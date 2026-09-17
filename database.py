@@ -2,12 +2,12 @@ import sqlite3
 from pathlib import Path
 
 # Ubicación de la base de datos
-DB_PATH = Path("data") / "humbertito.db"
+DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
 
 
 def conectar():
     """Conecta con la base de datos SQLite."""
-    DB_PATH.parent.mkdir(exist_ok=True)
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     return sqlite3.connect(DB_PATH)
 
 

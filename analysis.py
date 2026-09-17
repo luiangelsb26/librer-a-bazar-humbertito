@@ -9,7 +9,7 @@ import numpy as np
 # CONFIGURACIÓN
 # ==========================================================
 
-DB_PATH = Path("data") / "humbertito.db"
+DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
 
 
 # ==========================================================

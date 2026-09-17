@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 import analysis
 import prediction
+import database
 
 # ==========================================================
 # CONFIGURACIÓN
@@ -457,7 +458,9 @@ with st.sidebar:
     st.caption("Gestión comercial inteligente")
     st.divider()
 
-DB_PATH = Path("data") / "humbertito.db"
+DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+database.crear_base_datos()
 
 
 # ==========================================================

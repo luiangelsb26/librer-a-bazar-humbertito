@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-DB_PATH = Path("data") / "humbertito.db"
+DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
 
 def conectar():
     return sqlite3.connect(DB_PATH)
