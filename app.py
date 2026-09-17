@@ -11,7 +11,7 @@ import database
 # ==========================================================
 
 st.set_page_config(
-    page_title="Humbertito IA",
+    page_title="Librería Bazar Humbertito",
     page_icon="📚",
     layout="wide"
 )
@@ -31,11 +31,76 @@ def alternar_tema():
 
 st.markdown("""
     <style>
+        :root {
+            --humbertito-accent: #d45b45;
+            --humbertito-accent-soft: rgba(212, 91, 69, 0.14);
+            --humbertito-teal: #2d8177;
+        }
+        html, body, [class*="css"] {
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        }
+        [data-testid="stAppViewContainer"] {
+            background-image: radial-gradient(
+                circle at 100% 0%, rgba(212, 91, 69, 0.08), transparent 28rem
+            );
+        }
+        [data-testid="stArrowVegaLiteChart"],
+        [data-testid="stVegaLiteChart"],
+        [data-testid="stPyplotChart"] {
+            animation: none !important;
+            transition: none !important;
+            transform: none !important;
+        }
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 {
             margin: 0 0 0.15rem 0;
             font-size: 1.25rem;
             font-weight: 700;
             letter-spacing: 0.01em;
+            color: var(--humbertito-accent);
+        }
+        [data-testid="stSidebar"] > div:first-child {
+            padding: 1.75rem 1.25rem 1rem;
+        }
+        [data-testid="stSidebar"] {
+            flex: 0 0 280px;
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+        }
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+            overflow: visible;
+        }
+        [data-testid="stSidebar"] .sidebar-brand {
+            padding: 0.2rem 0 1.15rem 0.85rem;
+            border-left: 3px solid var(--humbertito-accent);
+        }
+        [data-testid="stSidebar"] .sidebar-brand-title {
+            display: flex;
+            align-items: flex-start;
+            color: var(--humbertito-accent);
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: 0.025em;
+        }
+        [data-testid="stSidebar"] .sidebar-brand-name {
+            min-width: 0;
+            max-width: 225px;
+        }
+        [data-testid="stSidebar"] .sidebar-brand-subtitle {
+            margin-top: 0.45rem;
+            color: rgba(250, 250, 250, 0.66);
+            font-size: 0.74rem;
+            line-height: 1.35;
+            letter-spacing: 0.035em;
+        }
+        [data-testid="stSidebar"] hr {
+            margin: 0.8rem 0 1.45rem;
+            opacity: 0.35;
+        }
+        [data-testid="stSidebar"] [data-testid="stCaptionContainer"] strong {
+            color: var(--humbertito-accent);
         }
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h4 {
             margin: 0.35rem 0 0.65rem 0;
@@ -77,23 +142,110 @@ st.markdown("""
             min-height: 2.7rem;
             font-weight: 600;
             letter-spacing: 0.01em;
-        }
-        [data-testid="stSidebar"] [class*="st-key-theme_toggle"] {
-            position: fixed !important;
-            left: 0.75rem;
-            bottom: 0.75rem;
-            z-index: 20;
-            width: min(19rem, calc(100vw - 1.5rem));
-            box-sizing: border-box;
-            padding: 0.65rem 0 0.15rem;
-            background: inherit;
-        }
-        [data-testid="stSidebar"] [class*="st-key-theme_toggle"] button {
             width: 100%;
-            margin: 0;
+            justify-content: center;
+            text-align: center;
         }
-        [data-testid="stSidebar"][aria-expanded="false"] [class*="st-key-theme_toggle"] {
-            display: none !important;
+        [data-testid="stSidebar"] [data-testid="stSelectbox"],
+        [data-testid="stSidebar"] [data-testid="stButton"],
+        [data-testid="stSidebar"] [role="group"] {
+            width: 100%;
+            max-width: 252px;
+            box-sizing: border-box;
+        }
+        [data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"],
+        [data-testid="stSidebar"] [role="group"] {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_"] {
+            width: 100% !important;
+            max-width: 252px;
+        }
+        [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_"] [data-testid="stButton"] {
+            width: 100% !important;
+            max-width: 252px;
+        }
+        [data-testid="stSidebar"] [role="group"] {
+            border-radius: 0.5rem;
+        }
+        [data-testid="stMain"] [data-testid="stTextInput"],
+        [data-testid="stMain"] [data-testid="stNumberInput"],
+        [data-testid="stMain"] [data-testid="stTextArea"],
+        [data-testid="stMain"] [data-testid="stSelectbox"] {
+            width: 100%;
+            max-width: 520px;
+        }
+        [class*="st-key-menu_item_"] button,
+        [class*="st-key-menu_active"] button {
+            min-height: 2.7rem;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--humbertito-accent) !important;
+            border-radius: 0.5rem;
+            background: var(--humbertito-accent) !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+        }
+        [class*="st-key-menu_item_"] button:hover,
+        [class*="st-key-menu_active"] button:hover {
+            background: #b94735 !important;
+            border-color: #b94735 !important;
+            color: #ffffff !important;
+        }
+        [class*="st-key-menu_active"] button {
+            background: var(--humbertito-accent) !important;
+            border-color: var(--humbertito-accent) !important;
+            color: #ffffff !important;
+        }
+        [class*="st-key-menu_active"] button:hover {
+            background: #b94735 !important;
+            border-color: #b94735 !important;
+            color: #ffffff !important;
+        }
+        [class*="st-key-theme_toggle"] {
+            position: fixed !important;
+            top: 4.25rem;
+            right: 1.5rem;
+            z-index: 999999;
+            width: auto;
+            box-sizing: border-box;
+            padding: 0;
+        }
+        [class*="st-key-theme_toggle"] button {
+            width: auto;
+            min-width: 9.75rem;
+            min-height: 2.5rem;
+            margin: 0;
+            padding: 0.5rem 0.9rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 650;
+            letter-spacing: 0.01em;
+            border: 1px solid #6b7280 !important;
+            background: #6b7280 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(20, 28, 32, 0.18);
+            transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease !important;
+        }
+        [class*="st-key-theme_toggle"] button:hover {
+            transform: none !important;
+            background: #4b5563 !important;
+            border-color: #4b5563 !important;
+            box-shadow: 0 4px 12px rgba(20, 28, 32, 0.18);
+        }
+        [class*="st-key-theme_toggle"] button:focus-visible {
+            outline: 3px solid rgba(107, 114, 128, 0.4);
+            outline-offset: 3px;
+        }
+        @media (max-width: 640px) {
+            [class*="st-key-theme_toggle"] {
+                top: 3.75rem;
+                right: 0.65rem;
+            }
+            [class*="st-key-theme_toggle"] button {
+                min-width: 9.5rem;
+                font-size: 0.78rem;
+            }
         }
         [data-testid="stMain"] h1 {
             margin-top: 0.5rem;
@@ -101,6 +253,8 @@ st.markdown("""
             font-size: clamp(1.65rem, 3vw, 2.35rem);
             font-weight: 750;
             letter-spacing: -0.02em;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--humbertito-accent);
         }
         [data-testid="stMain"] h1 + h3 {
             margin-top: 0;
@@ -116,6 +270,7 @@ st.markdown("""
             font-size: clamp(1.35rem, 2.4vw, 1.85rem);
             font-weight: 750;
             letter-spacing: -0.01em;
+            border-bottom: 2px solid var(--humbertito-accent-soft);
         }
         [data-testid="stMain"] h3 {
             margin-top: 1.2rem;
@@ -128,6 +283,13 @@ st.markdown("""
             padding: 1rem 1.1rem;
             border: 1px solid rgba(128, 128, 128, 0.28);
             border-radius: 0.65rem;
+            border-top: 3px solid var(--humbertito-accent);
+            box-shadow: 0 8px 20px rgba(20, 28, 32, 0.07);
+            transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+        [data-testid="stMetric"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(20, 28, 32, 0.12);
         }
         [data-testid="stMetricLabel"] {
             font-weight: 650;
@@ -140,6 +302,7 @@ st.markdown("""
             padding: 1.25rem;
             border: 1px solid rgba(128, 128, 128, 0.28);
             border-radius: 0.65rem;
+            box-shadow: 0 8px 20px rgba(20, 28, 32, 0.05);
         }
         [data-testid="stTextInput"] input,
         [data-testid="stNumberInput"] input,
@@ -172,6 +335,11 @@ st.markdown("""
         [data-testid="stTabs"] button[role="tab"] {
             min-height: 2.6rem;
             font-weight: 650;
+            border-radius: 0.45rem 0.45rem 0 0;
+        }
+        [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+            color: var(--humbertito-accent);
+            background: var(--humbertito-accent-soft);
         }
         [data-testid="stDataFrame"] {
             border: 1px solid rgba(128, 128, 128, 0.28);
@@ -201,12 +369,38 @@ st.markdown("""
             border: 1px solid rgba(128, 128, 128, 0.22);
             border-radius: 0.65rem;
         }
+        [data-testid="stArrowVegaLiteChart"] *,
+        [data-testid="stVegaLiteChart"] *,
+        [data-testid="stPyplotChart"] * {
+            animation: none !important;
+            transition: none !important;
+        }
         [data-testid="stAlert"] {
-            border-radius: 0.65rem;
-            border: 1px solid rgba(128, 128, 128, 0.2);
+            width: 100%;
+            max-width: 980px;
+            margin: 0.75rem 0;
+            border: 0;
+            background: transparent;
+        }
+        [data-testid="stAlertContainer"] {
+            min-height: 3rem;
+            padding: 0.8rem 1rem;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 0.55rem;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+        }
+        [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+            background: #123c2d;
+            border-color: #28634c;
+        }
+        [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
+            background: #17324d;
+            border-color: #2d557a;
         }
         [data-testid="stAlert"] p {
-            margin: 0.1rem 0;
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.45;
         }
         [data-testid="stPopover"] [role="listbox"],
         [role="listbox"] {
@@ -219,6 +413,9 @@ st.markdown("""
         }
         [data-testid="stMain"] button[kind="primaryFormSubmit"] {
             font-weight: 700;
+            background: var(--humbertito-accent);
+            border-color: var(--humbertito-accent);
+            color: #ffffff;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -311,6 +508,14 @@ if st.session_state.tema_blanco:
                 background: #f8fafc !important;
                 border-color: #e5e7eb !important;
             }
+            [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+                background: #ecfdf5 !important;
+                border-color: #a7f3d0 !important;
+            }
+            [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
+                background: #eff6ff !important;
+                border-color: #bfdbfe !important;
+            }
             div[data-baseweb="select"] > div,
             div[data-testid="stTextInput"] input,
             div[data-testid="stNumberInput"] input,
@@ -352,6 +557,36 @@ if st.session_state.tema_blanco:
                 color: #263238 !important;
                 border-color: #cbd5e1 !important;
             }
+            [class*="st-key-theme_toggle"] button {
+                background: #374151 !important;
+                color: #ffffff !important;
+                border-color: #374151 !important;
+            }
+            [class*="st-key-theme_toggle"] button:hover {
+                background: #1f2937 !important;
+                border-color: #1f2937 !important;
+            }
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button {
+                background: #364152 !important;
+                border-color: #364152 !important;
+                color: #ffffff !important;
+                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+                transform: none !important;
+            }
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover {
+                background: #1f2937 !important;
+                border-color: #1f2937 !important;
+                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+                transform: none !important;
+            }
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button,
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover,
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button *,
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover * {
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+                opacity: 1 !important;
+            }
             [data-testid="stSidebar"] div[data-baseweb="select"] * {
                 color: #263238 !important;
             }
@@ -384,6 +619,22 @@ if st.session_state.tema_blanco:
             [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h4,
             [data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
                 color: #263238 !important;
+            }
+            [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
+                background: var(--humbertito-accent) !important;
+                border-color: var(--humbertito-accent) !important;
+                color: #ffffff !important;
+            }
+            [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
+                background: #b94735 !important;
+                border-color: #b94735 !important;
+                color: #ffffff !important;
+            }
+            [data-testid="stSidebar"] [class*="st-key-menu_active"] button,
+            [data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
+                background: var(--humbertito-accent) !important;
+                border-color: var(--humbertito-accent) !important;
+                color: #ffffff !important;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -449,13 +700,38 @@ else:
             [data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
                 color: #fafafa;
             }
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button {
+                background: #d45b45 !important;
+                border-color: #d45b45 !important;
+                color: #ffffff !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+            }
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover {
+                background: #b94735 !important;
+                border-color: #b94735 !important;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.34);
+            }
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button *,
+            [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover * {
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+            }
         </style>
     """, unsafe_allow_html=True)
 
 
 with st.sidebar:
-    st.markdown("### 📚 Humbertito IA")
-    st.caption("Gestión comercial inteligente")
+    st.markdown(
+        """
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-title">
+                <span class="sidebar-brand-name">LIBRERÍA BAZAR “HUMBERTITO”</span>
+            </div>
+            <div class="sidebar-brand-subtitle">Gestión comercial inteligente</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     st.divider()
 
 DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
@@ -804,7 +1080,7 @@ def resumen_dashboard():
 # ==========================================================
 
 st.title("📚 Sistema basado en Inteligencia Artificial")
-st.subheader('Librería Bazar "Humbertito"')
+st.subheader('LIBRERÍA BAZAR “HUMBERTITO”')
 
 st.write(
     "Sistema de apoyo a la toma de decisiones gerenciales "
@@ -838,30 +1114,28 @@ st.divider()
 
 with st.sidebar:
     st.markdown("#### Menú principal")
-    menu = st.selectbox(
-        "Sección",
-        [
-            "Inicio",
-            "Dashboard gerencial",
-            "Productos",
-            "Ventas",
-            "Compras",
-            "🧠 Análisis inteligente",
-            "🔮 Predicción de demanda"
-        ],
-        label_visibility="collapsed"
-    )
+    opciones_menu = [
+        "Inicio",
+        "Dashboard gerencial",
+        "Productos",
+        "Ventas",
+        "Compras",
+        "Análisis inteligente",
+        "Predicción de demanda"
+    ]
+
+    if "menu" not in st.session_state:
+        st.session_state.menu = "Inicio"
+
+    for indice, opcion in enumerate(opciones_menu):
+        clave = "menu_active" if opcion == st.session_state.menu else f"menu_item_{indice}"
+        if st.button(opcion, key=clave):
+            st.session_state.menu = opcion
+            st.rerun()
+
+    menu = st.session_state.menu
     st.caption(f"Sección activa: **{menu}**")
     st.divider()
-    with st.container(key="theme_toggle"):
-        st.button(
-            "⚫ Cambiar a negro" if st.session_state.tema_blanco
-            else "⚪ Cambiar a blanco",
-            on_click=alternar_tema,
-            use_container_width=True,
-            help="Cambia entre el tema actual y un tema blanco más claro."
-        )
-
 
 # ==========================================================
 # INICIO
@@ -1242,9 +1516,9 @@ elif menu == "Compras":
 # ANÁLISIS INTELIGENTE
 # ==========================================================
 
-elif menu == "🧠 Análisis inteligente":
+elif menu == "Análisis inteligente":
 
-    st.header("🧠 Análisis inteligente")
+    st.header("Análisis inteligente")
 
     resumen = analysis.resumen_ventas()
     tendencia = analysis.tendencia_ventas()
@@ -1353,9 +1627,9 @@ elif menu == "🧠 Análisis inteligente":
 # PREDICCIÓN DE DEMANDA
 # ==========================================================
 
-elif menu == "🔮 Predicción de demanda":
+elif menu == "Predicción de demanda":
 
-    st.header("🔮 Predicción de demanda")
+    st.header("Predicción de demanda")
 
     st.write(
         "Estimación de la demanda futura a partir del historial "
@@ -1399,7 +1673,7 @@ elif menu == "🔮 Predicción de demanda":
             step=1
         )
 
-        if st.button("🔮 Generar predicción"):
+        if st.button("Generar predicción"):
 
             resultado = prediction.predecir_demanda(
                 producto_id,
@@ -1510,4 +1784,14 @@ elif menu == "🔮 Predicción de demanda":
                 st.info(
                     resultado["mensaje"]
                 )
+
+
+with st.container(key="theme_toggle"):
+    st.button(
+        "Modo Oscuro" if st.session_state.tema_blanco
+        else "Modo Claro",
+        key="darkModeBtn",
+        on_click=alternar_tema,
+        help="Cambia entre el tema actual y un tema blanco más claro."
+    )
 
