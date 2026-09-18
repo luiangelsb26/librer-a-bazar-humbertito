@@ -1359,6 +1359,7 @@ st.markdown("""
             }
             [data-testid="stSidebar"] .sidebar-brand-subtitle {
                 font-size: 0.68rem !important;
+                white-space: nowrap !important;
             }
             [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_item_"],
             [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] {
@@ -1369,14 +1370,65 @@ st.markdown("""
                 min-height: 2.9rem !important;
                 font-size: 0.84rem !important;
             }
+            [data-testid="stSidebar"] [data-testid="stExpander"] details,
+            [data-testid="stSidebar"] [data-testid="stExpander"] details[open] {
+                right: 1rem !important;
+                bottom: 1rem !important;
+                width: calc(100vw - 2rem) !important;
+                max-width: 22rem !important;
+            }
+            [data-testid="stSidebar"] [data-testid="stExpander"] details > div {
+                max-height: 70dvh !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+            }
             [data-testid="stMainBlockContainer"] {
                 padding: 1rem 0.9rem 2rem !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
             [data-testid="stMain"] h1 {
                 font-size: 1.65rem !important;
             }
             [data-testid="stMain"] h2 {
                 font-size: 1.35rem !important;
+            }
+            [data-testid="stMain"] [data-testid="stForm"] {
+                padding: 0.85rem !important;
+                border-radius: 0.55rem !important;
+            }
+            [data-testid="stMain"] input,
+            [data-testid="stMain"] textarea,
+            [data-testid="stMain"] [role="combobox"] {
+                max-width: 100% !important;
+                font-size: 1rem !important;
+            }
+            [data-testid="stMain"] button {
+                min-height: 2.8rem !important;
+                max-width: 100% !important;
+                font-size: 0.9rem !important;
+            }
+            [data-testid="stMain"] [data-testid="stButton"] button,
+            [data-testid="stMain"] [data-testid="stFormSubmitButton"] button {
+                width: 100% !important;
+            }
+            [data-testid="stTabs"] [role="tablist"] {
+                overflow-x: auto !important;
+                justify-content: flex-start !important;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-x;
+            }
+            [data-testid="stTabs"] [role="tablist"]::-webkit-scrollbar {
+                display: none;
+            }
+            [data-testid="stTabs"] button[role="tab"] {
+                flex: 0 0 auto !important;
+                white-space: nowrap !important;
+            }
+            [data-testid="stAlertContainer"] {
+                padding: 0.75rem !important;
+                min-height: 2.75rem !important;
             }
             [data-testid="stMain"] [data-testid="stMetric"] {
                 min-height: 5.4rem !important;
