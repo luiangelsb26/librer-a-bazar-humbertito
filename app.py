@@ -420,6 +420,10 @@ st.markdown("""
         .quick-card {
             margin: 0 0.2rem 0.75rem;
             padding: 1rem 1.1rem;
+            box-sizing: border-box;
+            width: 100%;
+            min-width: 0;
+            overflow: hidden;
             border: 1px solid rgba(128, 128, 128, 0.25);
             border-radius: 0.8rem;
             background: linear-gradient(135deg, rgba(212, 91, 69, 0.08), rgba(45, 129, 119, 0.07));
@@ -436,6 +440,8 @@ st.markdown("""
             margin: 0;
             line-height: 1.5;
             font-size: 0.9rem;
+            overflow-wrap: anywhere;
+            word-break: normal;
         }
         [class*="st-key-quick_"] {
             margin: 0 0.2rem;
@@ -446,6 +452,9 @@ st.markdown("""
         .alert-list {
             margin: 0.9rem 0 1.15rem;
             padding: 0.8rem 1rem 0.8rem 2rem;
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-wrap: anywhere;
             border-left: 2px solid var(--humbertito-teal);
             border-radius: 0 0.35rem 0.35rem 0;
             background: rgba(45, 129, 119, 0.06);
@@ -455,6 +464,9 @@ st.markdown("""
             margin-bottom: 0.45rem;
             line-height: 1.5;
             font-size: 0.86rem;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: normal;
         }
         .alert-list li:last-child {
             margin-bottom: 0;
@@ -578,11 +590,16 @@ st.markdown("""
             margin: 0.75rem 0;
             border: 0;
             background: transparent;
+            box-sizing: border-box;
+            overflow: hidden;
         }
         [data-testid="stAlertContainer"] {
             box-sizing: border-box;
             display: flex;
             align-items: center;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
             min-height: 3rem;
             padding: 0.8rem 1rem;
             border: none !important;
@@ -594,9 +611,26 @@ st.markdown("""
         }
         [data-testid="stAlertContainer"] > div {
             width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: anywhere;
+        }
+        [data-testid="stAlertContentSuccess"],
+        [data-testid="stAlertContentInfo"],
+        [data-testid="stAlertContentWarning"],
+        [data-testid="stAlertContentError"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-wrap: anywhere !important;
         }
         [data-testid="stAlert"] p {
             text-align: left !important;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: normal;
         }
         [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
             background: #123c2d;
@@ -618,6 +652,16 @@ st.markdown("""
             margin: 0;
             font-size: 0.9rem;
             line-height: 1.45;
+        }
+        [data-testid="stForm"],
+        [data-testid="stMetric"],
+        [data-testid="stDataFrame"],
+        [data-testid="stTable"],
+        [data-testid="stExpander"] {
+            box-sizing: border-box;
+            min-width: 0;
+            max-width: 100%;
+            overflow-wrap: anywhere;
         }
         [data-testid="stPopover"] [role="listbox"],
         [role="listbox"] {
