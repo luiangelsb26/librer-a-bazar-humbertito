@@ -66,10 +66,36 @@ st.markdown("""
             padding: 4.8rem 1.875rem 1rem;
             overflow: hidden !important;
         }
-        [data-testid="stSidebarCollapseButton"],
+        [data-testid="stSidebarCollapseButton"] {
+            position: fixed !important;
+            top: 0.8rem !important;
+            left: 16.8rem !important;
+            z-index: 1000000 !important;
+            display: block !important;
+        }
+        [data-testid="stSidebarCollapseButton"] button,
         [data-testid="stSidebar"] button[aria-label*="sidebar" i],
         [data-testid="stSidebar"] button[aria-label*="barra lateral" i] {
-            display: none !important;
+            width: 2.35rem !important;
+            height: 2.35rem !important;
+            min-width: 2.35rem !important;
+            min-height: 2.35rem !important;
+            padding: 0 !important;
+            border: 1px solid #cbd4dc !important;
+            border-radius: 50% !important;
+            background: #edf0f3 !important;
+            color: #263238 !important;
+            box-shadow: 0 2px 7px rgba(38, 50, 56, 0.14) !important;
+            transform: none !important;
+            transition: none !important;
+        }
+        [data-testid="stSidebarCollapseButton"] button:hover,
+        [data-testid="stSidebar"] button[aria-label*="sidebar" i]:hover,
+        [data-testid="stSidebar"] button[aria-label*="barra lateral" i]:hover {
+            background: #e1e6ea !important;
+            border-color: #2d8177 !important;
+            color: #263238 !important;
+            transform: none !important;
         }
         [data-testid="stSidebar"] {
             flex: 0 0 280px;
@@ -1313,6 +1339,11 @@ st.markdown("""
             margin: 0.85rem 0 1.25rem !important;
         }
         @media (max-width: 640px) {
+            [data-testid="stSidebarCollapseButton"] {
+                top: 0.65rem !important;
+                left: auto !important;
+                right: 0.75rem !important;
+            }
             [data-testid="stSidebar"] {
                 width: 100vw !important;
                 min-width: 100vw !important;
