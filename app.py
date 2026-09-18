@@ -66,7 +66,8 @@ st.markdown("""
             padding: 4.8rem 1.875rem 1rem;
             overflow: hidden !important;
         }
-        [data-testid="stSidebarCollapseButton"] {
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="stSidebarCollapsedControl"] {
             position: fixed !important;
             top: 0.8rem !important;
             left: 16.8rem !important;
@@ -74,15 +75,16 @@ st.markdown("""
             display: block !important;
         }
         [data-testid="stSidebarCollapseButton"] button,
+        [data-testid="stSidebarCollapsedControl"] button,
         [data-testid="stSidebar"] button[aria-label*="sidebar" i],
         [data-testid="stSidebar"] button[aria-label*="barra lateral" i] {
-            width: 2.35rem !important;
-            height: 2.35rem !important;
-            min-width: 2.35rem !important;
-            min-height: 2.35rem !important;
-            padding: 0 !important;
+            width: 2.65rem !important;
+            height: 1.9rem !important;
+            min-width: 2.65rem !important;
+            min-height: 1.9rem !important;
+            padding: 0 0.35rem !important;
             border: 1px solid #cbd4dc !important;
-            border-radius: 50% !important;
+            border-radius: 0.5rem !important;
             background: #edf0f3 !important;
             color: #263238 !important;
             box-shadow: 0 2px 7px rgba(38, 50, 56, 0.14) !important;
@@ -90,12 +92,89 @@ st.markdown("""
             transition: none !important;
         }
         [data-testid="stSidebarCollapseButton"] button:hover,
+        [data-testid="stSidebarCollapsedControl"] button:hover,
         [data-testid="stSidebar"] button[aria-label*="sidebar" i]:hover,
         [data-testid="stSidebar"] button[aria-label*="barra lateral" i]:hover {
             background: #e1e6ea !important;
             border-color: #2d8177 !important;
             color: #263238 !important;
             transform: none !important;
+        }
+        [data-testid="stSidebarCollapseButton"] button,
+        [data-testid="stSidebarCollapsedControl"] button,
+        [data-testid="stSidebar"] button[aria-label*="sidebar" i],
+        [data-testid="stSidebar"] button[aria-label*="barra lateral" i] {
+            background: #2d8177 !important;
+            border: 1px solid #8ed1c8 !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 9px rgba(15, 23, 42, 0.22) !important;
+        }
+        [data-testid="stSidebarCollapseButton"] button:hover,
+        [data-testid="stSidebarCollapsedControl"] button:hover,
+        [data-testid="stSidebar"] button[aria-label*="sidebar" i]:hover,
+        [data-testid="stSidebar"] button[aria-label*="barra lateral" i]:hover {
+            background: #24665f !important;
+            border-color: #b5e1db !important;
+            color: #ffffff !important;
+        }
+        [data-testid="stSidebarCollapseButton"] button svg,
+        [data-testid="stSidebarCollapsedControl"] button svg,
+        [data-testid="stSidebarCollapseButton"] button svg *,
+        [data-testid="stSidebarCollapsedControl"] button svg * {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+        }
+        button[aria-label*="open sidebar" i],
+        button[aria-label*="close sidebar" i],
+        button[aria-label*="expand sidebar" i],
+        button[aria-label*="collapse sidebar" i],
+        button[aria-label*="abrir barra lateral" i],
+        button[aria-label*="cerrar barra lateral" i] {
+            display: flex !important;
+            position: fixed !important;
+            top: 0.8rem !important;
+            left: 16.8rem !important;
+            z-index: 1000001 !important;
+            width: 2.65rem !important;
+            height: 1.9rem !important;
+            min-width: 2.65rem !important;
+            min-height: 1.9rem !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            border: 1px solid #8ed1c8 !important;
+            border-radius: 0.5rem !important;
+            background: #2d8177 !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 9px rgba(15, 23, 42, 0.22) !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        button[aria-label*="open sidebar" i] svg,
+        button[aria-label*="close sidebar" i] svg,
+        button[aria-label*="expand sidebar" i] svg,
+        button[aria-label*="collapse sidebar" i] svg,
+        button[aria-label*="abrir barra lateral" i] svg,
+        button[aria-label*="cerrar barra lateral" i] svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+        }
+        [data-testid="stSidebarCollapseButton"] button:focus-visible,
+        [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_item_"] button:focus-visible,
+        [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button:focus-visible {
+            outline: 3px solid rgba(45, 129, 119, 0.4) !important;
+            outline-offset: 2px !important;
+        }
+        [data-testid="stSidebarCollapseButton"] svg,
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary svg {
+            width: 1rem !important;
+            height: 1rem !important;
+            stroke-width: 2.5 !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+            cursor: pointer !important;
+            font-weight: 650 !important;
+            letter-spacing: 0.01em !important;
         }
         [data-testid="stSidebar"] {
             flex: 0 0 280px;
@@ -1180,6 +1259,24 @@ else:
                 color: #ffffff !important;
                 -webkit-text-fill-color: #ffffff !important;
             }
+            [data-testid="stSidebar"] > div:first-child,
+            [data-testid="stSidebarContent"],
+            [data-testid="stSidebarUserContent"] {
+                scrollbar-color: #2d8177 #151a20 !important;
+            }
+            [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar,
+            [data-testid="stSidebarContent"]::-webkit-scrollbar,
+            [data-testid="stSidebarUserContent"]::-webkit-scrollbar {
+                width: 6px !important;
+                background: #151a20 !important;
+            }
+            [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb,
+            [data-testid="stSidebarContent"]::-webkit-scrollbar-thumb,
+            [data-testid="stSidebarUserContent"]::-webkit-scrollbar-thumb {
+                background: #2d8177 !important;
+                border: 1px solid #1f5d57 !important;
+                border-radius: 4px !important;
+            }
         </style>
     """, unsafe_allow_html=True)
 
@@ -1339,7 +1436,30 @@ st.markdown("""
             margin: 0.85rem 0 1.25rem !important;
         }
         @media (max-width: 640px) {
-            [data-testid="stSidebarCollapseButton"] {
+            [data-testid="stSidebarCollapseButton"],
+            [data-testid="stSidebarCollapsedControl"] {
+                top: 0.65rem !important;
+                left: auto !important;
+                right: 0.75rem !important;
+                display: block !important;
+                z-index: 1000000 !important;
+                pointer-events: auto !important;
+            }
+            [data-testid="stSidebarCollapseButton"] button,
+            [data-testid="stSidebarCollapsedControl"] button {
+                width: 2.75rem !important;
+                height: 2.25rem !important;
+                min-width: 2.75rem !important;
+                min-height: 2.25rem !important;
+                padding: 0 !important;
+                touch-action: manipulation !important;
+            }
+            button[aria-label*="open sidebar" i],
+            button[aria-label*="close sidebar" i],
+            button[aria-label*="expand sidebar" i],
+            button[aria-label*="collapse sidebar" i],
+            button[aria-label*="abrir barra lateral" i],
+            button[aria-label*="cerrar barra lateral" i] {
                 top: 0.65rem !important;
                 left: auto !important;
                 right: 0.75rem !important;
