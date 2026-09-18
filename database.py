@@ -80,6 +80,46 @@ def crear_base_datos():
     conexion.close()
 
 
+def reiniciar_datos():
+    """Elimina todos los registros y conserva las tablas del sistema."""
+    conexion = conectar()
+
+    try:
+        conexion.execute("PRAGMA foreign_keys = ON")
+        cursor = conexion.cursor()
+
+        tablas = (
+            "detalle_ventas",
+            "detalle_compras",
+            "ventas",
+            "compras",
+            "productos",
+        )
+        registros_eliminados = {}
+
+        for tabla in tablas:
+            registros_eliminados[tabla] = cursor.execute(
+                f"SELECT COUNT(*) FROM {tabla}"
+            ).fetchone()[0]
+            cursor.execute(f"DELETE FROM {tabla}")
+
+        for tabla in tablas:
+            cursor.execute(
+                "DELETE FROM sqlite_sequence WHERE name = ?",
+                (tabla,)
+            )
+
+        conexion.commit()
+        return registros_eliminados
+
+    except Exception:
+        conexion.rollback()
+        raise
+
+    finally:
+        conexion.close()
+
+
 if __name__ == "__main__":
     crear_base_datos()
     print("Base de datos creada correctamente.")
