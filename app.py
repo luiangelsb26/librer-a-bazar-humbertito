@@ -1317,8 +1317,12 @@ st.markdown("""
                 width: 100vw !important;
                 min-width: 100vw !important;
                 max-width: 100vw !important;
+                height: 100dvh !important;
+                overflow: hidden !important;
             }
-            [data-testid="stSidebar"] > div:first-child {
+            [data-testid="stSidebar"] > div:first-child,
+            [data-testid="stSidebarContent"],
+            [data-testid="stSidebarUserContent"] {
                 width: 100% !important;
                 padding: 1rem 1rem 1.25rem !important;
                 box-sizing: border-box !important;
@@ -1331,9 +1335,13 @@ st.markdown("""
                 scrollbar-width: thin;
                 touch-action: pan-y;
             }
+            [data-testid="stSidebarContent"]::-webkit-scrollbar,
+            [data-testid="stSidebarUserContent"]::-webkit-scrollbar,
             [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar {
                 width: 5px;
             }
+            [data-testid="stSidebarContent"]::-webkit-scrollbar-thumb,
+            [data-testid="stSidebarUserContent"]::-webkit-scrollbar-thumb,
             [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb {
                 background: rgba(100, 116, 139, 0.65);
                 border-radius: 3px;
