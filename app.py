@@ -1322,10 +1322,28 @@ st.markdown("""
                 width: 100% !important;
                 padding: 1rem 1rem 1.25rem !important;
                 box-sizing: border-box !important;
+                height: 100dvh !important;
+                max-height: 100dvh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-y: contain;
+                scrollbar-width: thin;
+                touch-action: pan-y;
+            }
+            [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar {
+                width: 5px;
+            }
+            [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb {
+                background: rgba(100, 116, 139, 0.65);
+                border-radius: 3px;
             }
             [data-testid="stSidebar"] .sidebar-brand {
                 min-height: auto !important;
                 padding: 0.85rem 0.9rem 0.9rem !important;
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 30 !important;
             }
             [data-testid="stSidebar"] .sidebar-brand-title,
             [data-testid="stSidebar"] .sidebar-brand-name {
@@ -1359,6 +1377,8 @@ st.markdown("""
             [data-testid="stMain"] [data-testid="stDataFrame"],
             [data-testid="stMain"] [data-testid="stTable"] {
                 overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-x pan-y;
             }
         }
     </style>
