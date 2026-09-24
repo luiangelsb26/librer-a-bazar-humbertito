@@ -6,6 +6,7 @@ from datetime import datetime
 import analysis
 import prediction
 import database
+import auth
 
 if not hasattr(database, "reiniciar_datos"):
     database = importlib.reload(database)
@@ -35,6 +36,94 @@ def alternar_tema():
 
 st.markdown("""
     <style>
+    
+/* ==========================================
+   MENÚ LATERAL - HUMBERTITO IA
+   ========================================== */
+
+/* Panel lateral */
+[data-testid="stSidebar"] {
+    background-color: #20232D;
+    border-right: 1px solid #343A47;
+}
+
+/* Permitir desplazamiento vertical */
+[data-testid="stSidebar"] > div:first-child {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #50596A #20232D;
+}
+
+/* Contenedor interno */
+[data-testid="stSidebarContent"] {
+    padding: 1.2rem 1rem 2rem 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Barra de desplazamiento en Chrome y Edge */
+[data-testid="stSidebarContent"]::-webkit-scrollbar {
+    width: 6px;
+}
+
+[data-testid="stSidebarContent"]::-webkit-scrollbar-thumb {
+    background: #50596A;
+    border-radius: 10px;
+}
+
+[data-testid="stSidebarContent"]::-webkit-scrollbar-track {
+    background: #20232D;
+}
+
+/* Separadores */
+[data-testid="stSidebar"] hr {
+    border-color: #343A47;
+    margin: 1rem 0;
+}
+
+/* Botones del menú */
+[data-testid="stSidebar"] .stButton > button {
+    width: 100%;
+    min-height: 46px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background-color: #292D38;
+    color: #E0E5ED;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    padding: 0.65rem 1rem;
+    margin-bottom: 5px;
+    transition: background-color 0.2s ease,
+                border-color 0.2s ease;
+}
+
+/* Efecto al pasar el cursor */
+[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #353B49;
+    border-color: #4B586A;
+    color: #FFFFFF;
+}
+
+/* Botones de cierre de sesión */
+[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
+    background-color: #252A35;
+    border-color: #3A414F;
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 768px) {
+    [data-testid="stSidebarContent"] {
+        padding: 0.8rem;
+    }
+
+    [data-testid="stSidebar"] .stButton > button {
+        min-height: 44px;
+        font-size: 13px;
+    }
+}
         :root {
             --humbertito-accent: #d45b45;
             --humbertito-accent-soft: rgba(212, 91, 69, 0.14);
@@ -678,6 +767,154 @@ st.markdown("""
             border-color: var(--humbertito-accent);
             color: #ffffff;
         }
+
+
+/* ==========================================================
+   SIDEBAR PROFESIONAL - HUMBERTITO
+   ========================================================== */
+[data-testid="stSidebar"] {
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+}
+[data-testid="stSidebar"] > div:first-child {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    padding: 4.8rem 1rem 1rem !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin;
+    scrollbar-color: #596273 transparent;
+}
+[data-testid="stSidebarContent"] {
+    padding: 0 !important;
+    overflow: visible !important;
+}
+[data-testid="stSidebar"] > div:first-child::-webkit-scrollbar { width: 6px; }
+[data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-track { background: transparent; }
+[data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb {
+    background: #596273;
+    border-radius: 10px;
+}
+[data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb:hover { background: #758096; }
+[data-testid="stSidebar"] .sidebar-brand {
+    margin: 0 0 1rem 0 !important;
+    padding: 0.9rem 0.9rem 1rem !important;
+    border-left: 3px solid var(--humbertito-accent) !important;
+    border-bottom: 1px solid rgba(128,128,128,0.18) !important;
+    border-radius: 0 10px 10px 0 !important;
+    background: rgba(255,255,255,0.025) !important;
+}
+[data-testid="stSidebar"] .user-card {
+    margin: 0.45rem 0 0.85rem !important;
+    padding: 0.8rem 0.85rem !important;
+    border: 1px solid rgba(128,128,128,0.20) !important;
+    border-radius: 10px !important;
+    background: rgba(255,255,255,0.035) !important;
+    box-sizing: border-box !important;
+}
+[data-testid="stSidebar"] .user-name {
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    margin-bottom: 0.25rem !important;
+    overflow-wrap: anywhere !important;
+}
+[data-testid="stSidebar"] .user-role {
+    font-size: 0.76rem !important;
+    line-height: 1.35 !important;
+    opacity: 0.68 !important;
+}
+[data-testid="stSidebar"] .sidebar-section-title {
+    margin: 0.95rem 0 0.55rem !important;
+    font-size: 0.69rem !important;
+    font-weight: 750 !important;
+    letter-spacing: 0.10em !important;
+    text-transform: uppercase !important;
+    opacity: 0.55 !important;
+}
+[data-testid="stSidebar"] .stButton > button {
+    width: 100% !important;
+    min-height: 42px !important;
+    margin: 0 0 5px 0 !important;
+    padding: 0.55rem 0.8rem !important;
+    border-radius: 8px !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    color: inherit !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(212,91,69,0.10) !important;
+    border-color: rgba(212,91,69,0.22) !important;
+    color: var(--humbertito-accent) !important;
+}
+[data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+    background: var(--humbertito-accent) !important;
+    border-color: var(--humbertito-accent) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+}
+[data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
+    background: #b94735 !important;
+    border-color: #b94735 !important;
+    color: #ffffff !important;
+}
+[data-testid="stSidebar"] [class*="st-key-cerrar_sesion"] button {
+    background: rgba(128,128,128,0.08) !important;
+    border-color: rgba(128,128,128,0.18) !important;
+}
+[data-testid="stSidebar"] [class*="st-key-cerrar_sesion"] button:hover {
+    background: rgba(212,91,69,0.10) !important;
+    border-color: rgba(212,91,69,0.22) !important;
+    color: var(--humbertito-accent) !important;
+}
+[data-testid="stSidebar"] .active-section {
+    margin: 0.65rem 0 0.15rem !important;
+    padding: 0.55rem 0.7rem !important;
+    border-radius: 7px !important;
+    background: rgba(128,128,128,0.06) !important;
+    border: 1px solid rgba(128,128,128,0.10) !important;
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    margin-top: 0.25rem !important;
+    border: 1px solid rgba(128,128,128,0.18) !important;
+    border-radius: 9px !important;
+    overflow: hidden !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+    padding: 0.7rem 0.8rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 650 !important;
+}
+[data-testid="stSidebar"] hr {
+    margin: 0.75rem 0 !important;
+    opacity: 0.25 !important;
+}
+@media (max-width: 768px) {
+    [data-testid="stSidebar"] {
+        width: 270px !important;
+        min-width: 270px !important;
+        max-width: 270px !important;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        padding: 4.2rem 0.8rem 0.8rem !important;
+    }
+    [data-testid="stSidebar"] .stButton > button {
+        min-height: 42px !important;
+        font-size: 0.84rem !important;
+    }
+}
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -1640,10 +1877,314 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+# ==========================================================
+# SIDEBAR FINAL - DISEÑO PROFESIONAL + SCROLL ESTABLE
+# ==========================================================
+
+st.markdown("""
+<style>
+    /* Contenedor: un único scroll vertical */
+    [data-testid="stSidebar"] {
+        width: 292px !important;
+        min-width: 292px !important;
+        max-width: 292px !important;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        padding: 0.85rem 0.85rem 1.2rem !important;
+        box-sizing: border-box !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior-y: contain !important;
+        scrollbar-width: thin !important;
+        scrollbar-gutter: stable !important;
+    }
+    [data-testid="stSidebarContent"],
+    [data-testid="stSidebarUserContent"] {
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+    [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar { width: 7px !important; }
+    [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-track { background: transparent !important; }
+    [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb {
+        background: rgba(148,163,184,0.40) !important;
+        border-radius: 999px !important;
+    }
+    [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb:hover {
+        background: rgba(148,163,184,0.60) !important;
+    }
+
+    /* Marca */
+    [data-testid="stSidebar"] .sidebar-brand {
+        width: 100% !important;
+        margin: 0 0 0.75rem !important;
+        padding: 0.88rem 0.9rem !important;
+        box-sizing: border-box !important;
+        position: static !important;
+        border: 1px solid rgba(148,163,184,0.18) !important;
+        border-left: 3px solid #2d8177 !important;
+        border-radius: 0 10px 10px 0 !important;
+        background: rgba(255,255,255,0.035) !important;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.06) !important;
+    }
+    [data-testid="stSidebar"] .sidebar-brand-kicker {
+        margin: 0 0 0.32rem !important;
+        color: #8995a3 !important;
+        font-size: 0.57rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+    }
+    [data-testid="stSidebar"] .sidebar-brand-title,
+    [data-testid="stSidebar"] .sidebar-brand-name {
+        display: block !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        font-family: Georgia, "Times New Roman", serif !important;
+        font-size: 1.02rem !important;
+        line-height: 1.06 !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+    }
+    [data-testid="stSidebar"] .sidebar-brand-subtitle {
+        display: block !important;
+        margin: 0.48rem 0 0 !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        font-size: 0.66rem !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Perfil */
+    [data-testid="stSidebar"] .user-card {
+        width: 100% !important;
+        margin: 0 0 0.62rem !important;
+        padding: 0.75rem 0.8rem !important;
+        box-sizing: border-box !important;
+        border: 1px solid rgba(148,163,184,0.16) !important;
+        border-radius: 10px !important;
+        background: rgba(255,255,255,0.035) !important;
+    }
+    [data-testid="stSidebar"] .user-card-top {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        margin-bottom: 0.30rem !important;
+    }
+    [data-testid="stSidebar"] .user-status-dot {
+        width: 7px !important;
+        height: 7px !important;
+        flex: 0 0 7px !important;
+        border-radius: 50% !important;
+        background: #58b9a9 !important;
+        box-shadow: 0 0 0 3px rgba(88,185,169,0.11) !important;
+    }
+    [data-testid="stSidebar"] .user-status-text {
+        font-size: 0.57rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.10em !important;
+        opacity: 0.60 !important;
+    }
+    [data-testid="stSidebar"] .user-name {
+        margin: 0 !important;
+        font-size: 0.90rem !important;
+        line-height: 1.25 !important;
+        font-weight: 750 !important;
+        overflow-wrap: anywhere !important;
+    }
+    [data-testid="stSidebar"] .user-role {
+        margin-top: 0.12rem !important;
+        font-size: 0.69rem !important;
+        line-height: 1.3 !important;
+        opacity: 0.62 !important;
+    }
+
+    /* Logout */
+    [data-testid="stSidebar"] [class*="st-key-cerrar_sesion"] button {
+        width: 100% !important;
+        min-height: 2.25rem !important;
+        margin: 0 !important;
+        padding: 0.48rem 0.7rem !important;
+        border: 1px solid rgba(148,163,184,0.16) !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        color: inherit !important;
+        justify-content: center !important;
+        font-size: 0.74rem !important;
+        font-weight: 650 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    [data-testid="stSidebar"] [class*="st-key-cerrar_sesion"] button:hover {
+        background: rgba(212,91,69,0.09) !important;
+        border-color: rgba(212,91,69,0.28) !important;
+        color: #e47761 !important;
+    }
+
+    /* Encabezados de sección */
+    [data-testid="stSidebar"] .sidebar-section-title {
+        margin: 0.02rem 0 0.52rem !important;
+        padding-left: 0.1rem !important;
+        font-size: 0.63rem !important;
+        line-height: 1.2 !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        opacity: 0.50 !important;
+    }
+
+    /* BOTONES NORMALES: neutros, no rojos */
+    [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
+        width: 100% !important;
+        min-height: 2.48rem !important;
+        margin: 0 0 0.30rem !important;
+        padding: 0.54rem 0.72rem !important;
+        box-sizing: border-box !important;
+        border: 1px solid rgba(148,163,184,0.12) !important;
+        border-radius: 8px !important;
+        background: rgba(255,255,255,0.022) !important;
+        color: inherit !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        font-size: 0.78rem !important;
+        font-weight: 620 !important;
+        line-height: 1.2 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
+        background: rgba(45,129,119,0.10) !important;
+        border-color: rgba(45,129,119,0.30) !important;
+        color: inherit !important;
+    }
+
+    /* SOLO el elemento activo usa el color de énfasis */
+    [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+        width: 100% !important;
+        min-height: 2.48rem !important;
+        margin: 0 0 0.30rem !important;
+        padding: 0.54rem 0.72rem !important;
+        border: 1px solid #2d8177 !important;
+        border-radius: 8px !important;
+        background: #2d8177 !important;
+        color: #ffffff !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        box-shadow: 0 4px 11px rgba(45,129,119,0.18) !important;
+        transform: none !important;
+    }
+    [data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
+        background: #24665f !important;
+        border-color: #24665f !important;
+        color: #ffffff !important;
+    }
+
+    /* Separadores */
+    [data-testid="stSidebar"] hr {
+        margin: 0.62rem 0 0.75rem !important;
+        opacity: 0.18 !important;
+    }
+
+    /* Administración */
+    [data-testid="stSidebar"] [data-testid="stExpander"] {
+        width: 100% !important;
+        margin: 0 !important;
+        border: 1px solid rgba(148,163,184,0.15) !important;
+        border-radius: 9px !important;
+        overflow: hidden !important;
+        background: rgba(255,255,255,0.018) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        min-height: 2.42rem !important;
+        padding: 0.52rem 0.68rem !important;
+        font-size: 0.74rem !important;
+        font-weight: 680 !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stTextInput"] input {
+        font-size: 0.75rem !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] .stButton > button {
+        justify-content: center !important;
+        text-align: center !important;
+        font-size: 0.73rem !important;
+    }
+
+    /* Estabilidad: sin animaciones/transformaciones durante navegación */
+    [data-testid="stSidebar"] [data-testid="stElementContainer"],
+    [data-testid="stSidebar"] [data-testid="stButton"],
+    [data-testid="stSidebar"] [data-testid="stButton"] button {
+        animation: none !important;
+        transform: none !important;
+        will-change: auto !important;
+    }
+
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"] {
+            width: 282px !important;
+            min-width: 282px !important;
+            max-width: 282px !important;
+        }
+        [data-testid="stSidebar"] > div:first-child {
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            padding: 0.72rem 0.70rem 1rem !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-menu_item_"] button,
+        [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+            min-height: 2.58rem !important;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
+if st.session_state.tema_blanco:
+    st.markdown("""
+    <style>
+        [data-testid="stSidebar"] { background: #f7f9fa !important; color: #263238 !important; }
+        [data-testid="stSidebar"] .sidebar-brand { background: #ffffff !important; border-color: #dbe3e8 !important; border-left-color: #2d8177 !important; box-shadow: 0 6px 16px rgba(38,50,56,0.05) !important; }
+        [data-testid="stSidebar"] .sidebar-brand-kicker { color: #718096 !important; }
+        [data-testid="stSidebar"] .sidebar-brand-title, [data-testid="stSidebar"] .sidebar-brand-name { color: #263238 !important; }
+        [data-testid="stSidebar"] .sidebar-brand-subtitle { color: #64748b !important; }
+        [data-testid="stSidebar"] .user-card { background: #ffffff !important; border-color: #dbe3e8 !important; }
+        [data-testid="stSidebar"] [class*="st-key-menu_item_"] button { background: #ffffff !important; border-color: #e0e7eb !important; color: #263238 !important; }
+        [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover { background: #edf7f5 !important; border-color: #b9d9d4 !important; color: #24665f !important; }
+        [data-testid="stSidebar"] [class*="st-key-menu_active"] button { background: #2d8177 !important; border-color: #2d8177 !important; color: #ffffff !important; }
+        [data-testid="stSidebar"] [data-testid="stExpander"] { background: #ffffff !important; border-color: #dbe3e8 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+        [data-testid="stSidebar"] { background: #22252e !important; color: #eef2f5 !important; }
+        [data-testid="stSidebar"] .sidebar-brand { background: #1f242b !important; border-color: #35404a !important; border-left-color: #2d8177 !important; }
+        [data-testid="stSidebar"] .sidebar-brand-kicker { color: #8995a3 !important; }
+        [data-testid="stSidebar"] .sidebar-brand-title, [data-testid="stSidebar"] .sidebar-brand-name { color: #8ed1c8 !important; }
+        [data-testid="stSidebar"] .sidebar-brand-subtitle { color: #d1d8df !important; }
+        [data-testid="stSidebar"] .user-card { background: #2a2d36 !important; border-color: #3b404b !important; }
+        [data-testid="stSidebar"] [class*="st-key-menu_item_"] button { background: rgba(255,255,255,0.022) !important; border-color: #353b46 !important; color: #edf1f4 !important; }
+        [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover { background: rgba(45,129,119,0.12) !important; border-color: rgba(45,129,119,0.32) !important; color: #ffffff !important; }
+        [data-testid="stSidebar"] [class*="st-key-menu_active"] button { background: #2d8177 !important; border-color: #2d8177 !important; color: #ffffff !important; }
+        [data-testid="stSidebar"] [data-testid="stExpander"] { background: #252931 !important; border-color: #3a414c !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
 with st.sidebar:
     st.markdown(
         """
         <div class="sidebar-brand">
+            <div class="sidebar-brand-kicker">SISTEMA DE GESTIÓN</div>
             <div class="sidebar-brand-title">
                 <span class="sidebar-brand-name">LIBRERÍA BAZAR<br>“HUMBERTITO”</span>
             </div>
@@ -1657,6 +2198,135 @@ with st.sidebar:
 DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 database.crear_base_datos()
+
+
+# ==========================================================
+# AUTENTICACIÓN Y CONTROL DE ACCESO
+# ==========================================================
+
+auth.inicializar()
+
+
+def pantalla_acceso():
+    
+    st.markdown("""
+        <style>
+        /* Ocultar la barra lateral durante el login */
+        [data-testid="stSidebar"] {
+            display: none;
+        }
+
+        /* Ocultar el botón para abrir la barra lateral */
+        [data-testid="collapsedControl"] {
+            display: none;
+        }
+
+        /* Ocultar la barra superior */
+        header[data-testid="stHeader"] {
+            background: transparent;
+        }
+
+        /* Fondo y espacio de la pantalla */
+        .stApp {
+            background: #0e1117;
+        }
+
+        /* Centrar el contenido principal */
+        [data-testid="stMainBlockContainer"] {
+            max-width: 1000px;
+            padding-top: 3rem;
+            margin: auto;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(
+        "<h1 style='text-align:center'>LIBRERÍA BAZAR HUMBERTITO</h1>",
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        "<h3 style='text-align:center'>Acceso al sistema</h3>",
+        unsafe_allow_html=True
+    )
+
+    if auth.cantidad_usuarios() == 0:
+        st.info(
+            "Primera configuración: crea la cuenta del administrador."
+        )
+
+        with st.form("crear_primer_admin"):
+            nombre = st.text_input("Nombre completo")
+            username = st.text_input("Usuario")
+            password = st.text_input(
+                "Contraseña",
+                type="password"
+            )
+            confirmar = st.text_input(
+                "Confirmar contraseña",
+                type="password"
+            )
+
+            enviar = st.form_submit_button(
+                "Crear administrador",
+                type="primary",
+                width="stretch"
+            )
+
+            if enviar:
+                if password != confirmar:
+                    st.error("Las contraseñas no coinciden.")
+                else:
+                    try:
+                        auth.crear_usuario(
+                            username,
+                            nombre,
+                            password,
+                            "admin"
+                        )
+                        st.success(
+                            "Administrador creado. Inicia sesión."
+                        )
+                        st.rerun()
+                    except ValueError as error:
+                        st.error(str(error))
+
+    else:
+        with st.form("form_login"):
+            username = st.text_input("Usuario")
+            password = st.text_input(
+                "Contraseña",
+                type="password"
+            )
+
+            entrar = st.form_submit_button(
+                "Iniciar sesión",
+                type="primary",
+                width="stretch"
+            )
+
+            if entrar:
+                usuario = auth.verificar_usuario(
+                    username,
+                    password
+                )
+
+                if usuario:
+                    st.session_state["usuario"] = usuario
+                    st.session_state["menu"] = "Inicio"
+                    st.rerun()
+                else:
+                    st.error(
+                        "Usuario o contraseña incorrectos."
+                    )
+
+
+if "usuario" not in st.session_state:
+    pantalla_acceso()
+    st.stop()
+
+
+usuario_actual = st.session_state["usuario"]
+es_admin = usuario_actual["rol"] == "admin"
 
 
 # ==========================================================
@@ -2060,7 +2730,37 @@ st.divider()
 # ==========================================================
 
 with st.sidebar:
-    st.markdown("#### Menú principal")
+
+    rol_texto = "Administrador" if es_admin else "Empleado"
+
+    # PERFIL / SESIÓN
+    st.markdown(
+        f"""
+        <div class="user-card">
+            <div class="user-card-top">
+                <span class="user-status-dot"></span>
+                <span class="user-status-text">SESIÓN ACTIVA</span>
+            </div>
+            <div class="user-name">{usuario_actual['nombre']}</div>
+            <div class="user-role">{rol_texto}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    if st.button("Cerrar sesión", key="cerrar_sesion"):
+        st.session_state.pop("usuario", None)
+        st.session_state.pop("menu", None)
+        st.rerun()
+
+    st.divider()
+
+    # MENÚ PRINCIPAL
+    st.markdown(
+        '<div class="sidebar-section-title">Menú principal</div>',
+        unsafe_allow_html=True
+    )
+
     opciones_menu = [
         "Inicio",
         "Dashboard gerencial",
@@ -2070,6 +2770,9 @@ with st.sidebar:
         "Análisis inteligente",
         "Predicción de demanda"
     ]
+
+    if es_admin:
+        opciones_menu.append("Administrar usuarios")
 
     if "menu" not in st.session_state:
         st.session_state.menu = "Inicio"
@@ -2081,19 +2784,27 @@ with st.sidebar:
             st.rerun()
 
     menu = st.session_state.menu
-    st.caption(f"Sección activa: **{menu}**")
+
     st.divider()
+
+    # ADMINISTRACIÓN
+    st.markdown(
+        '<div class="sidebar-section-title">Administración</div>',
+        unsafe_allow_html=True
+    )
 
     with st.expander("Administración de datos"):
         st.caption(
             "El reinicio elimina productos, compras, ventas y sus historiales. "
             "Esta acción no se puede deshacer."
         )
+
         confirmacion = st.text_input(
             "Escriba REINICIAR para continuar",
             key="confirmar_reinicio",
             max_chars=9,
         )
+
         if st.button(
             "Eliminar todo y empezar de cero",
             key="reiniciar_datos",
@@ -2101,11 +2812,10 @@ with st.sidebar:
             disabled=confirmacion.strip().upper() != "REINICIAR",
         ):
             try:
-                registros = database.reiniciar_datos()
+                database.reiniciar_datos()
                 st.session_state.pop("confirmar_reinicio", None)
                 st.success(
-                    "Sistema reiniciado correctamente. Ya puedes comenzar un "
-                    "nuevo registro."
+                    "Sistema reiniciado correctamente. Ya puedes comenzar un nuevo registro."
                 )
                 st.rerun()
             except Exception as error:
@@ -2229,6 +2939,102 @@ if menu == "Inicio":
     st.info(
         "Utilice el menú lateral para gestionar productos, compras, ventas y análisis inteligente de la operación."
     )
+
+    
+# ==========================================================
+# ADMINISTRACIÓN DE USUARIOS
+# ==========================================================
+
+elif menu == "Administrar usuarios":
+
+    if not es_admin:
+        st.error("No tienes permisos para administrar usuarios.")
+        st.stop()
+
+    st.header("Administración de usuarios")
+
+    st.subheader("Crear una cuenta")
+
+    with st.form("crear_usuario"):
+        nombre = st.text_input("Nombre completo")
+        username = st.text_input("Nombre de usuario")
+
+        password = st.text_input(
+            "Contraseña",
+            type="password"
+        )
+
+        confirmar = st.text_input(
+            "Confirmar contraseña",
+            type="password"
+        )
+
+        rol = st.selectbox(
+            "Rol del usuario",
+            ["empleado", "admin"],
+            format_func=lambda x: (
+                "Empleado" if x == "empleado"
+                else "Administrador"
+            )
+        )
+
+        guardar = st.form_submit_button(
+            "Crear usuario",
+            type="primary"
+        )
+
+        if guardar:
+            if password != confirmar:
+                st.error("Las contraseñas no coinciden.")
+            else:
+                try:
+                    auth.crear_usuario(
+                        username,
+                        nombre,
+                        password,
+                        rol
+                    )
+                    st.success(
+                        f"Usuario {username} creado correctamente."
+                    )
+                    st.rerun()
+                except ValueError as error:
+                    st.error(str(error))
+
+    st.divider()
+    st.subheader("Usuarios registrados")
+
+    usuarios = auth.listar_usuarios()
+
+    if usuarios:
+        # Tabla HTML/estática para que la información se mantenga visible
+        # tanto en modo oscuro como en modo blanco.
+        tabla_usuarios = [
+            {
+                "ID": u[0],
+                "Usuario": u[1],
+                "Nombre": u[2],
+                "Rol": (
+                    "Administrador"
+                    if u[3] == "admin"
+                    else "Empleado"
+                ),
+                "Estado": (
+                    "Activo" if u[4] else "Inactivo"
+                ),
+                "Creado": u[5]
+            }
+            for u in usuarios
+        ]
+
+        st.table(
+            tabla_usuarios,
+            border=True,
+            width="stretch",
+            hide_index=True
+        )
+    else:
+        st.info("Todavía no hay usuarios registrados.")
 
 
 # ==========================================================
