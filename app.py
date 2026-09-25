@@ -3007,15 +3007,26 @@ def pantalla_acceso():
             background: radial-gradient(circle at 50% 0%, rgba(45,129,119,0.16), transparent 34rem), #0f1418;
         }
 
+        /* Centrado real del acceso: horizontal + vertical */
         [data-testid="stMainBlockContainer"] {
+            width: 100% !important;
             max-width: 620px !important;
-            padding: 5rem 1.25rem 3rem !important;
-            margin: auto;
+            min-height: 100vh !important;
+            padding: 2rem 1.25rem !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+        }
+
+        [data-testid="stMainBlockContainer"] > div {
+            width: 100% !important;
         }
 
         .login-brand {
             text-align: center;
-            margin-bottom: 1.4rem;
+            margin-bottom: 1.15rem;
         }
         .login-brand-badge {
             display: inline-block;
@@ -3046,8 +3057,8 @@ def pantalla_acceso():
             background: rgba(26,34,40,0.94) !important;
             border: 1px solid #2b3942 !important;
             border-radius: 18px !important;
-            padding: 1.45rem !important;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.28) !important;
+            padding: 1.35rem 1.45rem !important;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.30) !important;
         }
         [data-testid="stForm"] label {
             color: #d9e1e5 !important;
@@ -4550,4 +4561,4 @@ with st.container(key="theme_toggle"):
         on_click=alternar_tema,
         help="Cambiar entre modo claro y modo oscuro"
     )
-
+    
