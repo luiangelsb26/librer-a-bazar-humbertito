@@ -2325,8 +2325,68 @@ if "usuario" not in st.session_state:
     st.stop()
 
 
-usuario_actual = st.session_state["usuario"]
-es_admin = usuario_actual["rol"] == "admin"
+def normalizar_usuario(usuario):
+    """Convierte el usuario de autenticación a un diccionario compatible."""
+    if usuario is None:
+        return None
+
+    if isinstance(usuario, dict):
+        return {
+            "id": usuario.get("id"),
+            "username": usuario.get("username", ""),
+            "nombre": usuario.get("nombre", ""),
+            "rol": usuario.get("rol", "empleado"),
+            "activo": usuario.get("activo", 1),
+        }
+
+    if isinstance(usuario, (tuple, list)):
+        datos = list(usuario)
+
+        # Formato habitual: id, username, nombre, rol, activo
+        if len(datos) >= 5 and str(datos[3]).lower() in ("admin", "empleado"):
+            return {
+                "id": datos[0],
+                "username": datos[1],
+                "nombre": datos[2],
+                "rol": str(datos[3]).lower(),
+                "activo": datos[4],
+            }
+
+        # Formato alternativo: id, username, nombre, password, rol, activo
+        if len(datos) >= 6 and str(datos[4]).lower() in ("admin", "empleado"):
+            return {
+                "id": datos[0],
+                "username": datos[1],
+                "nombre": datos[2],
+                "rol": str(datos[4]).lower(),
+                "activo": datos[5],
+            }
+
+        # Último recurso: localizar el rol dentro de la fila.
+        for indice, valor in enumerate(datos):
+            if str(valor).lower() in ("admin", "empleado"):
+                return {
+                    "id": datos[0] if len(datos) > 0 else None,
+                    "username": datos[1] if len(datos) > 1 else "",
+                    "nombre": datos[2] if len(datos) > 2 else "",
+                    "rol": str(valor).lower(),
+                    "activo": 1,
+                }
+
+    return None
+
+
+# Normalizar también sesiones antiguas que hayan guardado una tupla.
+usuario_actual = normalizar_usuario(st.session_state.get("usuario"))
+
+if usuario_actual is None:
+    st.session_state.pop("usuario", None)
+    st.session_state.pop("menu", None)
+    pantalla_acceso()
+    st.stop()
+
+st.session_state["usuario"] = usuario_actual
+es_admin = usuario_actual.get("rol", "empleado") == "admin"
 
 
 # ==========================================================
