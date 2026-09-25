@@ -2180,6 +2180,323 @@ else:
     </style>
     """, unsafe_allow_html=True)
 
+
+
+# ==========================================================
+# INTERFAZ PREMIUM - HUMBERTITO IA
+# ==========================================================
+
+st.markdown("""
+<style>
+/* ---------- ESTRUCTURA GENERAL ---------- */
+[data-testid="stMainBlockContainer"] {
+    max-width: 1480px !important;
+    padding: 1.35rem 2.2rem 3rem !important;
+}
+[data-testid="stMain"] {
+    min-width: 0;
+}
+[data-testid="stAppViewContainer"] {
+    background: #f4f7f8;
+}
+[data-testid="stHeader"] {
+    background: transparent !important;
+}
+
+/* ---------- TITULOS ---------- */
+[data-testid="stMain"] h1 {
+    font-size: clamp(1.8rem, 2.8vw, 2.55rem) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.035em !important;
+    margin-bottom: 0.2rem !important;
+}
+[data-testid="stMain"] h2 {
+    font-size: clamp(1.35rem, 2vw, 1.8rem) !important;
+    font-weight: 780 !important;
+    letter-spacing: -0.025em !important;
+    border: 0 !important;
+    padding-bottom: 0.2rem !important;
+}
+[data-testid="stMain"] h3 {
+    font-weight: 720 !important;
+}
+
+/* ---------- METRICAS ---------- */
+[data-testid="stMetric"] {
+    position: relative !important;
+    min-height: 7.2rem !important;
+    padding: 1.05rem 1.15rem !important;
+    border: 1px solid rgba(45,129,119,0.16) !important;
+    border-radius: 16px !important;
+    background: rgba(255,255,255,0.92) !important;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.07) !important;
+    overflow: hidden !important;
+}
+[data-testid="stMetric"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: #2d8177;
+}
+[data-testid="stMetricLabel"] {
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.055em !important;
+    opacity: 0.68 !important;
+}
+[data-testid="stMetricValue"] {
+    font-size: clamp(1.45rem, 2.5vw, 2.05rem) !important;
+    font-weight: 800 !important;
+}
+
+/* ---------- TARJETAS RAPIDAS ---------- */
+.quick-card {
+    min-height: 10rem !important;
+    padding: 1.2rem !important;
+    border: 1px solid rgba(45,129,119,0.15) !important;
+    border-radius: 16px !important;
+    background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(244,248,248,0.96)) !important;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.06) !important;
+}
+.quick-card strong {
+    font-size: 1rem !important;
+    font-weight: 780 !important;
+}
+
+/* ---------- FORMULARIOS ---------- */
+[data-testid="stForm"] {
+    border: 1px solid rgba(148,163,184,0.25) !important;
+    border-radius: 16px !important;
+    background: rgba(255,255,255,0.72) !important;
+    box-shadow: 0 10px 28px rgba(15,23,42,0.05) !important;
+    padding: 1.25rem !important;
+}
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-baseweb="select"] > div {
+    border-radius: 10px !important;
+}
+
+/* ---------- BOTONES PRINCIPALES ---------- */
+[data-testid="stMain"] button {
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+}
+[data-testid="stMain"] button[kind="primary"],
+[data-testid="stMain"] button[kind="primaryFormSubmit"] {
+    background: #2d8177 !important;
+    border-color: #2d8177 !important;
+    color: #ffffff !important;
+    box-shadow: 0 5px 14px rgba(45,129,119,0.20) !important;
+}
+[data-testid="stMain"] button[kind="primary"]:hover,
+[data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
+    background: #24665f !important;
+    border-color: #24665f !important;
+}
+
+/* ---------- TABLAS ---------- */
+[data-testid="stDataFrame"],
+[data-testid="stTable"] {
+    border: 1px solid #dce4e7 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    box-shadow: 0 7px 20px rgba(15,23,42,0.05) !important;
+}
+[data-testid="stTable"] th {
+    font-size: 0.76rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.045em !important;
+    font-weight: 800 !important;
+}
+[data-testid="stTable"] td,
+[data-testid="stTable"] th {
+    padding: 0.72rem 0.8rem !important;
+}
+
+/* ---------- ALERTAS ---------- */
+[data-testid="stAlert"] {
+    border-radius: 12px !important;
+}
+
+/* ---------- EXPANDERS ---------- */
+[data-testid="stExpander"] {
+    border-radius: 12px !important;
+    border: 1px solid rgba(148,163,184,0.25) !important;
+    overflow: hidden !important;
+}
+
+/* ---------- SIDEBAR ---------- */
+[data-testid="stSidebar"] {
+    width: 292px !important;
+    min-width: 292px !important;
+    max-width: 292px !important;
+    background: #182027 !important;
+    border-right: 1px solid #2b3942 !important;
+}
+[data-testid="stSidebar"] > div:first-child {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0.85rem 0.8rem 1rem !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #50616b transparent !important;
+}
+[data-testid="stSidebar"] .sidebar-brand {
+    padding: 1rem 1rem 1.1rem !important;
+    margin-bottom: 0.8rem !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-left: 3px solid #2d8177 !important;
+    border-radius: 0 14px 14px 0 !important;
+    background: linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)) !important;
+}
+[data-testid="stSidebar"] .sidebar-brand-kicker {
+    font-size: 0.62rem !important;
+    letter-spacing: 0.14em !important;
+    font-weight: 800 !important;
+    color: #7fbab4 !important;
+    margin-bottom: 0.35rem !important;
+}
+[data-testid="stSidebar"] .sidebar-brand-name {
+    font-size: 1.08rem !important;
+    font-weight: 800 !important;
+    line-height: 1.12 !important;
+    color: #f5f8f9 !important;
+}
+[data-testid="stSidebar"] .sidebar-brand-subtitle {
+    margin-top: 0.5rem !important;
+    font-size: 0.72rem !important;
+    color: #9eabb2 !important;
+}
+[data-testid="stSidebar"] .user-card {
+    padding: 0.9rem !important;
+    margin: 0.45rem 0 0.7rem !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,0.035) !important;
+}
+[data-testid="stSidebar"] .user-name {
+    color: #f5f8f9 !important;
+    font-weight: 750 !important;
+}
+[data-testid="stSidebar"] .user-role,
+[data-testid="stSidebar"] .user-status-text {
+    color: #9eabb2 !important;
+}
+[data-testid="stSidebar"] .user-status-dot {
+    display: inline-block !important;
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 50% !important;
+    background: #35b78f !important;
+    margin-right: 0.35rem !important;
+}
+[data-testid="stSidebar"] .sidebar-section-title {
+    margin: 1rem 0 0.55rem !important;
+    color: #81919a !important;
+    font-size: 0.64rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.13em !important;
+    text-transform: uppercase !important;
+}
+[data-testid="stSidebar"] .stButton > button {
+    min-height: 42px !important;
+    margin-bottom: 5px !important;
+    padding: 0.55rem 0.75rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: #cbd5da !important;
+    box-shadow: none !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    font-size: 0.84rem !important;
+    font-weight: 650 !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(45,129,119,0.12) !important;
+    border-color: rgba(45,129,119,0.28) !important;
+    color: #ffffff !important;
+}
+[data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+    background: #2d8177 !important;
+    border-color: #2d8177 !important;
+    color: #ffffff !important;
+    box-shadow: 0 5px 14px rgba(45,129,119,0.18) !important;
+}
+[data-testid="stSidebar"] [class*="st-key-cerrar_sesion"] button {
+    color: #aeb9bf !important;
+    background: rgba(255,255,255,0.035) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+    justify-content: center !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    background: rgba(255,255,255,0.025) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+    color: #d5dde1 !important;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 900px) {
+    [data-testid="stMainBlockContainer"] {
+        padding: 1rem 1rem 2rem !important;
+    }
+}
+@media (max-width: 640px) {
+    [data-testid="stSidebar"] {
+        width: 270px !important;
+        min-width: 270px !important;
+        max-width: 270px !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+if st.session_state.tema_blanco:
+    st.markdown("""
+    <style>
+        [data-testid="stAppViewContainer"] { background: #f4f7f8 !important; }
+        [data-testid="stMain"] { color: #263238 !important; }
+        [data-testid="stMetric"], [data-testid="stForm"] { background: #ffffff !important; }
+        [data-testid="stSidebar"] { background: #f8fafb !important; border-right-color: #dce5e8 !important; }
+        [data-testid="stSidebar"] .sidebar-brand { background: #ffffff !important; border-color: #dce5e8 !important; border-left-color: #2d8177 !important; }
+        [data-testid="stSidebar"] .sidebar-brand-name { color: #263238 !important; }
+        [data-testid="stSidebar"] .sidebar-brand-subtitle, [data-testid="stSidebar"] .user-role { color: #64748b !important; }
+        [data-testid="stSidebar"] .user-card { background: #ffffff !important; border-color: #dce5e8 !important; }
+        [data-testid="stSidebar"] .user-name { color: #263238 !important; }
+        [data-testid="stSidebar"] .stButton > button { color: #334155 !important; }
+        [data-testid="stSidebar"] .stButton > button:hover { background: #edf7f5 !important; color: #24665f !important; }
+        [data-testid="stSidebar"] [class*="st-key-menu_active"] button { background: #2d8177 !important; color: #ffffff !important; }
+        [data-testid="stSidebar"] [class*="st-key-cerrar_sesion"] button { background: #ffffff !important; border-color: #dce5e8 !important; color: #475569 !important; }
+        [data-testid="stSidebar"] [data-testid="stExpander"] { background: #ffffff !important; border-color: #dce5e8 !important; }
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary { color: #334155 !important; }
+        [data-testid="stTable"] th { background: #eef4f5 !important; color: #263238 !important; }
+        [data-testid="stTable"] td { background: #ffffff !important; color: #334155 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+        [data-testid="stAppViewContainer"] { background: #11161b !important; }
+        [data-testid="stMain"] { color: #e7edf0 !important; }
+        [data-testid="stMetric"], [data-testid="stForm"] { background: #1a2228 !important; border-color: #2b3942 !important; }
+        [data-testid="stMetricLabel"] { color: #aebbc2 !important; }
+        [data-testid="stTable"], [data-testid="stDataFrame"] { border-color: #2b3942 !important; }
+        [data-testid="stTable"] th { background: #202a31 !important; color: #e7edf0 !important; }
+        [data-testid="stTable"] td { background: #171e23 !important; color: #d9e1e5 !important; border-color: #2b3942 !important; }
+        [data-testid="stForm"] label { color: #d9e1e5 !important; }
+        .quick-card { background: linear-gradient(145deg, #1a2228, #171e23) !important; border-color: #2b3942 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
 with st.sidebar:
     st.markdown(
         """
@@ -2228,24 +2545,75 @@ def pantalla_acceso():
 
         /* Fondo y espacio de la pantalla */
         .stApp {
-            background: #0e1117;
+            background: radial-gradient(circle at 50% 0%, rgba(45,129,119,0.16), transparent 34rem), #0f1418;
         }
 
-        /* Centrar el contenido principal */
         [data-testid="stMainBlockContainer"] {
-            max-width: 1000px;
-            padding-top: 3rem;
+            max-width: 620px !important;
+            padding: 5rem 1.25rem 3rem !important;
             margin: auto;
+        }
+
+        .login-brand {
+            text-align: center;
+            margin-bottom: 1.4rem;
+        }
+        .login-brand-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border: 1px solid rgba(45,129,119,0.45);
+            border-radius: 999px;
+            color: #8ed1c8;
+            background: rgba(45,129,119,0.10);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+        .login-brand-title {
+            margin-top: 0.8rem;
+            color: #ffffff;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+        .login-brand-subtitle {
+            margin-top: 0.35rem;
+            color: #9eabb2;
+            font-size: 0.88rem;
+        }
+        [data-testid="stForm"] {
+            background: rgba(26,34,40,0.94) !important;
+            border: 1px solid #2b3942 !important;
+            border-radius: 18px !important;
+            padding: 1.45rem !important;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.28) !important;
+        }
+        [data-testid="stForm"] label {
+            color: #d9e1e5 !important;
+            font-weight: 650 !important;
+        }
+        [data-testid="stForm"] input {
+            background: #11181d !important;
+            color: #ffffff !important;
+            border-color: #34434c !important;
+        }
+        [data-testid="stForm"] button[kind="primaryFormSubmit"] {
+            min-height: 2.9rem !important;
+            font-size: 0.92rem !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
     st.markdown(
-        "<h1 style='text-align:center'>LIBRERÍA BAZAR HUMBERTITO</h1>",
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        "<h3 style='text-align:center'>Acceso al sistema</h3>",
+        """
+        <div class="login-brand">
+            <div class="login-brand-badge">SISTEMA DE GESTIÓN</div>
+            <div class="login-brand-title">LIBRERÍA BAZAR “HUMBERTITO”</div>
+            <div class="login-brand-subtitle">Gestión comercial inteligente · Humbertito IA</div>
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
