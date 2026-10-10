@@ -2652,6 +2652,7 @@ st.markdown("""
 /* ---------- ESTRUCTURA GENERAL ---------- */
 [data-testid="stMainBlockContainer"] {
     max-width: 1480px !important;
+    margin-top: -0.75rem !important;
     padding: 0 2.2rem 3rem !important;
 }
 [data-testid="stMain"] {
