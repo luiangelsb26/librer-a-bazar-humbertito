@@ -3603,7 +3603,7 @@ st.markdown("""
     <div>
         <h1 class="hb-page-title">Humbertito IA</h1>
         <p class="hb-page-subtitle">
-            Gestión comercial inteligente · apoyo a la toma de decisiones gerenciales
+            Gestión Comercial Inteligente · Apoyo a la Toma de Decisiones Gerenciales
         </p>
     </div>
     <div class="hb-status-pill">
