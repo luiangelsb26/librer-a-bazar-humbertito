@@ -948,7 +948,7 @@ st.markdown("""
 }
 .hb-page-header {
     display:flex; align-items:flex-end; justify-content:space-between;
-    gap:1rem; margin:.2rem 0 1.45rem;
+    gap:1rem; margin:0 0 1.45rem;
 }
 .hb-page-title {
     margin:0; font-family:Georgia,"Times New Roman",serif;
@@ -1821,7 +1821,7 @@ st.markdown("""
 }
 .hb-page-header {
     display:flex; align-items:flex-end; justify-content:space-between;
-    gap:1rem; margin:.2rem 0 1.45rem;
+    gap:1rem; margin:0 0 1.45rem;
 }
 .hb-page-title {
     margin:0; font-family:Georgia,"Times New Roman",serif;
@@ -2652,10 +2652,11 @@ st.markdown("""
 /* ---------- ESTRUCTURA GENERAL ---------- */
 [data-testid="stMainBlockContainer"] {
     max-width: 1480px !important;
-    padding: 1.35rem 2.2rem 3rem !important;
+    padding: 0.6rem 2.2rem 3rem !important;
 }
 [data-testid="stMain"] {
     min-width: 0;
+    padding-top: 0 !important;
 }
 [data-testid="stAppViewContainer"] {
     background: #f4f7f8;
