@@ -582,11 +582,12 @@ st.markdown("""
             border-radius: 0.65rem;
             border-top: 3px solid var(--humbertito-accent);
             box-shadow: 0 8px 20px rgba(20, 28, 32, 0.07);
-            transition: transform 160ms ease, box-shadow 160ms ease;
+            transition: none !important;
+            transform: none !important;
         }
         [data-testid="stMetric"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(20, 28, 32, 0.12);
+            transform: none !important;
+            box-shadow: 0 8px 20px rgba(20, 28, 32, 0.07);
         }
         [data-testid="stMetricLabel"] {
             font-weight: 650;
@@ -619,11 +620,12 @@ st.markdown("""
             min-height: 2.55rem;
             border-radius: 0.45rem;
             font-weight: 650;
-            transition: transform 140ms ease, box-shadow 140ms ease;
+            transition: none !important;
+            transform: none !important;
         }
         [data-testid="stMain"] button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transform: none !important;
+            box-shadow: none !important;
         }
         [data-testid="stTabs"] [role="tablist"] {
             gap: 0.75rem;
@@ -1019,7 +1021,7 @@ st.markdown("""
 [data-testid="stMain"] button[kind="primary"]:hover,
 [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
     background:linear-gradient(135deg,#3ca193,#2f8178) !important;
-    border-color:#3ca193 !important; transform:translateY(-1px) !important;
+    border-color:#3ca193 !important; transform:none !important; box-shadow:0 7px 18px rgba(47,143,131,.20) !important;
 }
 [data-testid="stTabs"] [role="tablist"] {
     gap:.3rem; padding:.25rem; border:1px solid var(--hb-dark-border);
@@ -1892,7 +1894,7 @@ st.markdown("""
 [data-testid="stMain"] button[kind="primary"]:hover,
 [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
     background:linear-gradient(135deg,#3ca193,#2f8178) !important;
-    border-color:#3ca193 !important; transform:translateY(-1px) !important;
+    border-color:#3ca193 !important; transform:none !important; box-shadow:0 7px 18px rgba(47,143,131,.20) !important;
 }
 [data-testid="stTabs"] [role="tablist"] {
     gap:.3rem; padding:.25rem; border:1px solid var(--hb-dark-border);
