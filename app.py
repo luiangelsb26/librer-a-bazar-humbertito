@@ -1,7 +1,5 @@
 import streamlit as st
-import sqlite3
 import importlib
-from pathlib import Path
 from datetime import datetime
 import analysis
 import prediction
@@ -20,6 +18,8 @@ st.set_page_config(
     page_icon="B",
     layout="wide"
 )
+
+database.configurar_desde_streamlit()
 
 
 # ==========================================================
@@ -3113,8 +3113,6 @@ with st.sidebar:
     )
     st.divider()
 
-DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
-DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 database.crear_base_datos()
 
 
@@ -3123,6 +3121,12 @@ database.crear_base_datos()
 # ==========================================================
 
 auth.inicializar()
+
+if not database.usar_supabase():
+    st.warning(
+        "La app está usando SQLite local. Configura SUPABASE_DB_URL "
+        "en los Secrets de Streamlit Cloud para usar la base persistente."
+    )
 
 
 def pantalla_acceso():
@@ -3374,7 +3378,7 @@ es_admin = usuario_actual.get("rol", "empleado") == "admin"
 # ==========================================================
 
 def conectar():
-    return sqlite3.connect(DB_PATH)
+    return database.conectar()
 
 
 # ==========================================================
@@ -3460,10 +3464,9 @@ def registrar_producto(
         con.commit()
         return True, "Producto registrado correctamente."
 
-    except sqlite3.IntegrityError:
-        return False, "El código del producto ya existe."
-
     except Exception as e:
+        if database.es_error_integridad(e):
+            return False, "El código del producto ya existe."
         return False, f"Error: {e}"
 
     finally:
@@ -3525,9 +3528,10 @@ def registrar_venta(producto_id, cantidad):
         cur = con.execute("""
             INSERT INTO ventas (fecha, total)
             VALUES (?, ?)
+            RETURNING id
         """, (fecha, subtotal))
 
-        venta_id = cur.lastrowid
+        venta_id = cur.fetchone()[0]
 
         con.execute("""
             INSERT INTO detalle_ventas (
@@ -3626,9 +3630,10 @@ def registrar_compra(producto_id, cantidad, precio_compra):
         cur = con.execute("""
             INSERT INTO compras (fecha, total)
             VALUES (?, ?)
+            RETURNING id
         """, (fecha, subtotal))
 
-        compra_id = cur.lastrowid
+        compra_id = cur.fetchone()[0]
 
         con.execute("""
             INSERT INTO detalle_compras (

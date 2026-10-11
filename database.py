@@ -1,76 +1,175 @@
+import os
 import sqlite3
 from pathlib import Path
 
-# Ubicación de la base de datos
+# Ubicación de la base de datos local
 DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+_DATABASE_URL = os.environ.get("SUPABASE_DB_URL")
+
+
+class _CursorPostgres:
+    def __init__(self, cursor):
+        self._cursor = cursor
+
+    def execute(self, consulta, parametros=()):
+        self._cursor.execute(consulta.replace("?", "%s"), parametros)
+        return self
+
+    def executemany(self, consulta, parametros):
+        self._cursor.executemany(consulta.replace("?", "%s"), parametros)
+        return self
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchmany(self, cantidad=None):
+        if cantidad is None:
+            return self._cursor.fetchmany()
+        return self._cursor.fetchmany(cantidad)
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    @property
+    def description(self):
+        return self._cursor.description
+
+
+class _ConexionPostgres:
+    def __init__(self, conexion):
+        self._conexion = conexion
+
+    def cursor(self):
+        return _CursorPostgres(self._conexion.cursor())
+
+    def execute(self, consulta, parametros=()):
+        return self.cursor().execute(consulta, parametros)
+
+    def executemany(self, consulta, parametros):
+        return self.cursor().executemany(consulta, parametros)
+
+    def commit(self):
+        self._conexion.commit()
+
+    def rollback(self):
+        self._conexion.rollback()
+
+    def close(self):
+        self._conexion.close()
+
+
+def configurar_desde_streamlit():
+    """Lee la URL de Supabase desde los secrets de Streamlit, si existe."""
+    global _DATABASE_URL
+
+    if _DATABASE_URL:
+        return
+
+    import streamlit as st
+    from streamlit.errors import StreamlitSecretNotFoundError
+
+    try:
+        _DATABASE_URL = st.secrets.get("SUPABASE_DB_URL")
+    except StreamlitSecretNotFoundError:
+        return
+
+
+def usar_supabase():
+    return bool(_DATABASE_URL)
+
+
+def es_error_integridad(error):
+    if isinstance(error, sqlite3.IntegrityError):
+        return True
+
+    try:
+        from psycopg import IntegrityError
+    except ModuleNotFoundError:
+        return False
+
+    return isinstance(error, IntegrityError)
 
 
 def conectar():
-    """Conecta con la base de datos SQLite."""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    """Conecta a Supabase si está configurado; de lo contrario, a SQLite local."""
+    if _DATABASE_URL:
+        try:
+            import psycopg
+        except ModuleNotFoundError as error:
+            raise RuntimeError(
+                "Falta psycopg para conectarse a Supabase. "
+                "Instala las dependencias de requirements.txt."
+            ) from error
+
+        return _ConexionPostgres(
+            psycopg.connect(_DATABASE_URL, connect_timeout=10)
+        )
+
     return sqlite3.connect(DB_PATH)
 
 
 def crear_base_datos():
-    """Crea las tablas principales del sistema."""
+    """Crea las tablas principales en SQLite o PostgreSQL."""
     conexion = conectar()
     cursor = conexion.cursor()
+    id_type = (
+        "SERIAL PRIMARY KEY"
+        if usar_supabase()
+        else "INTEGER PRIMARY KEY AUTOINCREMENT"
+    )
+    real_type = "DOUBLE PRECISION" if usar_supabase() else "REAL"
 
-    # Tabla de productos
-    cursor.execute("""
+    cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS productos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             codigo TEXT UNIQUE NOT NULL,
             nombre TEXT NOT NULL,
             categoria TEXT,
-            precio_compra REAL NOT NULL,
-            precio_venta REAL NOT NULL,
+            precio_compra {real_type} NOT NULL,
+            precio_venta {real_type} NOT NULL,
             stock INTEGER NOT NULL DEFAULT 0,
             stock_minimo INTEGER NOT NULL DEFAULT 5
         )
     """)
 
-    # Tabla de ventas
-    cursor.execute("""
+    cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS ventas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             fecha TEXT NOT NULL,
-            total REAL NOT NULL
+            total {real_type} NOT NULL
         )
     """)
 
-    # Detalle de cada venta
-    cursor.execute("""
+    cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS detalle_ventas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             venta_id INTEGER NOT NULL,
             producto_id INTEGER NOT NULL,
             cantidad INTEGER NOT NULL,
-            precio_unitario REAL NOT NULL,
-            subtotal REAL NOT NULL,
+            precio_unitario {real_type} NOT NULL,
+            subtotal {real_type} NOT NULL,
             FOREIGN KEY (venta_id) REFERENCES ventas(id),
             FOREIGN KEY (producto_id) REFERENCES productos(id)
         )
     """)
 
-    # Tabla de compras
-    cursor.execute("""
+    cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS compras (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             fecha TEXT NOT NULL,
-            total REAL NOT NULL
+            total {real_type} NOT NULL
         )
     """)
 
-    # Detalle de compras
-    cursor.execute("""
+    cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS detalle_compras (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             compra_id INTEGER NOT NULL,
             producto_id INTEGER NOT NULL,
             cantidad INTEGER NOT NULL,
-            precio_unitario REAL NOT NULL,
-            subtotal REAL NOT NULL,
+            precio_unitario {real_type} NOT NULL,
+            subtotal {real_type} NOT NULL,
             FOREIGN KEY (compra_id) REFERENCES compras(id),
             FOREIGN KEY (producto_id) REFERENCES productos(id)
         )
@@ -85,9 +184,7 @@ def reiniciar_datos():
     conexion = conectar()
 
     try:
-        conexion.execute("PRAGMA foreign_keys = ON")
         cursor = conexion.cursor()
-
         tablas = (
             "detalle_ventas",
             "detalle_compras",
@@ -101,13 +198,21 @@ def reiniciar_datos():
             registros_eliminados[tabla] = cursor.execute(
                 f"SELECT COUNT(*) FROM {tabla}"
             ).fetchone()[0]
-            cursor.execute(f"DELETE FROM {tabla}")
 
-        for tabla in tablas:
-            cursor.execute(
-                "DELETE FROM sqlite_sequence WHERE name = ?",
-                (tabla,)
+        if usar_supabase():
+            lista_tablas = ", ".join(tablas)
+            conexion.execute(
+                f"TRUNCATE TABLE {lista_tablas} RESTART IDENTITY"
             )
+        else:
+            for tabla in tablas:
+                cursor.execute(f"DELETE FROM {tabla}")
+
+            for tabla in tablas:
+                cursor.execute(
+                    "DELETE FROM sqlite_sequence WHERE name = ?",
+                    (tabla,)
+                )
 
         conexion.commit()
         return registros_eliminados

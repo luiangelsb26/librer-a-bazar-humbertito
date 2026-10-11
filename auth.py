@@ -1,24 +1,14 @@
-import sqlite3
 import hashlib
-from pathlib import Path
 from datetime import datetime
+import database
 
 
 # ==========================================================
 # CONFIGURACIÓN DE LA BASE DE DATOS
 # ==========================================================
 
-DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
-
-DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-
-# ==========================================================
-# CONEXIÓN
-# ==========================================================
-
 def conectar():
-    return sqlite3.connect(DB_PATH)
+    return database.conectar()
 
 
 # ==========================================================
@@ -39,10 +29,15 @@ def inicializar():
 
     con = conectar()
     cur = con.cursor()
+    id_type = (
+        "SERIAL PRIMARY KEY"
+        if database.usar_supabase()
+        else "INTEGER PRIMARY KEY AUTOINCREMENT"
+    )
 
-    cur.execute("""
+    cur.execute(f"""
         CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             username TEXT UNIQUE NOT NULL,
             nombre TEXT NOT NULL,
             password TEXT NOT NULL,
