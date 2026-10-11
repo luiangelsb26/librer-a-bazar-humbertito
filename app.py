@@ -1142,6 +1142,55 @@ body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"]
 body:has(.hb-light-mode) .hb-status-pill {
     color:#27776f; background:#e8f5f2; border-color:#cde7e2;
 }
+
+/* ---------- AJUSTES FINOS ---------- */
+[data-testid="stTabs"] [role="tablist"] {
+    gap:.85rem !important;
+    padding-inline:.35rem !important;
+}
+[data-testid="stTabs"] button[role="tab"] {
+    padding-inline:.8rem !important;
+}
+[data-testid="stMain"] h2 {
+    padding-bottom:.35rem !important;
+    border-bottom:1px solid rgba(148,163,184,.14) !important;
+}
+[data-testid="stMain"] button,
+[data-testid="stTabs"] button[role="tab"],
+[data-testid="stSidebar"] .stButton > button {
+    transition:background-color 140ms ease,border-color 140ms ease,color 140ms ease,box-shadow 140ms ease !important;
+}
+[data-testid="stMain"] button:focus-visible,
+[data-testid="stSidebar"] button:focus-visible,
+[data-testid="stSidebar"] input:focus-visible,
+[data-testid="stSidebar"] [role="combobox"]:focus-visible,
+[data-testid="stTabs"] [role="tab"]:focus-visible,
+[data-testid="stMain"] a:focus-visible,
+[data-testid="stMain"] input:focus-visible,
+[data-testid="stMain"] textarea:focus-visible,
+[data-testid="stMain"] [role="combobox"]:focus-visible {
+    outline:2px solid rgba(85,184,169,.72) !important;
+    outline-offset:2px !important;
+}
+[data-testid="stMain"] [data-testid="stTextInput"] input,
+[data-testid="stMain"] [data-testid="stNumberInput"] input,
+[data-testid="stMain"] [data-testid="stTextArea"] textarea,
+[data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"] {
+    transition:border-color 140ms ease,box-shadow 140ms ease !important;
+}
+[data-testid="stMain"] [data-testid="stAlert"],
+[data-testid="stMain"] [data-testid="stAlertContainer"] {
+    border-radius:12px !important;
+}
+[data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
+    background:rgba(85,184,169,.055) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] h2 {
+    border-bottom-color:rgba(71,96,105,.14) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
+    background:#f2f8f7 !important;
+}
 @media (max-width:900px) {
     [data-testid="stMainBlockContainer"] { padding:1.4rem 1rem 2.5rem !important; }
     .hb-page-header { align-items:flex-start; flex-direction:column; }
@@ -2905,6 +2954,95 @@ st.markdown("""
 }
 [data-testid="stSidebar"] [data-testid="stExpander"] summary {
     color: #d5dde1 !important;
+}
+
+/* ---------- AVISOS ---------- */
+[data-testid="stMain"] [data-testid="stAlert"] {
+    max-width:980px !important;
+    margin:.7rem 0 !important;
+    overflow:visible !important;
+}
+[data-testid="stMain"] [data-testid="stAlertContainer"] {
+    display:flex !important;
+    align-items:center !important;
+    box-sizing:border-box !important;
+    min-height:3rem !important;
+    padding:.35rem .9rem !important;
+    border:1px solid rgba(148,163,184,.18) !important;
+    border-left-width:3px !important;
+    border-radius:11px !important;
+    box-shadow:0 5px 16px rgba(0,0,0,.12) !important;
+}
+[data-testid="stMain"] [data-testid="stAlertContainer"] > div {
+    display:flex !important;
+    align-items:center !important;
+    min-height:2.2rem !important;
+    width:100% !important;
+}
+[data-testid="stMain"] [data-testid^="stAlertContent"] {
+    display:flex !important;
+    align-items:center !important;
+    width:100% !important;
+}
+[data-testid="stMain"] [data-testid^="stAlertContent"] [data-testid="stMarkdownContainer"] {
+    display:flex !important;
+    align-items:center !important;
+    min-height:2.2rem !important;
+}
+[data-testid="stMain"] [data-testid^="stAlertContent"] p {
+    position:relative !important;
+    top:-5px !important;
+    margin:0 !important;
+    font-size:.88rem !important;
+    font-weight:550 !important;
+    line-height:1.4 !important;
+    color:#e8f0f5 !important;
+}
+[data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+    background:#12372c !important;
+    border-color:rgba(52,211,153,.32) !important;
+    border-left-color:#34b889 !important;
+}
+[data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
+    background:#152f47 !important;
+    border-color:rgba(96,165,250,.34) !important;
+    border-left-color:#60a5fa !important;
+}
+[data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
+    background:#403116 !important;
+    border-color:rgba(251,191,36,.34) !important;
+    border-left-color:#fbbf24 !important;
+}
+[data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
+    background:#43262c !important;
+    border-color:rgba(248,113,113,.34) !important;
+    border-left-color:#f87171 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlertContainer"] {
+    box-shadow:0 4px 12px rgba(35,52,61,.07) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlertContainer"] p {
+    color:#263840 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+    background:#ecf8f1 !important;
+    border-color:#c6e8d3 !important;
+    border-left-color:#32966b !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
+    background:#edf5fc !important;
+    border-color:#c9dced !important;
+    border-left-color:#4787c3 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
+    background:#fff8e8 !important;
+    border-color:#eedda9 !important;
+    border-left-color:#c28a16 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
+    background:#fff0ef !important;
+    border-color:#efcfcc !important;
+    border-left-color:#c45454 !important;
 }
 
 /* ---------- RESPONSIVE ---------- */
