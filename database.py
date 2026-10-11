@@ -31,6 +31,9 @@ class _CursorPostgres:
     def fetchall(self):
         return self._cursor.fetchall()
 
+    def close(self):
+        self._cursor.close()
+
     @property
     def description(self):
         return self._cursor.description

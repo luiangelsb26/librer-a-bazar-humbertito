@@ -1,12 +1,9 @@
-import sqlite3
-from pathlib import Path
 import pandas as pd
 import numpy as np
-
-DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
+import database
 
 def conectar():
-    return sqlite3.connect(DB_PATH)
+    return database.conectar()
 
 def obtener_ventas_producto(producto_id):
     con = conectar()

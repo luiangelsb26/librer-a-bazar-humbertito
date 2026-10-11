@@ -1,23 +1,18 @@
-import sqlite3
-from pathlib import Path
-
 import pandas as pd
 import numpy as np
+import database
 
 
 # ==========================================================
 # CONFIGURACIÓN
 # ==========================================================
 
-DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
-
-
 # ==========================================================
 # CONEXIÓN A LA BASE DE DATOS
 # ==========================================================
 
 def conectar():
-    return sqlite3.connect(DB_PATH)
+    return database.conectar()
 
 
 # ==========================================================
