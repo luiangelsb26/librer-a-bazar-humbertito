@@ -3098,6 +3098,199 @@ else:
     </style>
     """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+    html,
+    body,
+    [data-testid="stAppViewContainer"] {
+        scroll-behavior: smooth;
+        scrollbar-width: auto;
+        scrollbar-color: #71818a #182027;
+    }
+
+    [data-testid="stMain"] {
+        width: auto;
+        min-width: 0;
+        flex: 1 1 0%;
+    }
+
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
+        flex: 0 0 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        transition:
+            flex-basis 180ms ease,
+            width 180ms ease,
+            min-width 180ms ease,
+            max-width 180ms ease !important;
+    }
+
+    [data-testid="stMainBlockContainer"] {
+        width: 100% !important;
+        max-width: none !important;
+        align-self: stretch !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    [data-testid="stMainBlockContainer"] > div,
+    [data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"],
+    [data-testid="stMainBlockContainer"] [data-testid="column"] {
+        min-width: 0;
+    }
+
+    [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:has([data-testid="stMarkdownContainer"] style) {
+        display: none !important;
+    }
+
+    body {
+        overscroll-behavior-y: none;
+    }
+
+    [data-testid="stMainBlockContainer"] {
+        margin-top: 0 !important;
+        padding: 0.75rem clamp(1rem, 3vw, 2.75rem) 4rem !important;
+        scroll-padding-top: 0.75rem;
+    }
+
+    [data-testid="stMain"] h1 {
+        margin-top: 0 !important;
+        margin-bottom: 0.75rem !important;
+        line-height: 1.15 !important;
+        scroll-margin-top: 0.75rem;
+    }
+
+    [data-testid="stMain"] h2,
+    [data-testid="stMain"] h3 {
+        line-height: 1.25 !important;
+    }
+
+    [data-testid="stSidebar"] > div:first-child {
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior-y: contain !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin !important;
+        scrollbar-color: rgba(148, 163, 184, 0.62) transparent !important;
+    }
+
+    [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar {
+        width: 9px;
+    }
+
+    [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        border-radius: 999px;
+        background-color: rgba(148, 163, 184, 0.62);
+    }
+
+    [data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(148, 163, 184, 0.9);
+    }
+
+    [data-testid="stMain"]::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    [data-testid="stMain"]::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    [data-testid="stMain"]::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        border-radius: 999px;
+        background-color: rgba(113, 129, 138, 0.68);
+    }
+
+    [data-testid="stMain"]::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(113, 129, 138, 0.95);
+    }
+
+    [data-testid="stSidebar"] .stButton > button,
+    [data-testid="stMain"] button {
+        transition:
+            background-color 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            transform 160ms ease !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button:hover,
+    [data-testid="stMain"] button:hover {
+        transform: translateY(-1px) !important;
+    }
+
+    [data-testid="stSidebar"] button:focus-visible,
+    [data-testid="stMain"] button:focus-visible {
+        outline: 3px solid rgba(85, 184, 169, 0.55) !important;
+        outline-offset: 2px !important;
+    }
+
+    [data-testid="stMain"] [data-testid="stDataFrame"],
+    [data-testid="stMain"] [data-testid="stTable"] {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+
+    [class*="st-key-theme_toggle"] button {
+        width: auto !important;
+        min-width: 3.6rem !important;
+        padding: 0 0.8rem !important;
+        border-radius: 999px !important;
+    }
+
+    [class*="st-key-theme_toggle"] {
+        position: fixed !important;
+        top: 3rem !important;
+        right: 1.25rem !important;
+        z-index: 1000002 !important;
+        width: fit-content !important;
+        max-width: calc(100vw - 2rem) !important;
+    }
+
+    @media (max-width: 768px) {
+        [data-testid="stMainBlockContainer"] {
+            margin-top: 0 !important;
+            padding: 1rem 1rem 3rem !important;
+        }
+
+        [data-testid="stMain"] h1 {
+            font-size: clamp(1.5rem, 7vw, 2rem) !important;
+        }
+
+        [class*="st-key-theme_toggle"] {
+            top: 2.75rem !important;
+            right: 0.75rem !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html,
+        [data-testid="stAppViewContainer"] {
+            scroll-behavior: auto;
+        }
+
+        [data-testid="stSidebar"] .stButton > button,
+        [data-testid="stMain"] button {
+            transition: none !important;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
 with st.sidebar:
     st.markdown(
         """
@@ -3164,6 +3357,16 @@ def pantalla_acceso():
             display: flex !important;
             flex-direction: column !important;
             justify-content: center !important;
+        }
+
+        body:has(.login-brand) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
+            justify-content: center !important;
+        }
+
+        @media (max-height: 640px) {
+            body:has(.login-brand) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
+                justify-content: flex-start !important;
+            }
         }
 
         [data-testid="stMainBlockContainer"] > div {
@@ -3738,44 +3941,6 @@ def obtener_alertas_stock(limit=5):
 
 
 # ==========================================================
-# ENCABEZADO
-# ==========================================================
-
-st.markdown("""
-<div class="hb-page-header">
-    <div>
-        <h1 class="hb-page-title">Humbertito IA</h1>
-        <p class="hb-page-subtitle">
-            Gestión Comercial Inteligente · Apoyo a la Toma de Decisiones Gerenciales
-        </p>
-    </div>
-    <div class="hb-status-pill">
-        <span class="hb-status-dot"></span>
-        Sistema operativo
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-
-# ==========================================================
-# INDICADORES
-# ==========================================================
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    st.metric("Productos registrados", contar_productos())
-
-with c2:
-    st.metric("Stock disponible", obtener_stock())
-
-with c3:
-    st.metric("Estado del sistema", "Activo")
-
-st.divider()
-
-
-# ==========================================================
 # MENÚ
 # ==========================================================
 
@@ -3827,9 +3992,20 @@ with st.sidebar:
     if "menu" not in st.session_state:
         st.session_state.menu = "Inicio"
 
+    iconos_menu = {
+        "Inicio": ":material/home:",
+        "Dashboard gerencial": ":material/dashboard:",
+        "Productos": ":material/inventory_2:",
+        "Ventas": ":material/point_of_sale:",
+        "Compras": ":material/shopping_cart:",
+        "Análisis inteligente": ":material/query_stats:",
+        "Predicción de demanda": ":material/trending_up:",
+        "Administrar usuarios": ":material/manage_accounts:",
+    }
+
     for indice, opcion in enumerate(opciones_menu):
         clave = "menu_active" if opcion == st.session_state.menu else f"menu_item_{indice}"
-        if st.button(opcion, key=clave):
+        if st.button(opcion, key=clave, icon=iconos_menu[opcion]):
             st.session_state.menu = opcion
             st.rerun()
 
@@ -3877,7 +4053,7 @@ with st.sidebar:
 
 if menu == "Inicio":
 
-    st.header("Panel principal")
+    st.header("Panel principal", icon=":material/home:")
 
     operacion = resumen_operativo()
     alertas = obtener_alertas_stock(3)
@@ -3911,7 +4087,11 @@ if menu == "Inicio":
             """,
             unsafe_allow_html=True,
         )
-        if st.button("Ir a productos", key="quick_productos"):
+        if st.button(
+            "Ir a productos",
+            key="quick_productos",
+            icon=":material/inventory_2:",
+        ):
             st.session_state.menu = "Productos"
             st.rerun()
 
@@ -3925,7 +4105,11 @@ if menu == "Inicio":
             """,
             unsafe_allow_html=True,
         )
-        if st.button("Ir a ventas", key="quick_ventas"):
+        if st.button(
+            "Ir a ventas",
+            key="quick_ventas",
+            icon=":material/point_of_sale:",
+        ):
             st.session_state.menu = "Ventas"
             st.rerun()
 
@@ -3939,7 +4123,11 @@ if menu == "Inicio":
             """,
             unsafe_allow_html=True,
         )
-        if st.button("Ir a compras", key="quick_compras"):
+        if st.button(
+            "Ir a compras",
+            key="quick_compras",
+            icon=":material/shopping_cart:",
+        ):
             st.session_state.menu = "Compras"
             st.rerun()
 
@@ -3953,7 +4141,11 @@ if menu == "Inicio":
             """,
             unsafe_allow_html=True,
         )
-        if st.button("Ver dashboard", key="quick_dashboard"):
+        if st.button(
+            "Ver dashboard",
+            key="quick_dashboard",
+            icon=":material/dashboard:",
+        ):
             st.session_state.menu = "Dashboard gerencial"
             st.rerun()
 
@@ -3986,7 +4178,7 @@ if menu == "Inicio":
             unsafe_allow_html=True,
         )
 
-    st.info(
+    st.caption(
         "Utilice el menú lateral para gestionar productos, compras, ventas y análisis inteligente de la operación."
     )
 
@@ -4001,7 +4193,7 @@ elif menu == "Administrar usuarios":
         st.error("No tienes permisos para administrar usuarios.")
         st.stop()
 
-    st.header("Administración de usuarios")
+    st.header("Administración de usuarios", icon=":material/manage_accounts:")
 
     st.subheader("Crear una cuenta")
 
@@ -4077,11 +4269,11 @@ elif menu == "Administrar usuarios":
             for u in usuarios
         ]
 
-        st.table(
+        st.dataframe(
             tabla_usuarios,
-            border=True,
             width="stretch",
-            hide_index=True
+            hide_index=True,
+            height=360,
         )
     else:
         st.info("Todavía no hay usuarios registrados.")
@@ -4093,7 +4285,7 @@ elif menu == "Administrar usuarios":
 
 elif menu == "Dashboard gerencial":
 
-    st.header("Dashboard gerencial")
+    st.header("Dashboard gerencial", icon=":material/dashboard:")
 
     ventas, cantidad_ventas, compras, stock_bajo = resumen_dashboard()
 
@@ -4171,7 +4363,7 @@ elif menu == "Dashboard gerencial":
 
 elif menu == "Productos":
 
-    st.header("Gestión de productos")
+    st.header("Gestión de productos", icon=":material/inventory_2:")
 
     tab1, tab2 = st.tabs([
         "Registrar producto",
@@ -4267,7 +4459,12 @@ elif menu == "Productos":
                     "Stock mínimo": p[7]
                 })
 
-            st.table(tabla)
+            st.dataframe(
+                tabla,
+                width="stretch",
+                hide_index=True,
+                height=420,
+            )
 
         else:
 
@@ -4280,7 +4477,7 @@ elif menu == "Productos":
 
 elif menu == "Ventas":
 
-    st.header("Gestión de ventas")
+    st.header("Gestión de ventas", icon=":material/point_of_sale:")
 
     productos = obtener_productos()
 
@@ -4346,7 +4543,12 @@ elif menu == "Ventas":
                     "Subtotal": f"S/ {venta[6]:.2f}"
                 })
 
-            st.table(tabla)
+            st.dataframe(
+                tabla,
+                width="stretch",
+                hide_index=True,
+                height=420,
+            )
 
         else:
 
@@ -4359,7 +4561,7 @@ elif menu == "Ventas":
 
 elif menu == "Compras":
 
-    st.header("Gestión de compras")
+    st.header("Gestión de compras", icon=":material/shopping_cart:")
 
     productos = obtener_productos()
 
@@ -4433,7 +4635,12 @@ elif menu == "Compras":
                     "Subtotal": f"S/ {compra[6]:.2f}"
                 })
 
-            st.table(tabla)
+            st.dataframe(
+                tabla,
+                width="stretch",
+                hide_index=True,
+                height=420,
+            )
 
         else:
 
@@ -4446,7 +4653,7 @@ elif menu == "Compras":
 
 elif menu == "Análisis inteligente":
 
-    st.header("Análisis inteligente")
+    st.header("Análisis inteligente", icon=":material/query_stats:")
 
     resumen = analysis.resumen_ventas()
     tendencia = analysis.tendencia_ventas()
@@ -4492,7 +4699,7 @@ elif menu == "Análisis inteligente":
     top = analysis.productos_mas_vendidos()
 
     if not top.empty:
-        st.table(top)
+        st.dataframe(top, width="stretch", hide_index=True, height=360)
 
     else:
 
@@ -4505,7 +4712,7 @@ elif menu == "Análisis inteligente":
     bajo = analysis.productos_stock_bajo()
 
     if not bajo.empty:
-        st.table(bajo)
+        st.dataframe(bajo, width="stretch", hide_index=True, height=360)
 
     else:
 
@@ -4518,7 +4725,7 @@ elif menu == "Análisis inteligente":
     comportamiento = analysis.analisis_productos()
 
     if not comportamiento.empty:
-        st.table(
+        st.dataframe(
             comportamiento[
                 [
                     "codigo",
@@ -4529,7 +4736,10 @@ elif menu == "Análisis inteligente":
                     "unidades_vendidas",
                     "analisis"
                 ]
-            ]
+            ],
+            width="stretch",
+            hide_index=True,
+            height=420,
         )
 
     else:
@@ -4544,7 +4754,7 @@ elif menu == "Análisis inteligente":
 
 elif menu == "Predicción de demanda":
 
-    st.header("Predicción de demanda")
+    st.header("Predicción de demanda", icon=":material/trending_up:")
 
     st.write(
         "Estimación de la demanda futura a partir del historial "
@@ -4703,8 +4913,13 @@ elif menu == "Predicción de demanda":
 
 with st.container(key="theme_toggle"):
     st.button(
-        "C" if st.session_state.tema_blanco else "O",
+        "Tema",
         key="darkModeBtn",
+        icon=(
+            ":material/dark_mode:"
+            if st.session_state.tema_blanco
+            else ":material/light_mode:"
+        ),
         on_click=alternar_tema,
         help="Cambiar entre modo claro y modo oscuro"
     )
