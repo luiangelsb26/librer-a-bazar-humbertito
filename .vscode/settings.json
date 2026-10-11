@@ -1,0 +1,21 @@
+{
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.py[cod]": true,
+        "**/venv": true,
+        "**/.venv": true,
+        "**/.streamlit/secrets.toml": true,
+        "**/data/*.db": true,
+        "**/datamkdir": true,
+        "**/app_backup.py": true
+    },
+    "search.exclude": {
+        "**/__pycache__": true,
+        "**/venv": true,
+        "**/.venv": true,
+        "**/.streamlit/secrets.toml": true,
+        "**/data/*.db": true,
+        "**/datamkdir": true,
+        "**/app_backup.py": true
+    }
+}

@@ -1,9 +1,11 @@
 venv/
+.venv/
 __pycache__/
 *.py[cod]
 .streamlit/secrets.toml
 .streamlit/cache/
 data/*.db
 datamkdir/*
+app_backup.py
 .DS_Store
 Thumbs.db
