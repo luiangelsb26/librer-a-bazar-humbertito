@@ -1450,41 +1450,39 @@ if st.session_state.tema_blanco:
                 border-collapse: collapse !important;
             }
             .st-key-registered_users_table [data-testid="stTable"] {
-                overflow: hidden !important;
                 padding: 0 !important;
-                border: 2px solid #319889 !important;
-                border-radius: 14px !important;
-                background: #dff4ef !important;
-                box-shadow: 0 10px 24px rgba(37, 120, 108, .14) !important;
+                border: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                outline: none !important;
             }
             .st-key-registered_users_table [data-testid="stTable"] table {
                 border-collapse: separate !important;
                 border-spacing: 0 !important;
-                border: 2px solid #319889 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                border: 1px solid #b8cbce !important;
                 border-radius: 12px !important;
                 overflow: hidden !important;
                 background: #dff4ef !important;
             }
             .st-key-registered_users_table [data-testid="stTable"] th {
                 background: #2f8f83 !important;
-                border: 1px solid #67b8ad !important;
+                border: 0 !important;
+                border-right: 1px solid #72b9b0 !important;
+                border-bottom: 1px solid #72b9b0 !important;
                 color: #ffffff !important;
             }
             .st-key-registered_users_table [data-testid="stTable"] td {
                 background: #dff4ef !important;
-                border: 1px solid #a9d9d1 !important;
+                border: 0 !important;
+                border-right: 1px solid #d1e1e1 !important;
+                border-bottom: 1px solid #d1e1e1 !important;
                 color: #203c39 !important;
-            }
-            .st-key-registered_users_table [data-testid="stTable"] th:first-child,
-            .st-key-registered_users_table [data-testid="stTable"] td:first-child {
-                border-left: 0 !important;
             }
             .st-key-registered_users_table [data-testid="stTable"] th:last-child,
             .st-key-registered_users_table [data-testid="stTable"] td:last-child {
                 border-right: 0 !important;
-            }
-            .st-key-registered_users_table [data-testid="stTable"] thead tr:first-child th {
-                border-top: 0 !important;
             }
             .st-key-registered_users_table [data-testid="stTable"] tbody tr:last-child td {
                 border-bottom: 0 !important;
@@ -4126,20 +4124,49 @@ body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stExpander"] {
     border-color:#d4e5e7 !important;
     background:rgba(255,255,255,.75) !important;
 }
-body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stVerticalBlockBorderWrapper"],
-body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stVerticalBlockBorderWrapper"] {
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] {
+    border:0 !important;
+    box-shadow:none !important;
+    outline:none !important;
+}
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] table {
+    border:1px solid #b8cbce !important;
+    border-radius:12px !important;
+    box-shadow:none !important;
+}
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] th,
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] td {
+    border-width:0 !important;
+}
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] th {
+    border-right:1px solid #72b9b0 !important;
+    border-bottom:1px solid #72b9b0 !important;
+}
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] td {
+    border-right:1px solid #d1e1e1 !important;
+    border-bottom:1px solid #d1e1e1 !important;
+}
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] th:last-child,
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] td:last-child {
+    border-right:0 !important;
+}
+body:has(.hb-light-mode) .st-key-registered_users_table [data-testid="stTable"] tbody tr:last-child td {
+    border-bottom:0 !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel,
+body:has(.hb-light-mode) .st-key-user_delete_panel {
     box-sizing:border-box !important;
     height:100% !important;
     padding:1.15rem !important;
-    border:1px solid #bfd8dc !important;
+    border:1px solid #c8dcdf !important;
     border-radius:16px !important;
-    background:linear-gradient(145deg,#ffffff 0%,#eff7f8 100%) !important;
-    box-shadow:0 10px 24px rgba(35,91,98,.09) !important;
+    background:linear-gradient(145deg,#ffffff 0%,#f1f8f8 100%) !important;
+    box-shadow:0 8px 20px rgba(35,91,98,.065) !important;
 }
-body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stVerticalBlockBorderWrapper"]:hover,
-body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stVerticalBlockBorderWrapper"]:hover {
-    border-color:#8fc9bf !important;
-    box-shadow:0 12px 26px rgba(35,139,125,.13) !important;
+body:has(.hb-light-mode) .st-key-user_transfer_panel:hover,
+body:has(.hb-light-mode) .st-key-user_delete_panel:hover {
+    border-color:#a8cec9 !important;
+    box-shadow:0 10px 22px rgba(35,139,125,.09) !important;
 }
 @media (max-width:640px) {
     body:has(.hb-light-mode) [data-testid="stMetric"] {
@@ -5375,7 +5402,7 @@ elif menu == "Administrar usuarios":
         transferencia_column, eliminacion_column = st.columns(2, gap="large")
 
         with transferencia_column:
-            with st.container(key="user_transfer_panel", border=True):
+            with st.container(key="user_transfer_panel"):
                 st.subheader(
                     "Transferir administración",
                     icon=":material/swap_horiz:",
@@ -5446,7 +5473,7 @@ elif menu == "Administrar usuarios":
                     )
 
         with eliminacion_column:
-            with st.container(key="user_delete_panel", border=True):
+            with st.container(key="user_delete_panel"):
                 st.subheader(
                     "Eliminar una cuenta",
                     icon=":material/person_remove:",
@@ -6195,4 +6222,202 @@ with st.container(key="theme_toggle"):
         on_click=alternar_tema,
         help="Cambiar entre modo claro y modo oscuro"
     )
-    
+
+# ==========================================================
+# Este bloque va al final para prevalecer sobre estilos anteriores.
+# ==========================================================
+
+st.markdown("""
+<style>
+/* El contenedor externo no dibuja un segundo borde. */
+.st-key-registered_users_table [data-testid="stTable"] {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Un único marco continuo alrededor de toda la tabla. */
+.st-key-registered_users_table [data-testid="stTable"] table {
+    display: table !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border: 1px solid #b8cbce !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    background: #dff4ef !important;
+}
+
+/* Líneas internas continuas, sin bordes duplicados. */
+.st-key-registered_users_table [data-testid="stTable"] th,
+.st-key-registered_users_table [data-testid="stTable"] td {
+    box-sizing: border-box !important;
+    border: 0 !important;
+    border-right: 1px solid #cbdde0 !important;
+    border-bottom: 1px solid #cbdde0 !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+}
+
+/* Encabezado. */
+.st-key-registered_users_table [data-testid="stTable"] th {
+    background: #edf4f4 !important;
+    color: #29434a !important;
+    font-weight: 750 !important;
+    white-space: nowrap !important;
+}
+
+/* Celdas del cuerpo. */
+.st-key-registered_users_table [data-testid="stTable"] td {
+    background: #ffffff !important;
+    color: #33474f !important;
+}
+
+/* No dibujar líneas extra en los extremos. */
+.st-key-registered_users_table [data-testid="stTable"] th:last-child,
+.st-key-registered_users_table [data-testid="stTable"] td:last-child {
+    border-right: 0 !important;
+}
+.st-key-registered_users_table [data-testid="stTable"] tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+
+/* Evitar que estilos globales alteren las esquinas. */
+.st-key-registered_users_table [data-testid="stTable"] thead tr:first-child th:first-child {
+    border-top-left-radius: 12px !important;
+}
+.st-key-registered_users_table [data-testid="stTable"] thead tr:first-child th:last-child {
+    border-top-right-radius: 12px !important;
+}
+.st-key-registered_users_table [data-testid="stTable"] tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px !important;
+}
+.st-key-registered_users_table [data-testid="stTable"] tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px !important;
+}
+
+/* Tema oscuro: conservar el marco y las uniones de los bordes. */
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] table {
+    border-color: #344650 !important;
+    background: #171e23 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] th {
+    background: #202a31 !important;
+    color: #e7edf0 !important;
+    border-right-color: #344650 !important;
+    border-bottom-color: #344650 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] td {
+    background: #171e23 !important;
+    color: #d9e1e5 !important;
+    border-right-color: #344650 !important;
+    border-bottom-color: #344650 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+
+# ==========================================================
+# MARCO EXTERIOR DEFINITIVO: CIERRA LOS CUATRO LADOS
+# ==========================================================
+
+st.markdown("""
+<style>
+/* El marco se dibuja encima de la tabla para que el lado derecho
+   y las esquinas queden cerrados aunque Streamlit cambie sus bordes. */
+.st-key-registered_users_table [data-testid="stTable"] {
+    position: relative !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+}
+.st-key-registered_users_table [data-testid="stTable"]::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    border: 1px solid #263b44 !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+.st-key-registered_users_table [data-testid="stTable"] table {
+    width: 100% !important;
+    border: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+}
+/* La última columna y la última fila conservan sus separadores internos;
+   el marco superpuesto forma el cierre exterior negro continuo. */
+.st-key-registered_users_table [data-testid="stTable"] th:last-child,
+.st-key-registered_users_table [data-testid="stTable"] td:last-child {
+    border-right: 0 !important;
+}
+.st-key-registered_users_table [data-testid="stTable"] tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================================
+# AJUSTE FINO: REDUCIR EL CONTORNO Y EL ESPACIO INTERIOR
+# DE LOS PANELES DE TRANSFERENCIA Y ELIMINACION
+# ==========================================================
+
+st.markdown("""
+<style>
+body:has(.hb-light-mode) .st-key-user_transfer_panel,
+body:has(.hb-light-mode) .st-key-user_delete_panel {
+    padding: 0.85rem !important;
+    border: 1px solid #d4e1e3 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(35, 91, 98, 0.045) !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel:hover,
+body:has(.hb-light-mode) .st-key-user_delete_panel:hover {
+    border-color: #c4d8da !important;
+    box-shadow: 0 5px 14px rgba(35, 91, 98, 0.06) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================================
+# AJUSTE ADICIONAL: CONTORNO MAS DISCRETO EN LOS PANELES
+# ==========================================================
+
+st.markdown("""
+<style>
+body:has(.hb-light-mode) .st-key-user_transfer_panel,
+body:has(.hb-light-mode) .st-key-user_delete_panel {
+    padding: 0.7rem !important;
+    border: 1px solid #e1e9ea !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 7px rgba(35, 91, 98, 0.025) !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel:hover,
+body:has(.hb-light-mode) .st-key-user_delete_panel:hover {
+    border-color: #d7e3e4 !important;
+    box-shadow: 0 3px 9px rgba(35, 91, 98, 0.035) !important;
+}
+
+/* Reducir el espacio sobrante entre el borde superior y el título. */
+body:has(.hb-light-mode) .st-key-user_transfer_panel,
+body:has(.hb-light-mode) .st-key-user_delete_panel {
+    padding-top: 0.25rem !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel h3,
+body:has(.hb-light-mode) .st-key-user_delete_panel h3 {
+    margin-top: 0.2rem !important;
+}
+</style>
+""", unsafe_allow_html=True)
