@@ -19,6 +19,25 @@ st.set_page_config(
     layout="wide"
 )
 
+
+def notificar_exito(mensaje):
+    notificaciones = st.session_state.setdefault(
+        "_notificaciones_exito",
+        [],
+    )
+    notificaciones.append(mensaje)
+
+
+for mensaje_notificacion in st.session_state.pop(
+    "_notificaciones_exito",
+    [],
+):
+    st.toast(
+        mensaje_notificacion,
+        icon=":material/check_circle:",
+    )
+
+
 database.configurar_desde_streamlit()
 
 
@@ -3994,13 +4013,14 @@ def pantalla_acceso():
             text-transform: uppercase;
         }
         .login-brand-title {
-            max-width: 12ch;
-            margin-top: 1.55rem;
+            max-width: 13ch;
+            margin-top: 1.45rem;
             color: #f5f9f9;
             font-size: clamp(2rem, 3.4vw, 3rem);
-            font-weight: 780;
-            line-height: 1.03;
-            letter-spacing: -0.045em;
+            font-weight: 680;
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+            text-wrap: balance;
         }
         .login-brand-subtitle {
             max-width: 34rem;
@@ -4150,13 +4170,6 @@ def pantalla_acceso():
         </style>
     """, unsafe_allow_html=True)
 
-    mensaje_traspaso = st.session_state.pop(
-        "mensaje_traspaso_admin",
-        None,
-    )
-    if mensaje_traspaso:
-        st.success(mensaje_traspaso)
-
     brand_column, access_column = st.columns(
         [1.08, 0.92],
         vertical_alignment="center",
@@ -4235,7 +4248,7 @@ def pantalla_acceso():
                                 password,
                                 "admin"
                             )
-                            st.success(
+                            notificar_exito(
                                 "Administrador creado. Inicia sesión."
                             )
                             st.rerun()
@@ -4814,7 +4827,7 @@ with st.sidebar:
             try:
                 database.reiniciar_datos()
                 st.session_state.pop("confirmar_reinicio", None)
-                st.success(
+                notificar_exito(
                     "Sistema reiniciado correctamente. Ya puedes comenzar un nuevo registro."
                 )
                 st.rerun()
@@ -5025,7 +5038,7 @@ elif menu == "Administrar usuarios":
                         password,
                         rol
                     )
-                    st.success(
+                    notificar_exito(
                         f"Usuario {username} creado correctamente."
                     )
                     st.rerun()
@@ -5125,7 +5138,7 @@ elif menu == "Administrar usuarios":
                             usuario_actual.get("id"),
                             nuevo_admin_id,
                         )
-                        st.session_state["mensaje_traspaso_admin"] = (
+                        notificar_exito(
                             f"Administración transferida a @{nuevo_admin[1]}. "
                             "Tu cuenta fue eliminada; inicia sesión con la nueva cuenta."
                         )
@@ -5222,7 +5235,7 @@ elif menu == "Administrar usuarios":
                         st.session_state.pop(
                             "usuario_pendiente_eliminar_id", None
                         )
-                        st.success(
+                        notificar_exito(
                             f"La cuenta @{username} se eliminó correctamente."
                         )
                         st.rerun()
@@ -5392,7 +5405,7 @@ elif menu == "Productos":
                     )
 
                     if ok:
-                        st.success(mensaje)
+                        notificar_exito(mensaje)
                         st.rerun()
                     else:
                         st.error(mensaje)
@@ -5477,7 +5490,7 @@ elif menu == "Ventas":
                 )
 
                 if ok:
-                    st.success(mensaje)
+                    notificar_exito(mensaje)
                     st.rerun()
                 else:
                     st.error(mensaje)
@@ -5569,7 +5582,7 @@ elif menu == "Compras":
                 )
 
                 if ok:
-                    st.success(mensaje)
+                    notificar_exito(mensaje)
                     st.rerun()
                 else:
                     st.error(mensaje)
