@@ -251,7 +251,7 @@ st.markdown("""
         [data-testid="stSidebarCollapseButton"] button:focus-visible,
         [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_item_"] button:focus-visible,
         [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button:focus-visible {
-            outline: 3px solid rgba(45, 129, 119, 0.4) !important;
+            outline: 2px solid rgba(148, 163, 184, 0.42) !important;
             outline-offset: 2px !important;
         }
         [data-testid="stSidebarCollapseButton"] svg,
@@ -1195,6 +1195,129 @@ body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTable"] tbody tr
     [data-testid="stMainBlockContainer"] { padding:1.4rem 1rem 2.5rem !important; }
     .hb-page-header { align-items:flex-start; flex-direction:column; }
 }
+[data-testid="stSidebar"] .sidebar-brand {
+    padding:0.8rem 0 .95rem !important;
+    border:0 !important;
+    border-bottom:1px solid rgba(148,163,184,.14) !important;
+    border-radius:0 !important;
+    background:transparent !important;
+}
+[data-testid="stSidebar"] .sidebar-brand-kicker {
+    color:#7faea8 !important;
+    font-size:.64rem !important;
+    letter-spacing:.13em !important;
+}
+[data-testid="stSidebar"] .sidebar-brand-title {
+    color:#e5edef !important;
+    font-family:inherit !important;
+    font-size:1.05rem !important;
+    font-weight:750 !important;
+    letter-spacing:.01em !important;
+}
+[data-testid="stSidebar"] .sidebar-brand-subtitle {
+    margin-top:.4rem !important;
+    color:#91a0a8 !important;
+    font-size:.76rem !important;
+    letter-spacing:0 !important;
+}
+[data-testid="stSidebar"] .user-card {
+    border-color:rgba(148,163,184,.13) !important;
+    border-radius:10px !important;
+    background:rgba(255,255,255,.025) !important;
+}
+[data-testid="stSidebar"] .user-status-text,
+[data-testid="stSidebar"] .user-role {
+    color:#91a0a8 !important;
+}
+[data-testid="stSidebar"] .sidebar-section-title {
+    color:#84939b !important;
+    font-size:.65rem !important;
+    letter-spacing:.12em !important;
+}
+[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_"] button {
+    min-height:40px !important;
+    margin-bottom:3px !important;
+    border:1px solid transparent !important;
+    border-radius:8px !important;
+    background:transparent !important;
+    color:#b8c4c9 !important;
+    font-weight:550 !important;
+    justify-content:flex-start !important;
+    text-align:left !important;
+    padding-left:.8rem !important;
+    box-shadow:none !important;
+}
+[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_"] button:hover {
+    border-color:rgba(148,163,184,.10) !important;
+    background:rgba(255,255,255,.045) !important;
+    color:#edf3f4 !important;
+}
+[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button,
+[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button:hover {
+    border-color:transparent !important;
+    background:rgba(255,255,255,.055) !important;
+    color:#edf3f4 !important;
+    box-shadow:none !important;
+}
+[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_item_"] button:focus-visible,
+[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button:focus-visible {
+    outline:2px solid rgba(148,163,184,.42) !important;
+    outline-offset:2px !important;
+}
+[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-cerrar_sesion"] button {
+    min-height:36px !important;
+    border:1px solid rgba(148,163,184,.14) !important;
+    border-radius:8px !important;
+    background:rgba(255,255,255,.025) !important;
+    color:#b8c4c9 !important;
+    font-size:.82rem !important;
+    font-weight:500 !important;
+    box-shadow:none !important;
+}
+[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-cerrar_sesion"] button:hover {
+    border-color:rgba(148,163,184,.24) !important;
+    background:rgba(255,255,255,.055) !important;
+    color:#edf3f4 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand {
+    border-bottom-color:#e5ebed !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-kicker {
+    color:#4f887f !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-title {
+    color:#26383e !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-subtitle,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-status-text,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-role,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-section-title {
+    color:#718087 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-card {
+    border-color:#e4eaec !important;
+    background:#f8fafb !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_"] button {
+    color:#506168 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_"] button:hover {
+    border-color:#e5ebed !important;
+    background:#f4f7f8 !important;
+    color:#26383e !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button,
+body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button:hover {
+    border-color:transparent !important;
+    background:#e9edef !important;
+    color:#34464d !important;
+    box-shadow:0 2px 5px rgba(38,50,56,.08) !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-cerrar_sesion"] button {
+    border-color:#e1e8ea !important;
+    background:#fff !important;
+    color:#506168 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1566,14 +1689,14 @@ if st.session_state.tema_blanco:
             [data-testid="stSidebar"] [class*="st-key-menu_active"] button,
             [data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
                 background: #e5e9ed !important;
-                border: 2px solid var(--humbertito-teal) !important;
+                border: 1px solid transparent !important;
                 border-radius: 0.65rem !important;
                 color: #263238 !important;
-                box-shadow: 0 3px 8px rgba(45, 129, 119, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+                box-shadow: 0 2px 5px rgba(38, 50, 56, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
             }
             [data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
                 background: #dce2e7 !important;
-                border-color: #24665f !important;
+                border-color: transparent !important;
                 color: #263238 !important;
             }
         </style>
@@ -3291,6 +3414,433 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+:root {
+    --hb-accent: #2f8f83;
+    --hb-accent-bright: #55b8a9;
+    --hb-ink: #eaf1f3;
+    --hb-muted: #94a5ae;
+    --hb-border: rgba(148, 163, 184, 0.16);
+}
+[data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse at 92% 0%, rgba(47, 143, 131, 0.12), transparent 30rem),
+        linear-gradient(180deg, #101820 0%, #0f171e 100%) !important;
+}
+[data-testid="stMainBlockContainer"] {
+    width: 100% !important;
+    max-width: 1480px !important;
+    margin: 0 auto !important;
+    padding: 2rem clamp(1.1rem, 3vw, 2.8rem) 4rem !important;
+}
+[data-testid="stMain"] {
+    color: var(--hb-ink) !important;
+    font-family: Inter, "Segoe UI", sans-serif !important;
+}
+[data-testid="stMain"] h1,
+[data-testid="stMain"] h2,
+[data-testid="stMain"] h3 {
+    font-family: Inter, "Segoe UI", sans-serif !important;
+    letter-spacing: -0.025em !important;
+}
+[data-testid="stMain"] h1 {
+    margin-bottom: 0.9rem !important;
+    font-size: clamp(1.65rem, 2.5vw, 2.25rem) !important;
+    font-weight: 760 !important;
+}
+[data-testid="stMain"] h2 {
+    margin-top: 1.6rem !important;
+    font-size: clamp(1.2rem, 1.7vw, 1.45rem) !important;
+    font-weight: 720 !important;
+}
+[data-testid="stMain"] h3 {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+}
+[data-testid="stMain"] p,
+[data-testid="stMain"] label {
+    line-height: 1.55 !important;
+}
+[data-testid="stMetric"] {
+    min-height: 7.6rem !important;
+    padding: 1.15rem 1.2rem !important;
+    border: 1px solid var(--hb-border) !important;
+    border-radius: 15px !important;
+    background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018)) !important;
+    box-shadow: 0 12px 28px rgba(0,0,0,.14) !important;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    border-color: rgba(85,184,169,.36) !important;
+    box-shadow: 0 16px 34px rgba(0,0,0,.2) !important;
+}
+[data-testid="stMetricLabel"] {
+    color: var(--hb-muted) !important;
+    font-size: .74rem !important;
+    font-weight: 700 !important;
+    letter-spacing: .055em !important;
+    text-transform: uppercase !important;
+}
+[data-testid="stMetricValue"] {
+    color: var(--hb-ink) !important;
+    font-size: clamp(1.35rem, 2vw, 1.9rem) !important;
+    font-weight: 780 !important;
+    letter-spacing: -.025em !important;
+}
+[data-testid="stForm"],
+[data-testid="stExpander"],
+[data-testid="stDataFrame"],
+[data-testid="stTable"] {
+    border-color: var(--hb-border) !important;
+    border-radius: 14px !important;
+}
+[data-testid="stForm"] {
+    padding: 1.25rem !important;
+    background: rgba(24,35,44,.82) !important;
+    box-shadow: 0 14px 32px rgba(0,0,0,.12) !important;
+}
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-baseweb="select"] > div {
+    border-radius: 9px !important;
+    border-color: rgba(148,163,184,.23) !important;
+}
+[data-testid="stMain"] button {
+    border-radius: 9px !important;
+    font-weight: 650 !important;
+}
+[data-testid="stMain"] button[kind="primary"],
+[data-testid="stMain"] button[kind="primaryFormSubmit"] {
+    background: linear-gradient(135deg, #328f83, #26776e) !important;
+    border-color: #328f83 !important;
+    box-shadow: 0 6px 16px rgba(47,143,131,.2) !important;
+}
+[data-testid="stMain"] button[kind="primary"]:hover,
+[data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
+    background: linear-gradient(135deg, #3ca193, #2f8178) !important;
+    border-color: #3ca193 !important;
+}
+[data-testid="stTabs"] [role="tablist"] {
+    gap: .35rem;
+    padding: .3rem;
+    border: 1px solid var(--hb-border);
+    border-radius: 12px;
+    background: rgba(255,255,255,.025);
+}
+[data-testid="stTabs"] button[role="tab"] {
+    border-radius: 9px !important;
+    font-weight: 650 !important;
+}
+.hb-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: 12.5rem;
+    overflow: hidden;
+    margin: 0 0 1.6rem;
+    padding: clamp(1.5rem, 3vw, 2.4rem);
+    border: 1px solid rgba(95,177,166,.22);
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at 88% 18%, rgba(89,184,170,.2), transparent 17rem),
+        linear-gradient(118deg, #1a3035 0%, #172a31 52%, #1b2630 100%);
+    box-shadow: 0 22px 50px rgba(0,0,0,.2);
+}
+.hb-hero::after {
+    content: "";
+    position: absolute;
+    width: 17rem;
+    height: 17rem;
+    right: -4rem;
+    bottom: -12rem;
+    border: 1px solid rgba(139,221,207,.18);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.4rem rgba(139,221,207,.035), 0 0 0 2.8rem rgba(139,221,207,.025);
+    pointer-events: none;
+}
+.hb-hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 46rem;
+}
+.hb-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .9rem;
+    color: #9be0d5;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+.hb-hero-eyebrow::before {
+    content: "";
+    width: .45rem;
+    height: .45rem;
+    border-radius: 50%;
+    background: #63d5b4;
+    box-shadow: 0 0 0 4px rgba(99,213,180,.12);
+}
+.hb-hero h1 {
+    margin: 0 !important;
+    color: #f3f8f8 !important;
+    font-size: clamp(1.8rem, 3.4vw, 2.65rem) !important;
+    font-weight: 780 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -.04em !important;
+}
+.hb-hero p {
+    max-width: 38rem;
+    margin: .75rem 0 0;
+    color: #b8cbd0;
+    font-size: .98rem;
+    line-height: 1.55;
+}
+.hb-hero-date {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    padding: .7rem .9rem;
+    border: 1px solid rgba(176,219,213,.18);
+    border-radius: 12px;
+    background: rgba(8,18,22,.2);
+    color: #d5e9e7;
+    font-size: .78rem;
+    font-weight: 650;
+}
+.quick-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 9.1rem;
+    margin-bottom: .65rem;
+    padding: 1.15rem;
+    border: 1px solid var(--hb-border);
+    border-radius: 15px;
+    background: linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.018));
+    box-shadow: 0 10px 24px rgba(0,0,0,.1);
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.quick-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(85,184,169,.34);
+    box-shadow: 0 15px 28px rgba(0,0,0,.16);
+}
+.quick-card strong {
+    color: var(--hb-ink);
+    font-size: .98rem;
+    font-weight: 720;
+}
+.quick-card p {
+    margin: .5rem 0 0;
+    color: var(--hb-muted);
+    font-size: .82rem;
+    line-height: 1.5;
+}
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #141e26 0%, #10171e 100%) !important;
+    border-right: 1px solid rgba(148,163,184,.13) !important;
+}
+[data-testid="stSidebar"] .sidebar-brand {
+    padding: 1.05rem !important;
+    border: 1px solid rgba(85,184,169,.18) !important;
+    border-left: 3px solid #3fa395 !important;
+    border-radius: 0 14px 14px 0 !important;
+    background: linear-gradient(145deg, rgba(47,143,131,.11), rgba(255,255,255,.025)) !important;
+}
+[data-testid="stSidebar"] .user-card {
+    border: 1px solid rgba(148,163,184,.14) !important;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,.035) !important;
+}
+[data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
+    min-height: 2.75rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    color: #c3d0d5 !important;
+    box-shadow: none !important;
+}
+[data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
+    background: rgba(47,143,131,.12) !important;
+    border-color: rgba(85,184,169,.2) !important;
+    color: #f0f7f7 !important;
+}
+[data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+    min-height: 2.75rem !important;
+    border: 1px solid rgba(106,207,192,.3) !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #328f83, #26776e) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(31,115,105,.22) !important;
+}
+[data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
+    background: linear-gradient(135deg, #3ca193, #2f8178) !important;
+}
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse at 92% 0%, rgba(47,143,131,.1), transparent 30rem),
+        linear-gradient(180deg, #f8fafb 0%, #f1f5f6 100%) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] {
+    color: #25363d !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] h1,
+body:has(.hb-light-mode) [data-testid="stMain"] h2,
+body:has(.hb-light-mode) [data-testid="stMain"] h3 {
+    color: #1b2b32 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetric"],
+body:has(.hb-light-mode) [data-testid="stForm"],
+body:has(.hb-light-mode) [data-testid="stExpander"],
+body:has(.hb-light-mode) [data-testid="stDataFrame"],
+body:has(.hb-light-mode) [data-testid="stTable"] {
+    border-color: #e0e8eb !important;
+    background: rgba(255,255,255,.94) !important;
+    box-shadow: 0 10px 26px rgba(34,52,61,.06) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetricLabel"] { color: #71818a !important; }
+body:has(.hb-light-mode) [data-testid="stMetricValue"] { color: #17262d !important; }
+body:has(.hb-light-mode) [data-testid="stTextInput"] input,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea,
+body:has(.hb-light-mode) [data-baseweb="select"] > div {
+    background: #fff !important;
+    color: #24343b !important;
+    border-color: #d4dfe3 !important;
+}
+body:has(.hb-light-mode) .quick-card {
+    border-color: #e0e8eb;
+    background: linear-gradient(145deg, #fff, #f8fbfb);
+    box-shadow: 0 10px 24px rgba(34,52,61,.06);
+}
+body:has(.hb-light-mode) .quick-card strong { color: #25363d; }
+body:has(.hb-light-mode) .quick-card p { color: #687980; }
+body:has(.hb-light-mode) [data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #fff 0%, #f7fafb 100%) !important;
+    border-right-color: #e1e8eb !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-card {
+    border-color: #dce8e7 !important;
+    background: linear-gradient(145deg, #f0f8f7, #fff) !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-name,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-name {
+    color: #26383e !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-subtitle,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-role,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-status-text {
+    color: #647780 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
+    color: #52656d !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
+    background: #edf7f5 !important;
+    color: #246d65 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+    background: linear-gradient(135deg, #328f83, #26776e) !important;
+    color: #fff !important;
+}
+body:has(.hb-light-mode) .hb-hero {
+    border-color: rgba(47,143,131,.2);
+    background:
+        radial-gradient(circle at 88% 18%, rgba(89,184,170,.18), transparent 17rem),
+        linear-gradient(118deg, #e8f4f2 0%, #edf5f5 55%, #eef2f5 100%);
+    box-shadow: 0 18px 42px rgba(34,52,61,.08);
+}
+body:has(.hb-light-mode) .hb-hero h1 { color: #1b3438 !important; }
+body:has(.hb-light-mode) .hb-hero p { color: #536a70; }
+body:has(.hb-light-mode) .hb-hero-eyebrow { color: #27776f; }
+body:has(.hb-light-mode) .hb-hero-date {
+    border-color: #cfe1df;
+    background: rgba(255,255,255,.65);
+    color: #35565a;
+}
+@media (max-width: 900px) {
+    [data-testid="stMainBlockContainer"] { padding: 1.35rem 1.1rem 3rem !important; }
+}
+@media (max-width: 640px) {
+    .hb-hero {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1rem;
+        min-height: 0;
+        padding: 1.35rem;
+        border-radius: 17px;
+    }
+    .hb-hero-date { align-self: flex-start; }
+    [data-testid="stMetric"] {
+        min-height: 6.3rem !important;
+        padding: .9rem !important;
+    }
+    [data-testid="stMainBlockContainer"] { padding: 1rem .85rem 2.5rem !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+    }
+}
+#root [data-testid="stSidebar"] > div:first-child {
+    padding-top:.35rem !important;
+}
+#root [data-testid="stSidebar"] [class*="st-key-menu_"] button,
+#root [data-testid="stSidebar"] [class*="st-key-menu_"] button:hover,
+#root [data-testid="stSidebar"] [class*="st-key-menu_"] button:active {
+    border:1px solid rgba(226,232,240,.24) !important;
+    outline:none !important;
+    box-shadow:none !important;
+}
+#root [data-testid="stSidebar"] [class*="st-key-menu_"] button {
+    background:transparent !important;
+    color:#b8c4c9 !important;
+}
+#root [data-testid="stSidebar"] [class*="st-key-menu_"] button:hover {
+    border-color:rgba(226,232,240,.24) !important;
+    background:rgba(255,255,255,.055) !important;
+    color:#edf3f4 !important;
+}
+#root [data-testid="stSidebar"] [class*="st-key-menu_active"] button,
+#root [data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
+    border-color:rgba(226,232,240,.28) !important;
+    background:rgba(255,255,255,.075) !important;
+    color:#edf3f4 !important;
+}
+#root [data-testid="stSidebar"] [class*="st-key-menu_"] button:focus-visible {
+    outline:2px solid #89979d !important;
+    outline-offset:2px !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_"] button {
+    border-color:rgba(71,85,91,.22) !important;
+    background:transparent !important;
+    color:#506168 !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_"] button:hover {
+    border-color:rgba(71,85,91,.22) !important;
+    background:#eef1f2 !important;
+    color:#34464d !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_active"] button,
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
+    border-color:rgba(71,85,91,.28) !important;
+    background:#e7ebed !important;
+    color:#34464d !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 with st.sidebar:
     st.markdown(
         """
@@ -3349,9 +3899,9 @@ def pantalla_acceso():
         /* Centrado real del acceso: horizontal + vertical */
         [data-testid="stMainBlockContainer"] {
             width: 100% !important;
-            max-width: 620px !important;
+            max-width: 1080px !important;
             min-height: 100vh !important;
-            padding: 2rem 1.25rem !important;
+            padding: 2.5rem clamp(1rem, 4vw, 3rem) !important;
             margin: 0 auto !important;
             box-sizing: border-box !important;
             display: flex !important;
@@ -3374,33 +3924,136 @@ def pantalla_acceso():
         }
 
         .login-brand {
-            text-align: center;
-            margin-bottom: 1.15rem;
+            display: flex;
+            min-height: 27rem;
+            flex-direction: column;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: clamp(1.5rem, 3.5vw, 3rem);
+            border: 1px solid rgba(105, 187, 175, 0.2);
+            border-radius: 22px;
+            background:
+                radial-gradient(circle at 85% 12%, rgba(84, 184, 169, 0.2), transparent 16rem),
+                linear-gradient(145deg, #19353a 0%, #172932 58%, #17232b 100%);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
         }
-        .login-brand-badge {
-            display: inline-block;
-            padding: 0.35rem 0.75rem;
-            border: 1px solid rgba(45,129,119,0.45);
-            border-radius: 999px;
+        .login-brand-head {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-bottom: 1.4rem;
+            border-bottom: 1px solid rgba(184, 219, 215, 0.16);
+        }
+        .login-brand-mark {
+            display: flex;
+            width: 4rem;
+            height: 4rem;
+            flex: 0 0 4rem;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(164, 220, 212, 0.3);
+            border-radius: 17px;
+            background: linear-gradient(145deg, rgba(88, 184, 170, 0.24), rgba(255, 255, 255, 0.06));
+            box-shadow: 0 12px 28px rgba(5, 15, 18, 0.2);
+        }
+        .login-brand-mark svg {
+            display: block;
+            width: 2.25rem;
+            height: 2.25rem;
+            fill: none;
+            stroke: #d8f5ef;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.7;
+        }
+        .login-brand-identity {
+            min-width: 0;
+        }
+        .login-brand-kicker {
+            margin-bottom: 0.28rem;
             color: #8ed1c8;
-            background: rgba(45,129,119,0.10);
-            font-size: 0.68rem;
-            font-weight: 800;
-            letter-spacing: 0.14em;
+            font-size: 0.66rem;
+            font-weight: 750;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+        .login-brand-name {
+            color: #d6e4e5;
+            font-size: 0.8rem;
+            font-weight: 650;
+            letter-spacing: 0.09em;
+            line-height: 1.35;
+            text-transform: uppercase;
+        }
+        .login-brand-name-strong {
+            color: #f6fbfb;
+            font-size: 1.48rem;
+            font-weight: 820;
+            letter-spacing: -0.035em;
+            line-height: 1.05;
             text-transform: uppercase;
         }
         .login-brand-title {
-            margin-top: 0.8rem;
-            color: #ffffff;
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: 2rem;
-            font-weight: 800;
-            letter-spacing: -0.025em;
+            max-width: 12ch;
+            margin-top: 1.55rem;
+            color: #f5f9f9;
+            font-size: clamp(2rem, 3.4vw, 3rem);
+            font-weight: 780;
+            line-height: 1.03;
+            letter-spacing: -0.045em;
         }
         .login-brand-subtitle {
-            margin-top: 0.35rem;
+            max-width: 34rem;
+            margin-top: 0.85rem;
+            color: #b5c9cc;
+            font-size: 0.98rem;
+            line-height: 1.6;
+        }
+        .login-brand-features {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.45rem;
+            margin-top: 1.8rem;
+        }
+        .login-brand-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.38rem;
+            min-width: 0;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(184, 219, 215, 0.18);
+            color: #c9d9db;
+            font-size: 0.68rem;
+            font-weight: 650;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        .login-brand-feature::before {
+            content: "";
+            width: 0.34rem;
+            height: 0.34rem;
+            flex: 0 0 0.34rem;
+            border-radius: 50%;
+            background: #68cbb5;
+            box-shadow: 0 0 0 3px rgba(104, 203, 181, 0.11);
+        }
+        .login-form-intro {
+            max-width: 28rem;
+            margin: 0 auto 1.15rem;
+            text-align: center;
+        }
+        .login-form-intro h2 {
+            margin: 0;
+            color: #edf4f5;
+            font-size: 1.55rem;
+            font-weight: 750;
+            letter-spacing: -0.03em;
+        }
+        .login-form-intro p {
+            margin: 0.45rem 0 0;
             color: #9eabb2;
             font-size: 0.88rem;
+            line-height: 1.5;
         }
         [data-testid="stForm"] {
             background: rgba(26,34,40,0.94) !important;
@@ -3422,90 +4075,211 @@ def pantalla_acceso():
             min-height: 2.9rem !important;
             font-size: 0.92rem !important;
         }
+        body:has(.hb-light-mode) .login-brand {
+            border-color: rgba(47, 143, 131, 0.18);
+            background:
+                radial-gradient(circle at 85% 12%, rgba(84, 184, 169, 0.17), transparent 16rem),
+                linear-gradient(145deg, #e8f4f2 0%, #edf5f5 58%, #f2f5f7 100%);
+            box-shadow: 0 20px 48px rgba(34, 52, 61, 0.08);
+        }
+        body:has(.hb-light-mode) .login-brand-title,
+        body:has(.hb-light-mode) .login-form-intro h2 {
+            color: #1b3438;
+        }
+        body:has(.hb-light-mode) .login-brand-subtitle,
+        body:has(.hb-light-mode) .login-brand-feature,
+        body:has(.hb-light-mode) .login-form-intro p {
+            color: #536a70;
+        }
+        body:has(.hb-light-mode) .login-brand-head {
+            border-bottom-color: rgba(47, 143, 131, 0.16);
+        }
+        body:has(.hb-light-mode) .login-brand-mark {
+            border-color: #c7e3df;
+            background: linear-gradient(145deg, #d8eeea, #f6fbfa);
+        }
+        body:has(.hb-light-mode) .login-brand-mark svg {
+            stroke: #27776f;
+        }
+        body:has(.hb-light-mode) .login-brand-kicker {
+            color: #27776f;
+        }
+        body:has(.hb-light-mode) .login-brand-name {
+            color: #536a70;
+        }
+        body:has(.hb-light-mode) .login-brand-name-strong {
+            color: #1b3438;
+        }
+        @media (max-width: 760px) {
+            [data-testid="stMainBlockContainer"] {
+                max-width: 620px !important;
+                padding: 1.4rem 1rem 2rem !important;
+            }
+            .login-brand {
+                min-height: auto;
+                padding: 1.5rem;
+                border-radius: 17px;
+            }
+            .login-brand-mark {
+                width: 3.35rem;
+                height: 3.35rem;
+                flex-basis: 3.35rem;
+                border-radius: 14px;
+            }
+            .login-brand-mark svg { width: 1.9rem; height: 1.9rem; }
+            .login-brand-name-strong { font-size: 1.28rem; }
+            .login-brand-title { max-width: 16ch; font-size: 2rem; }
+            .login-brand-features { margin-top: 1.5rem; }
+            [data-testid="stForm"] { padding: 1.1rem !important; }
+        }
+        @media (max-width: 440px) {
+            .login-brand-head { gap: 0.75rem; padding-bottom: 1.1rem; }
+            .login-brand-features { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.3rem; }
+            .login-brand-feature {
+                gap: 0.25rem;
+                padding-top: 0.5rem;
+                font-size: 0.55rem;
+                letter-spacing: -0.02em;
+            }
+            .login-brand-feature::before {
+                width: 0.28rem;
+                height: 0.28rem;
+                flex-basis: 0.28rem;
+            }
+        }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown(
-        """
-        <div class="login-brand">
-            <div class="login-brand-badge">SISTEMA DE GESTIÓN</div>
-            <div class="login-brand-title">LIBRERÍA BAZAR “HUMBERTITO”</div>
-            <div class="login-brand-subtitle">Gestión comercial inteligente · Humbertito IA</div>
-        </div>
-        """,
-        unsafe_allow_html=True
+    mensaje_traspaso = st.session_state.pop(
+        "mensaje_traspaso_admin",
+        None,
     )
+    if mensaje_traspaso:
+        st.success(mensaje_traspaso)
 
-    if auth.cantidad_usuarios() == 0:
-        st.info(
-            "Primera configuración: crea la cuenta del administrador."
+    brand_column, access_column = st.columns(
+        [1.08, 0.92],
+        vertical_alignment="center",
+        gap="large",
+    )
+    with brand_column:
+        st.markdown(
+            """
+            <section class="login-brand">
+                <div class="login-brand-head">
+                    <div class="login-brand-mark" aria-hidden="true">
+                        <svg viewBox="0 0 32 32" focusable="false">
+                            <path d="M16 8.2c-3.6-2.1-7.3-2.1-11-.8v16.8c3.7-1.3 7.4-1.3 11 .8m0-16.8c3.6-2.1 7.3-2.1 11-.8v16.8c-3.7-1.3-7.4-1.3-11 .8m0-16.8v16.8"/>
+                            <path d="M8.5 12.1c1.7-.3 3.3 0 4.8.7m-4.8 3c1.7-.3 3.3 0 4.8.7m8.2-3.7c1.4-.7 3.1-1 4.8-.7m-4.8 3.7c1.4-.7 3.1-1 4.8-.7"/>
+                        </svg>
+                    </div>
+                    <div class="login-brand-identity">
+                        <div class="login-brand-kicker">Sistema de gestión</div>
+                        <div class="login-brand-name">Librería Bazar</div>
+                        <div class="login-brand-name-strong">Humbertito</div>
+                    </div>
+                </div>
+                <div class="login-brand-title">Tu negocio, en buenas manos.</div>
+                <div class="login-brand-subtitle">
+                    Gestiona ventas, inventario y compras desde una plataforma
+                    diseñada para que tengas el control de tu librería.
+                </div>
+                <div class="login-brand-features">
+                    <div class="login-brand-feature">Stock al día</div>
+                    <div class="login-brand-feature">Ventas ágiles</div>
+                    <div class="login-brand-feature">Control integral</div>
+                </div>
+            </section>
+            """,
+            unsafe_allow_html=True,
         )
 
-        with st.form("crear_primer_admin"):
-            nombre = st.text_input("Nombre completo")
-            username = st.text_input("Usuario")
-            password = st.text_input(
-                "Contraseña",
-                type="password"
-            )
-            confirmar = st.text_input(
-                "Confirmar contraseña",
-                type="password"
-            )
-
-            enviar = st.form_submit_button(
-                "Crear administrador",
-                type="primary",
-                width="stretch"
+    with access_column:
+        if auth.cantidad_usuarios() == 0:
+            st.markdown(
+                """
+                <div class="login-form-intro">
+                    <h2>Configuración inicial</h2>
+                    <p>Crea una cuenta de administrador para comenzar a usar el sistema.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
-            if enviar:
-                if password != confirmar:
-                    st.error("Las contraseñas no coinciden.")
-                else:
-                    try:
-                        auth.crear_usuario(
-                            username,
-                            nombre,
-                            password,
-                            "admin"
-                        )
-                        st.success(
-                            "Administrador creado. Inicia sesión."
-                        )
-                        st.rerun()
-                    except ValueError as error:
-                        st.error(str(error))
-
-    else:
-        with st.form("form_login"):
-            username = st.text_input("Usuario")
-            password = st.text_input(
-                "Contraseña",
-                type="password"
-            )
-
-            entrar = st.form_submit_button(
-                "Iniciar sesión",
-                type="primary",
-                width="stretch"
-            )
-
-            if entrar:
-                usuario = auth.verificar_usuario(
-                    username,
-                    password
+            with st.form("crear_primer_admin"):
+                nombre = st.text_input("Nombre completo")
+                username = st.text_input("Usuario")
+                password = st.text_input(
+                    "Contraseña",
+                    type="password"
+                )
+                confirmar = st.text_input(
+                    "Confirmar contraseña",
+                    type="password"
                 )
 
-                if usuario:
-                    st.session_state["usuario"] = usuario
-                    st.session_state["menu"] = "Inicio"
-                    st.rerun()
-                else:
-                    st.error(
-                        "Usuario o contraseña incorrectos."
+                enviar = st.form_submit_button(
+                    "Crear administrador",
+                    type="primary",
+                    width="stretch"
+                )
+
+                if enviar:
+                    if password != confirmar:
+                        st.error("Las contraseñas no coinciden.")
+                    else:
+                        try:
+                            auth.crear_usuario(
+                                username,
+                                nombre,
+                                password,
+                                "admin"
+                            )
+                            st.success(
+                                "Administrador creado. Inicia sesión."
+                            )
+                            st.rerun()
+                        except ValueError as error:
+                            st.error(str(error))
+
+        else:
+            st.markdown(
+                """
+                <div class="login-form-intro">
+                    <h2>Bienvenido de nuevo</h2>
+                    <p>Ingresa tus datos para acceder a tu espacio de trabajo.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            with st.form("form_login"):
+                username = st.text_input("Usuario")
+                password = st.text_input(
+                    "Contraseña",
+                    type="password"
+                )
+
+                entrar = st.form_submit_button(
+                    "Iniciar sesión",
+                    type="primary",
+                    width="stretch"
+                )
+
+                if entrar:
+                    usuario = auth.verificar_usuario(
+                        username,
+                        password
                     )
 
+                    if usuario:
+                        st.session_state["usuario"] = usuario
+                        st.session_state["menu"] = "Inicio"
+                        st.rerun()
+                    else:
+                        st.error(
+                            "Usuario o contraseña incorrectos."
+                        )
 
 if "usuario" not in st.session_state:
     pantalla_acceso()
@@ -3954,7 +4728,7 @@ with st.sidebar:
         <div class="user-card">
             <div class="user-card-top">
                 <span class="user-status-dot"></span>
-                <span class="user-status-text">SESIÓN ACTIVA</span>
+                <span class="user-status-text">Sesión activa</span>
             </div>
             <div class="user-name">{usuario_actual['nombre']}</div>
             <div class="user-role">{rol_texto}</div>
@@ -4053,28 +4827,39 @@ with st.sidebar:
 
 if menu == "Inicio":
 
-    st.header("Panel principal", icon=":material/home:")
-
     operacion = resumen_operativo()
     alertas = obtener_alertas_stock(3)
 
-    st.success(
-        "Sistema operativo y conectado correctamente con la base de datos."
+    st.markdown(
+        f"""
+        <section class="hb-hero">
+            <div class="hb-hero-content">
+                <div class="hb-hero-eyebrow">Gestión comercial · Librería Bazar Humbertito</div>
+                <h1>Todo tu negocio, en un solo lugar</h1>
+                <p>
+                    Consulta el rendimiento de tu negocio, controla el inventario
+                    y registra tus operaciones desde un solo panel.
+                </p>
+            </div>
+            <div class="hb-hero-date">{datetime.now().strftime("%d/%m/%Y")}</div>
+        </section>
+        """,
+        unsafe_allow_html=True,
     )
+
+    st.caption(":material/database: Resumen operativo")
 
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        st.metric("Ingresos totales", f"S/ {operacion['ventas']:.2f}")
+        st.metric("Ingresos totales", f"S/ {operacion['ventas']:.2f}", border=True)
     with k2:
-        st.metric("Margen neto", f"S/ {operacion['margen_neto']:.2f}")
+        st.metric("Margen neto", f"S/ {operacion['margen_neto']:.2f}", border=True)
     with k3:
-        st.metric("Stock crítico", operacion['stock_bajo'])
+        st.metric("Stock crítico", operacion['stock_bajo'], border=True)
     with k4:
-        st.metric("Ventas registradas", operacion['cantidad_ventas'])
+        st.metric("Ventas registradas", operacion['cantidad_ventas'], border=True)
 
-    st.divider()
-
-    st.subheader("Acciones rápidas")
+    st.subheader("Accesos rápidos", icon=":material/bolt:")
     a1, a2, a3, a4 = st.columns(4)
 
     with a1:
@@ -4149,40 +4934,44 @@ if menu == "Inicio":
             st.session_state.menu = "Dashboard gerencial"
             st.rerun()
 
-    st.divider()
+    with st.container(border=True):
+        st.subheader("Estado del inventario", icon=":material/inventory_2:")
 
-    st.subheader("Recomendación del día")
+        if alertas:
+            alert_column, action_column = st.columns([3, 1], vertical_alignment="center")
+            with alert_column:
+                st.warning(
+                    f"{operacion['stock_bajo']} producto(s) requieren revisión."
+                )
+            with action_column:
+                if st.button(
+                    "Revisar inventario",
+                    key="quick_stock_review",
+                    icon=":material/arrow_forward:",
+                    type="primary",
+                    width="stretch",
+                ):
+                    st.session_state.menu = "Productos"
+                    st.rerun()
 
-    if alertas:
-        st.warning("Hay productos con stock bajo o al límite mínimo de inventario.")
-        st.markdown(
-            """
-            <ul class="alert-list">
-                <li>Revisa primero el inventario crítico antes de cerrar el día.</li>
-                <li>Prioriza reposiciones de los productos con mayor rotación.</li>
-                <li>Verifica si la demanda proyectada supera el stock disponible.</li>
-            </ul>
-            """,
-            unsafe_allow_html=True,
-        )
-    else:
-        st.success("El inventario está saludable y no requiere reposición urgente.")
-        st.markdown(
-            """
-            <ul class="alert-list">
-                <li>Tu stock general está estable.</li>
-                <li>Puedes seguir monitoreando ventas y tendencias.</li>
-                <li>La próxima compra puede enfocarse en artículos con más movimiento.</li>
-            </ul>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    st.caption(
-        "Utilice el menú lateral para gestionar productos, compras, ventas y análisis inteligente de la operación."
-    )
-
-    
+            st.dataframe(
+                [
+                    {
+                        "Código": codigo,
+                        "Producto": nombre,
+                        "Stock actual": stock,
+                        "Stock mínimo": stock_minimo,
+                    }
+                    for codigo, nombre, stock, stock_minimo in alertas
+                ],
+                width="stretch",
+                hide_index=True,
+            )
+        else:
+            st.success("El inventario está saludable y no requiere reposición urgente.")
+            st.caption(
+                "Cuando un artículo alcance su nivel mínimo, aparecerá aquí para que puedas actuar a tiempo."
+            )
 # ==========================================================
 # ADMINISTRACIÓN DE USUARIOS
 # ==========================================================
@@ -4253,7 +5042,7 @@ elif menu == "Administrar usuarios":
         # tanto en modo oscuro como en modo blanco.
         tabla_usuarios = [
             {
-                "ID": u[0],
+                "ID": str(u[0]),
                 "Usuario": u[1],
                 "Nombre": u[2],
                 "Rol": (
@@ -4275,6 +5064,193 @@ elif menu == "Administrar usuarios":
             hide_index=True,
             height=360,
         )
+
+        st.divider()
+        usuarios_eliminables = [
+            usuario for usuario in usuarios
+            if str(usuario[0]) != str(usuario_actual.get("id"))
+        ]
+
+        with st.container(border=True):
+            st.subheader(
+                "Transferir administración",
+                icon=":material/swap_horiz:",
+            )
+            st.caption(
+                "Asigna el control a otra cuenta. Tu cuenta se eliminará "
+                "y se cerrará tu sesión; el historial se conservará."
+            )
+
+            if usuarios_eliminables:
+                usuarios_por_id = {
+                    usuario[0]: usuario for usuario in usuarios_eliminables
+                }
+                selector, resumen = st.columns([1.3, 1])
+                with selector:
+                    nuevo_admin_id = st.selectbox(
+                        "Nuevo administrador",
+                        options=list(usuarios_por_id),
+                        format_func=lambda user_id: (
+                            f"{usuarios_por_id[user_id][2]} "
+                            f"(@{usuarios_por_id[user_id][1]})"
+                        ),
+                        key="nuevo_administrador",
+                    )
+                nuevo_admin = usuarios_por_id[nuevo_admin_id]
+                with resumen:
+                    st.caption("SE TRANSFERIRÁ A")
+                    st.markdown(
+                        f"**{nuevo_admin[2]}** · @{nuevo_admin[1]}"
+                    )
+                    st.caption(
+                        "Recibirá permisos de administrador al confirmar."
+                    )
+
+                username_actual = usuario_actual["username"]
+                texto_confirmacion_traspaso = (
+                    f"TRANSFERIR {username_actual} A {nuevo_admin[1]}"
+                )
+
+                with st.form(
+                    "confirmar_traspaso_administracion",
+                    border=False,
+                ):
+                    entrada_confirmacion, accion_confirmacion = st.columns(
+                        [1.5, 1],
+                        vertical_alignment="bottom",
+                    )
+                    with entrada_confirmacion:
+                        confirmacion_traspaso = st.text_input(
+                            "Frase de confirmación",
+                            placeholder=texto_confirmacion_traspaso,
+                            key="confirmacion_traspaso_administracion",
+                        )
+                    with accion_confirmacion:
+                        confirmar_traspaso = st.form_submit_button(
+                            "Transferir y salir",
+                            icon=":material/swap_horiz:",
+                            type="primary",
+                            disabled=(
+                                confirmacion_traspaso.strip().casefold()
+                                != texto_confirmacion_traspaso.casefold()
+                            ),
+                            width="stretch",
+                        )
+
+                if confirmar_traspaso:
+                    try:
+                        auth.transferir_administracion_y_eliminar_usuario(
+                            usuario_actual.get("id"),
+                            nuevo_admin_id,
+                        )
+                        st.session_state["mensaje_traspaso_admin"] = (
+                            f"Administración transferida a @{nuevo_admin[1]}. "
+                            "Tu cuenta fue eliminada; inicia sesión con la nueva cuenta."
+                        )
+                        st.session_state.pop("usuario", None)
+                        st.session_state.pop("menu", None)
+                        st.session_state.pop(
+                            "usuario_pendiente_eliminar_id",
+                            None,
+                        )
+                        st.rerun()
+                    except ValueError as error:
+                        st.error(str(error))
+            else:
+                st.info(
+                    "Crea otra cuenta primero. Después podrás transferirle "
+                    "la administración y eliminar tu cuenta actual."
+                )
+
+        st.divider()
+        st.subheader("Eliminar una cuenta")
+        st.caption(
+            "La eliminación es permanente. Las ventas y compras registradas "
+            "se conservarán."
+        )
+
+        if usuarios_eliminables:
+            for usuario in usuarios_eliminables:
+                usuario_id, username, nombre, rol_usuario = usuario[:4]
+                with st.container(border=True):
+                    datos_usuario, accion_usuario = st.columns([4, 1])
+                    with datos_usuario:
+                        st.write(f"**{nombre}** · @{username}")
+                        st.caption(
+                            "Administrador" if rol_usuario == "admin" else "Empleado"
+                        )
+                    with accion_usuario:
+                        if st.button(
+                            "Eliminar",
+                            key=f"preparar_eliminar_usuario_{usuario_id}",
+                            icon=":material/delete_outline:",
+                            type="secondary",
+                            width="stretch",
+                        ):
+                            st.session_state["usuario_pendiente_eliminar_id"] = usuario_id
+                            st.rerun()
+
+            usuario_pendiente_id = st.session_state.get(
+                "usuario_pendiente_eliminar_id"
+            )
+            usuario_pendiente = next(
+                (
+                    usuario for usuario in usuarios_eliminables
+                    if str(usuario[0]) == str(usuario_pendiente_id)
+                ),
+                None,
+            )
+
+            if usuario_pendiente_id is not None and usuario_pendiente is None:
+                st.session_state.pop("usuario_pendiente_eliminar_id", None)
+                st.info("La cuenta seleccionada ya no está disponible.")
+            elif usuario_pendiente is not None:
+                usuario_id, username, nombre = usuario_pendiente[:3]
+                st.warning(
+                    f"Vas a eliminar la cuenta de {nombre} (@{username}). "
+                    "Esta acción no se puede deshacer."
+                )
+
+                with st.form(f"confirmar_eliminar_usuario_{usuario_id}"):
+                    confirmacion_eliminar = st.text_input(
+                        f"Escribe {username} para confirmar",
+                        key=f"confirmacion_eliminar_usuario_{usuario_id}",
+                    )
+                    confirmar_eliminar = st.form_submit_button(
+                        "Confirmar eliminación",
+                        type="secondary",
+                        disabled=confirmacion_eliminar.strip() != username,
+                    )
+
+                cancelar_eliminar = st.button(
+                    "Cancelar",
+                    key=f"cancelar_eliminar_usuario_{usuario_id}",
+                )
+
+                if cancelar_eliminar:
+                    st.session_state.pop("usuario_pendiente_eliminar_id", None)
+                    st.rerun()
+
+                if confirmar_eliminar:
+                    try:
+                        auth.eliminar_usuario(
+                            usuario_id,
+                            usuario_actual.get("id"),
+                        )
+                        st.session_state.pop(
+                            "usuario_pendiente_eliminar_id", None
+                        )
+                        st.success(
+                            f"La cuenta @{username} se eliminó correctamente."
+                        )
+                        st.rerun()
+                    except ValueError as error:
+                        st.error(str(error))
+        else:
+            st.info(
+                "No hay otras cuentas para eliminar. Crea otra cuenta arriba "
+                "para que aparezca aquí. La cuenta que estás usando no se puede eliminar."
+            )
     else:
         st.info("Todavía no hay usuarios registrados.")
 

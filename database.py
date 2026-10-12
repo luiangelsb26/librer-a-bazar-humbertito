@@ -5,7 +5,10 @@ from pathlib import Path
 # Ubicación de la base de datos local
 DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-_DATABASE_URL = os.environ.get("SUPABASE_DB_URL")
+_DATABASE_URL = os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_URL")
+
+# Si la conexión a Supabase falla, la app debe seguir funcionando con sqlite local.
+_FALLBACK_SQLITE = False
 
 
 class _CursorPostgres:
@@ -33,6 +36,10 @@ class _CursorPostgres:
 
     def close(self):
         self._cursor.close()
+
+    @property
+    def rowcount(self):
+        return self._cursor.rowcount
 
     @property
     def description(self):
@@ -73,13 +80,16 @@ def configurar_desde_streamlit():
     from streamlit.errors import StreamlitSecretNotFoundError
 
     try:
-        _DATABASE_URL = st.secrets.get("SUPABASE_DB_URL")
+        _DATABASE_URL = (
+            st.secrets.get("SUPABASE_DB_URL")
+            or st.secrets.get("DATABASE_URL")
+        )
     except StreamlitSecretNotFoundError:
         return
 
 
 def usar_supabase():
-    return bool(_DATABASE_URL)
+    return bool(_DATABASE_URL) and not _FALLBACK_SQLITE
 
 
 def es_error_integridad(error):
@@ -95,19 +105,24 @@ def es_error_integridad(error):
 
 
 def conectar():
-    """Conecta a Supabase si está configurado; de lo contrario, a SQLite local."""
-    if _DATABASE_URL:
+    """Conecta a Supabase si está configurado; si falla, usa SQLite local."""
+    global _DATABASE_URL, _FALLBACK_SQLITE
+
+    if _DATABASE_URL and not _FALLBACK_SQLITE:
         try:
             import psycopg
-        except ModuleNotFoundError as error:
-            raise RuntimeError(
-                "Falta psycopg para conectarse a Supabase. "
-                "Instala las dependencias de requirements.txt."
-            ) from error
+        except ModuleNotFoundError:
+            _FALLBACK_SQLITE = True
+            return sqlite3.connect(DB_PATH)
 
-        return _ConexionPostgres(
-            psycopg.connect(_DATABASE_URL, connect_timeout=10)
-        )
+        try:
+            return _ConexionPostgres(
+                psycopg.connect(_DATABASE_URL, connect_timeout=20, sslmode="require")
+            )
+        except Exception:
+            _FALLBACK_SQLITE = True
+            _DATABASE_URL = None
+            return sqlite3.connect(DB_PATH)
 
     return sqlite3.connect(DB_PATH)
 

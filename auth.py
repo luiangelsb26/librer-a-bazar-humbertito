@@ -238,3 +238,115 @@ def listar_usuarios():
     con.close()
 
     return usuarios
+
+
+# ==========================================================
+# ELIMINAR USUARIO
+# ==========================================================
+
+def eliminar_usuario(usuario_id, usuario_actual_id=None):
+    if usuario_id is None:
+        raise ValueError("Selecciona una cuenta válida.")
+
+    if str(usuario_id) == str(usuario_actual_id):
+        raise ValueError("No puedes eliminar la cuenta que estás usando.")
+
+    con = conectar()
+    cur = con.cursor()
+
+    try:
+        cur.execute("""
+            SELECT rol
+            FROM usuarios
+            WHERE id = ?
+        """, (usuario_id,))
+        usuario = cur.fetchone()
+
+        if usuario is None:
+            raise ValueError("La cuenta seleccionada ya no existe.")
+
+        if usuario[0] == "admin":
+            cur.execute("""
+                SELECT COUNT(*)
+                FROM usuarios
+                WHERE rol = 'admin'
+            """)
+            if cur.fetchone()[0] <= 1:
+                raise ValueError(
+                    "No se puede eliminar el último administrador."
+                )
+
+        cur.execute("""
+            DELETE FROM usuarios
+            WHERE id = ?
+        """, (usuario_id,))
+
+        if cur.rowcount != 1:
+            raise ValueError("No se pudo encontrar la cuenta para eliminar.")
+
+        con.commit()
+    except Exception:
+        con.rollback()
+        raise
+    finally:
+        con.close()
+
+
+# ==========================================================
+# TRANSFERIR ADMINISTRACIÓN Y ELIMINAR CUENTA ACTUAL
+# ==========================================================
+
+def transferir_administracion_y_eliminar_usuario(
+    usuario_actual_id,
+    nuevo_admin_id,
+):
+    if usuario_actual_id is None or nuevo_admin_id is None:
+        raise ValueError("Selecciona una cuenta válida para el traspaso.")
+
+    if str(usuario_actual_id) == str(nuevo_admin_id):
+        raise ValueError("Debes seleccionar otra cuenta como nuevo administrador.")
+
+    con = conectar()
+    cur = con.cursor()
+
+    try:
+        cur.execute("""
+            SELECT rol
+            FROM usuarios
+            WHERE id = ?
+        """, (usuario_actual_id,))
+        usuario_actual = cur.fetchone()
+        if usuario_actual is None or usuario_actual[0] != "admin":
+            raise ValueError(
+                "La cuenta actual ya no tiene permisos de administrador."
+            )
+
+        cur.execute("""
+            SELECT id
+            FROM usuarios
+            WHERE id = ?
+        """, (nuevo_admin_id,))
+        if cur.fetchone() is None:
+            raise ValueError("La cuenta elegida como reemplazo ya no existe.")
+
+        cur.execute("""
+            UPDATE usuarios
+            SET rol = 'admin'
+            WHERE id = ?
+        """, (nuevo_admin_id,))
+
+        cur.execute("""
+            DELETE FROM usuarios
+            WHERE id = ?
+        """, (usuario_actual_id,))
+        if cur.rowcount != 1:
+            raise ValueError(
+                "No se pudo eliminar la cuenta administrativa actual."
+            )
+
+        con.commit()
+    except Exception:
+        con.rollback()
+        raise
+    finally:
+        con.close()
