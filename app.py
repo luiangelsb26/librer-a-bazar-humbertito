@@ -4126,6 +4126,21 @@ body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stExpander"] {
     border-color:#d4e5e7 !important;
     background:rgba(255,255,255,.75) !important;
 }
+body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stVerticalBlockBorderWrapper"],
+body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stVerticalBlockBorderWrapper"] {
+    box-sizing:border-box !important;
+    height:100% !important;
+    padding:1.15rem !important;
+    border:1px solid #bfd8dc !important;
+    border-radius:16px !important;
+    background:linear-gradient(145deg,#ffffff 0%,#eff7f8 100%) !important;
+    box-shadow:0 10px 24px rgba(35,91,98,.09) !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stVerticalBlockBorderWrapper"]:hover,
+body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stVerticalBlockBorderWrapper"]:hover {
+    border-color:#8fc9bf !important;
+    box-shadow:0 12px 26px rgba(35,139,125,.13) !important;
+}
 @media (max-width:640px) {
     body:has(.hb-light-mode) [data-testid="stMetric"] {
         box-shadow:0 7px 16px rgba(35,91,98,.07) !important;
@@ -5360,7 +5375,7 @@ elif menu == "Administrar usuarios":
         transferencia_column, eliminacion_column = st.columns(2, gap="large")
 
         with transferencia_column:
-            with st.container(border=True):
+            with st.container(key="user_transfer_panel", border=True):
                 st.subheader(
                     "Transferir administración",
                     icon=":material/swap_horiz:",
@@ -5431,7 +5446,7 @@ elif menu == "Administrar usuarios":
                     )
 
         with eliminacion_column:
-            with st.container(border=True):
+            with st.container(key="user_delete_panel", border=True):
                 st.subheader(
                     "Eliminar una cuenta",
                     icon=":material/person_remove:",
