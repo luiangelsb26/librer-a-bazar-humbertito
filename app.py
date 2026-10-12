@@ -5106,36 +5106,18 @@ elif menu == "Administrar usuarios":
                         "Recibirá permisos de administrador al confirmar."
                     )
 
-                username_actual = usuario_actual["username"]
-                texto_confirmacion_traspaso = (
-                    f"TRANSFERIR {username_actual} A {nuevo_admin[1]}"
+                confirmar_traspaso_checkbox = st.checkbox(
+                    "Confirmo el traspaso y la eliminación de mi cuenta",
+                    key="confirmar_traspaso_checkbox",
                 )
-
-                with st.form(
-                    "confirmar_traspaso_administracion",
-                    border=False,
-                ):
-                    entrada_confirmacion, accion_confirmacion = st.columns(
-                        [1.5, 1],
-                        vertical_alignment="bottom",
-                    )
-                    with entrada_confirmacion:
-                        confirmacion_traspaso = st.text_input(
-                            "Frase de confirmación",
-                            placeholder=texto_confirmacion_traspaso,
-                            key="confirmacion_traspaso_administracion",
-                        )
-                    with accion_confirmacion:
-                        confirmar_traspaso = st.form_submit_button(
-                            "Transferir y salir",
-                            icon=":material/swap_horiz:",
-                            type="primary",
-                            disabled=(
-                                confirmacion_traspaso.strip().casefold()
-                                != texto_confirmacion_traspaso.casefold()
-                            ),
-                            width="stretch",
-                        )
+                confirmar_traspaso = st.button(
+                    "Transferir y salir",
+                    key="ejecutar_traspaso_administracion",
+                    icon=":material/swap_horiz:",
+                    type="primary",
+                    disabled=not confirmar_traspaso_checkbox,
+                    width="stretch",
+                )
 
                 if confirmar_traspaso:
                     try:
