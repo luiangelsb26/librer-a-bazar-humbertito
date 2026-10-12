@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import importlib
 from datetime import datetime
 import analysis
@@ -1408,11 +1409,6 @@ if st.session_state.tema_blanco:
             [data-testid="stVegaLiteChart"] svg line {
                 stroke: #cbd5e1 !important;
             }
-            [data-testid="stDataFrame"] * {
-                background-color: #ffffff !important;
-                color: #263238 !important;
-                border-color: #e5e7eb !important;
-            }
             [data-testid="stTabs"] [role="tablist"] {
                 border-bottom-color: #cbd4dc !important;
             }
@@ -1442,16 +1438,56 @@ if st.session_state.tema_blanco:
                 background: #f1f5f9 !important;
                 color: #263238 !important;
                 font-weight: 700 !important;
+                white-space: nowrap !important;
             }
             [data-testid="stTable"] td {
                 background: #ffffff !important;
                 color: #263238 !important;
                 border-color: #e5e7eb !important;
             }
-            [data-testid="stDataFrame"] [role="columnheader"] {
-                background-color: #f1f5f9 !important;
-                color: #263238 !important;
-                font-weight: 700 !important;
+            [data-testid="stTable"] table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            .st-key-registered_users_table [data-testid="stTable"] {
+                overflow: hidden !important;
+                padding: 0 !important;
+                border: 2px solid #319889 !important;
+                border-radius: 14px !important;
+                background: #dff4ef !important;
+                box-shadow: 0 10px 24px rgba(37, 120, 108, .14) !important;
+            }
+            .st-key-registered_users_table [data-testid="stTable"] table {
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+                border: 2px solid #319889 !important;
+                border-radius: 12px !important;
+                overflow: hidden !important;
+                background: #dff4ef !important;
+            }
+            .st-key-registered_users_table [data-testid="stTable"] th {
+                background: #2f8f83 !important;
+                border: 1px solid #67b8ad !important;
+                color: #ffffff !important;
+            }
+            .st-key-registered_users_table [data-testid="stTable"] td {
+                background: #dff4ef !important;
+                border: 1px solid #a9d9d1 !important;
+                color: #203c39 !important;
+            }
+            .st-key-registered_users_table [data-testid="stTable"] th:first-child,
+            .st-key-registered_users_table [data-testid="stTable"] td:first-child {
+                border-left: 0 !important;
+            }
+            .st-key-registered_users_table [data-testid="stTable"] th:last-child,
+            .st-key-registered_users_table [data-testid="stTable"] td:last-child {
+                border-right: 0 !important;
+            }
+            .st-key-registered_users_table [data-testid="stTable"] thead tr:first-child th {
+                border-top: 0 !important;
+            }
+            .st-key-registered_users_table [data-testid="stTable"] tbody tr:last-child td {
+                border-bottom: 0 !important;
             }
             [data-testid="stTabs"] [role="tablist"] {
                 border-bottom-color: #e5e7eb !important;
@@ -3857,6 +3893,244 @@ body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_ac
     background:#e7ebed !important;
     color:#34464d !important;
 }
+body:has(.hb-light-mode) {
+    --hb-light-ink:#18363b;
+    --hb-light-muted:#60777d;
+    --hb-light-teal:#238b7d;
+    --hb-light-teal-dark:#176b62;
+    --hb-light-border:#d4e5e8;
+}
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse at 88% 2%, rgba(67,181,162,.2), transparent 28rem),
+        radial-gradient(ellipse at 4% 42%, rgba(92,165,220,.1), transparent 30rem),
+        linear-gradient(145deg,#edf5f8 0%,#f4f8fa 48%,#eaf4f2 100%) !important;
+}
+body:has(.hb-light-mode) [data-testid="stHeader"],
+body:has(.hb-light-mode) [data-testid="stMain"],
+body:has(.hb-light-mode) [data-testid="stMainBlockContainer"] {
+    background:transparent !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] {
+    color:var(--hb-light-ink) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] h1,
+body:has(.hb-light-mode) [data-testid="stMain"] h2,
+body:has(.hb-light-mode) [data-testid="stMain"] h3,
+body:has(.hb-light-mode) [data-testid="stMain"] h4 {
+    color:#1b3f43 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] p,
+body:has(.hb-light-mode) [data-testid="stMain"] label,
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stCaptionContainer"] {
+    color:var(--hb-light-muted) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] a {
+    color:var(--hb-light-teal-dark) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] hr {
+    border-color:#cddfe2 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetric"] {
+    border:1px solid #cfe4e5 !important;
+    background:linear-gradient(145deg,#ffffff 0%,#f0faf8 100%) !important;
+    box-shadow:0 12px 28px rgba(35,91,98,.09) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetric"]::before {
+    background:linear-gradient(180deg,#31aa96,#438bd1) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetricLabel"] {
+    color:#53727a !important;
+    opacity:1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetricValue"] {
+    color:#173b40 !important;
+}
+body:has(.hb-light-mode) [data-testid="stForm"],
+body:has(.hb-light-mode) [data-testid="stExpander"],
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] {
+    border-color:var(--hb-light-border) !important;
+    background:rgba(255,255,255,.9) !important;
+    box-shadow:0 8px 22px rgba(35,91,98,.055) !important;
+}
+body:has(.hb-light-mode) [data-testid="stForm"] {
+    border-radius:16px !important;
+}
+body:has(.hb-light-mode) [data-testid="stExpander"] summary {
+    color:#294d53 !important;
+    background:linear-gradient(90deg,#f0f8f8,#f8fbfc) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] input,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea,
+body:has(.hb-light-mode) [data-baseweb="select"] > div {
+    border-color:#c9dcdf !important;
+    border-radius:10px !important;
+    background:#ffffff !important;
+    color:#243f45 !important;
+    box-shadow:0 2px 5px rgba(35,91,98,.035) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] input:focus,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input:focus,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea:focus {
+    border-color:#39a995 !important;
+    box-shadow:0 0 0 3px rgba(57,169,149,.15) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button {
+    border-color:#c8dcdf !important;
+    border-radius:10px !important;
+    background:linear-gradient(180deg,#ffffff,#f2f8f9) !important;
+    color:#2d5057 !important;
+    box-shadow:0 3px 8px rgba(35,91,98,.07) !important;
+    transition:transform .16s ease,box-shadow .16s ease,background .16s ease !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button:hover {
+    border-color:#8dc9bf !important;
+    background:linear-gradient(180deg,#f1fbf9,#e5f5f2) !important;
+    color:#176b62 !important;
+    box-shadow:0 6px 14px rgba(35,139,125,.13) !important;
+    transform:translateY(-1px);
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"],
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
+    border-color:#238b7d !important;
+    background:linear-gradient(135deg,#2fa391,#21796f) !important;
+    color:#ffffff !important;
+    box-shadow:0 6px 16px rgba(35,139,125,.22) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"] *,
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"] * {
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"]:hover,
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
+    border-color:#176b62 !important;
+    background:linear-gradient(135deg,#278f80,#176b62) !important;
+    color:#ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stNumberInput"] button {
+    background:#eaf5f5 !important;
+    color:#28776f !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] input[type="checkbox"],
+body:has(.hb-light-mode) [data-testid="stMain"] input[type="radio"] {
+    accent-color:#238b7d;
+}
+body:has(.hb-light-mode) [data-testid="stTabs"] [role="tablist"] {
+    border-bottom:1px solid #d2e2e4 !important;
+    background:rgba(255,255,255,.66) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTabs"] button[role="tab"] {
+    border-color:transparent !important;
+    background:transparent !important;
+    color:#5e747b !important;
+    box-shadow:none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    border-color:#c7e4df !important;
+    background:#e5f5f2 !important;
+    color:#176b62 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"],
+body:has(.hb-light-mode) [data-testid="stDataFrame"],
+body:has(.hb-light-mode) [data-testid="stArrowVegaLiteChart"],
+body:has(.hb-light-mode) [data-testid="stVegaLiteChart"],
+body:has(.hb-light-mode) [data-testid="stPyplotChart"] {
+    border-color:#d1e3e5 !important;
+    border-radius:14px !important;
+    background:#ffffff !important;
+    box-shadow:0 8px 22px rgba(35,91,98,.06) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] th {
+    background:#e7f4f3 !important;
+    color:#234b50 !important;
+    border-color:#d0e4e3 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] td {
+    background:#ffffff !important;
+    color:#314e54 !important;
+    border-color:#e0eaec !important;
+}
+body:has(.hb-light-mode) .quick-card {
+    border-color:#cde4e2 !important;
+    background:
+        radial-gradient(circle at 100% 0%,rgba(83,183,165,.13),transparent 11rem),
+        linear-gradient(145deg,#ffffff 0%,#eff8f7 100%) !important;
+    box-shadow:0 10px 24px rgba(35,91,98,.08) !important;
+}
+body:has(.hb-light-mode) .quick-card strong {
+    color:#1b4649 !important;
+}
+body:has(.hb-light-mode) .quick-card p {
+    color:#5d777d !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] {
+    background:linear-gradient(180deg,#f5fbfc 0%,#edf6f7 55%,#f3f9f8 100%) !important;
+    border-right:1px solid #d6e6e8 !important;
+    box-shadow:4px 0 22px rgba(40,91,98,.045) !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand {
+    border-color:#bfe0db !important;
+    border-left:4px solid #258e80 !important;
+    background:linear-gradient(135deg,#e1f4ef 0%,#f4fbfc 100%) !important;
+    box-shadow:0 8px 18px rgba(35,139,125,.1) !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-kicker {
+    color:#278274 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-name,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-title,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-name {
+    color:#183f43 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-subtitle,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-role,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-status-text,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-section-title {
+    color:#607b81 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-card {
+    border-color:#cfe5e4 !important;
+    background:linear-gradient(135deg,#ffffff,#eaf6f5) !important;
+    box-shadow:0 5px 14px rgba(35,91,98,.055) !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_"] button {
+    border:1px solid #d5e4e6 !important;
+    background:rgba(255,255,255,.78) !important;
+    color:#385a60 !important;
+    box-shadow:0 2px 6px rgba(35,91,98,.04) !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_"] button:hover {
+    border-color:#a9d8cf !important;
+    background:#e5f5f2 !important;
+    color:#176b62 !important;
+    box-shadow:0 5px 12px rgba(35,139,125,.1) !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_active"] button,
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
+    border-color:#258e80 !important;
+    background:linear-gradient(115deg,#2e9d8d,#24786f) !important;
+    color:#ffffff !important;
+    box-shadow:0 7px 16px rgba(35,139,125,.22) !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_"] button * {
+    color:inherit !important;
+    -webkit-text-fill-color:currentColor !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stSidebar"] [class*="st-key-menu_active"] button * {
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stExpander"] {
+    border-color:#d4e5e7 !important;
+    background:rgba(255,255,255,.75) !important;
+}
+@media (max-width:640px) {
+    body:has(.hb-light-mode) [data-testid="stMetric"] {
+        box-shadow:0 7px 16px rgba(35,91,98,.07) !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -5051,8 +5325,8 @@ elif menu == "Administrar usuarios":
     usuarios = auth.listar_usuarios()
 
     if usuarios:
-        # Tabla HTML/estática para que la información se mantenga visible
-        # tanto en modo oscuro como en modo blanco.
+        # La tabla estática mantiene visibles los datos sin depender
+        # del canvas del dataframe interactivo.
         tabla_usuarios = [
             {
                 "ID": str(u[0]),
@@ -5071,35 +5345,35 @@ elif menu == "Administrar usuarios":
             for u in usuarios
         ]
 
-        st.dataframe(
-            tabla_usuarios,
-            width="stretch",
-            hide_index=True,
-            height=360,
-        )
+        with st.container(key="registered_users_table"):
+            st.table(
+                pd.DataFrame(tabla_usuarios).style.hide(axis="index"),
+                width="stretch",
+            )
 
-        st.divider()
         usuarios_eliminables = [
             usuario for usuario in usuarios
             if str(usuario[0]) != str(usuario_actual.get("id"))
         ]
 
-        with st.container(border=True):
-            st.subheader(
-                "Transferir administración",
-                icon=":material/swap_horiz:",
-            )
-            st.caption(
-                "Asigna el control a otra cuenta. Tu cuenta se eliminará "
-                "y se cerrará tu sesión; el historial se conservará."
-            )
+        st.divider()
+        transferencia_column, eliminacion_column = st.columns(2, gap="large")
 
-            if usuarios_eliminables:
-                usuarios_por_id = {
-                    usuario[0]: usuario for usuario in usuarios_eliminables
-                }
-                selector, resumen = st.columns([1.3, 1])
-                with selector:
+        with transferencia_column:
+            with st.container(border=True):
+                st.subheader(
+                    "Transferir administración",
+                    icon=":material/swap_horiz:",
+                )
+                st.caption(
+                    "Asigna el control a otra cuenta. Tu cuenta se eliminará "
+                    "y se cerrará tu sesión; el historial se conservará."
+                )
+
+                if usuarios_eliminables:
+                    usuarios_por_id = {
+                        usuario[0]: usuario for usuario in usuarios_eliminables
+                    }
                     nuevo_admin_id = st.selectbox(
                         "Nuevo administrador",
                         options=list(usuarios_por_id),
@@ -5109,143 +5383,155 @@ elif menu == "Administrar usuarios":
                         ),
                         key="nuevo_administrador",
                     )
-                nuevo_admin = usuarios_por_id[nuevo_admin_id]
-                with resumen:
-                    st.caption("SE TRANSFERIRÁ A")
+                    nuevo_admin = usuarios_por_id[nuevo_admin_id]
                     st.markdown(
-                        f"**{nuevo_admin[2]}** · @{nuevo_admin[1]}"
+                        f"**Se transferirá a:** {nuevo_admin[2]} "
+                        f"· @{nuevo_admin[1]}"
                     )
                     st.caption(
                         "Recibirá permisos de administrador al confirmar."
                     )
 
-                confirmar_traspaso_checkbox = st.checkbox(
-                    "Confirmo el traspaso y la eliminación de mi cuenta",
-                    key="confirmar_traspaso_checkbox",
-                )
-                confirmar_traspaso = st.button(
-                    "Transferir y salir",
-                    key="ejecutar_traspaso_administracion",
-                    icon=":material/swap_horiz:",
-                    type="primary",
-                    disabled=not confirmar_traspaso_checkbox,
-                    width="stretch",
-                )
+                    confirmar_traspaso_checkbox = st.checkbox(
+                        "Confirmo el traspaso y la eliminación de mi cuenta",
+                        key="confirmar_traspaso_checkbox",
+                    )
+                    confirmar_traspaso = st.button(
+                        "Transferir y salir",
+                        key="ejecutar_traspaso_administracion",
+                        icon=":material/swap_horiz:",
+                        type="primary",
+                        disabled=not confirmar_traspaso_checkbox,
+                        width="stretch",
+                    )
 
-                if confirmar_traspaso:
-                    try:
-                        auth.transferir_administracion_y_eliminar_usuario(
-                            usuario_actual.get("id"),
-                            nuevo_admin_id,
-                        )
-                        notificar_exito(
-                            f"Administración transferida a @{nuevo_admin[1]}. "
-                            "Tu cuenta fue eliminada; inicia sesión con la nueva cuenta."
-                        )
-                        st.session_state.pop("usuario", None)
-                        st.session_state.pop("menu", None)
-                        st.session_state.pop(
-                            "usuario_pendiente_eliminar_id",
-                            None,
-                        )
-                        st.rerun()
-                    except ValueError as error:
-                        st.error(str(error))
-            else:
-                st.info(
-                    "Crea otra cuenta primero. Después podrás transferirle "
-                    "la administración y eliminar tu cuenta actual."
-                )
-
-        st.divider()
-        st.subheader("Eliminar una cuenta")
-        st.caption(
-            "La eliminación es permanente. Las ventas y compras registradas "
-            "se conservarán."
-        )
-
-        if usuarios_eliminables:
-            for usuario in usuarios_eliminables:
-                usuario_id, username, nombre, rol_usuario = usuario[:4]
-                with st.container(border=True):
-                    datos_usuario, accion_usuario = st.columns([4, 1])
-                    with datos_usuario:
-                        st.write(f"**{nombre}** · @{username}")
-                        st.caption(
-                            "Administrador" if rol_usuario == "admin" else "Empleado"
-                        )
-                    with accion_usuario:
-                        if st.button(
-                            "Eliminar",
-                            key=f"preparar_eliminar_usuario_{usuario_id}",
-                            icon=":material/delete_outline:",
-                            type="secondary",
-                            width="stretch",
-                        ):
-                            st.session_state["usuario_pendiente_eliminar_id"] = usuario_id
+                    if confirmar_traspaso:
+                        try:
+                            auth.transferir_administracion_y_eliminar_usuario(
+                                usuario_actual.get("id"),
+                                nuevo_admin_id,
+                            )
+                            notificar_exito(
+                                f"Administración transferida a @{nuevo_admin[1]}. "
+                                "Tu cuenta fue eliminada; inicia sesión con la nueva cuenta."
+                            )
+                            st.session_state.pop("usuario", None)
+                            st.session_state.pop("menu", None)
+                            st.session_state.pop(
+                                "usuario_pendiente_eliminar_id",
+                                None,
+                            )
                             st.rerun()
-
-            usuario_pendiente_id = st.session_state.get(
-                "usuario_pendiente_eliminar_id"
-            )
-            usuario_pendiente = next(
-                (
-                    usuario for usuario in usuarios_eliminables
-                    if str(usuario[0]) == str(usuario_pendiente_id)
-                ),
-                None,
-            )
-
-            if usuario_pendiente_id is not None and usuario_pendiente is None:
-                st.session_state.pop("usuario_pendiente_eliminar_id", None)
-                st.info("La cuenta seleccionada ya no está disponible.")
-            elif usuario_pendiente is not None:
-                usuario_id, username, nombre = usuario_pendiente[:3]
-                st.warning(
-                    f"Vas a eliminar la cuenta de {nombre} (@{username}). "
-                    "Esta acción no se puede deshacer."
-                )
-
-                with st.form(f"confirmar_eliminar_usuario_{usuario_id}"):
-                    confirmacion_eliminar = st.text_input(
-                        f"Escribe {username} para confirmar",
-                        key=f"confirmacion_eliminar_usuario_{usuario_id}",
-                    )
-                    confirmar_eliminar = st.form_submit_button(
-                        "Confirmar eliminación",
-                        type="secondary",
-                        disabled=confirmacion_eliminar.strip() != username,
+                        except ValueError as error:
+                            st.error(str(error))
+                else:
+                    st.info(
+                        "Crea otra cuenta primero. Después podrás transferirle "
+                        "la administración y eliminar tu cuenta actual."
                     )
 
-                cancelar_eliminar = st.button(
-                    "Cancelar",
-                    key=f"cancelar_eliminar_usuario_{usuario_id}",
+        with eliminacion_column:
+            with st.container(border=True):
+                st.subheader(
+                    "Eliminar una cuenta",
+                    icon=":material/person_remove:",
+                )
+                st.caption(
+                    "La eliminación es permanente. Las ventas y compras "
+                    "registradas se conservarán."
                 )
 
-                if cancelar_eliminar:
-                    st.session_state.pop("usuario_pendiente_eliminar_id", None)
-                    st.rerun()
+                if usuarios_eliminables:
+                    for usuario in usuarios_eliminables:
+                        usuario_id, username, nombre, rol_usuario = usuario[:4]
+                        with st.container(border=True):
+                            datos_usuario, accion_usuario = st.columns([3, 1])
+                            with datos_usuario:
+                                st.write(f"**{nombre}** · @{username}")
+                                st.caption(
+                                    "Administrador"
+                                    if rol_usuario == "admin"
+                                    else "Empleado"
+                                )
+                            with accion_usuario:
+                                if st.button(
+                                    "Eliminar",
+                                    key=f"preparar_eliminar_usuario_{usuario_id}",
+                                    icon=":material/delete_outline:",
+                                    type="secondary",
+                                    width="stretch",
+                                ):
+                                    st.session_state[
+                                        "usuario_pendiente_eliminar_id"
+                                    ] = usuario_id
+                                    st.rerun()
 
-                if confirmar_eliminar:
-                    try:
-                        auth.eliminar_usuario(
-                            usuario_id,
-                            usuario_actual.get("id"),
-                        )
+                    usuario_pendiente_id = st.session_state.get(
+                        "usuario_pendiente_eliminar_id"
+                    )
+                    usuario_pendiente = next(
+                        (
+                            usuario for usuario in usuarios_eliminables
+                            if str(usuario[0]) == str(usuario_pendiente_id)
+                        ),
+                        None,
+                    )
+
+                    if usuario_pendiente_id is not None and usuario_pendiente is None:
                         st.session_state.pop(
                             "usuario_pendiente_eliminar_id", None
                         )
-                        notificar_exito(
-                            f"La cuenta @{username} se eliminó correctamente."
+                        st.info("La cuenta seleccionada ya no está disponible.")
+                    elif usuario_pendiente is not None:
+                        usuario_id, username, nombre = usuario_pendiente[:3]
+                        st.warning(
+                            f"Vas a eliminar la cuenta de {nombre} (@{username}). "
+                            "Esta acción no se puede deshacer."
                         )
-                        st.rerun()
-                    except ValueError as error:
-                        st.error(str(error))
-        else:
-            st.info(
-                "No hay otras cuentas para eliminar. Crea otra cuenta arriba "
-                "para que aparezca aquí. La cuenta que estás usando no se puede eliminar."
-            )
+
+                        with st.form(f"confirmar_eliminar_usuario_{usuario_id}"):
+                            confirmacion_eliminar = st.text_input(
+                                f"Escribe {username} para confirmar",
+                                key=f"confirmacion_eliminar_usuario_{usuario_id}",
+                            )
+                            confirmar_eliminar = st.form_submit_button(
+                                "Confirmar eliminación",
+                                type="secondary",
+                                disabled=confirmacion_eliminar.strip() != username,
+                            )
+
+                        cancelar_eliminar = st.button(
+                            "Cancelar",
+                            key=f"cancelar_eliminar_usuario_{usuario_id}",
+                        )
+
+                        if cancelar_eliminar:
+                            st.session_state.pop(
+                                "usuario_pendiente_eliminar_id", None
+                            )
+                            st.rerun()
+
+                        if confirmar_eliminar:
+                            try:
+                                auth.eliminar_usuario(
+                                    usuario_id,
+                                    usuario_actual.get("id"),
+                                )
+                                st.session_state.pop(
+                                    "usuario_pendiente_eliminar_id", None
+                                )
+                                notificar_exito(
+                                    f"La cuenta @{username} se eliminó correctamente."
+                                )
+                                st.rerun()
+                            except ValueError as error:
+                                st.error(str(error))
+                else:
+                    st.info(
+                        "No hay otras cuentas para eliminar. Crea otra cuenta "
+                        "arriba para que aparezca aquí. La cuenta que estás "
+                        "usando no se puede eliminar."
+                    )
     else:
         st.info("Todavía no hay usuarios registrados.")
 
