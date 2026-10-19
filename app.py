@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import importlib
+import math
 from datetime import datetime
 import analysis
 import prediction
@@ -6056,14 +6057,57 @@ elif menu == "Predicción de demanda":
     st.header("Predicción de demanda", icon=":material/trending_up:")
 
     st.write(
-        "Estimación de la demanda futura a partir del historial "
-        "de ventas registrado en el sistema."
+        "Modelo de aprendizaje automático que aprende patrones de demanda "
+        "del historial de ventas registrado en el sistema."
     )
 
     st.info(
-        "Para realizar una estimación se requiere historial de "
-        "ventas en al menos 3 días distintos por producto."
+        "El entrenamiento evalúa las fechas más recientes y activa el modelo "
+        "solo si supera el error de una referencia basada en las ventas de hace 7 días."
     )
+
+    st.warning(
+        "Los días sin ventas registradas se interpretan como cero ventas. "
+        "Si el producto estuvo agotado, la demanda real podría ser mayor."
+    )
+
+    estado_actual = prediction.estado_modelo()
+    if estado_actual["estado"] == "ok":
+        st.success(
+            f"Modelo activo: {estado_actual['algoritmo']}. "
+            f"Entrenado el {estado_actual['fecha_entrenamiento']}; "
+            f"historial hasta {estado_actual['fecha_fin_historial']}."
+        )
+        evaluacion_actual = estado_actual.get("evaluacion", {})
+        if evaluacion_actual:
+            st.caption(
+                f"Evaluación temporal: MAE {evaluacion_actual['mae']:.2f} unidades; "
+                f"baseline de 7 días {evaluacion_actual['mae_baseline_7_dias']:.2f}."
+            )
+    else:
+        st.info(estado_actual.get("mensaje", "Entrene el modelo para habilitar predicciones."))
+
+    if st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
+        with st.spinner("Preparando historial y evaluando Random Forest..."):
+            resultado_entrenamiento = prediction.entrenar_modelo()
+        evaluacion = resultado_entrenamiento.get("evaluacion", {})
+        if resultado_entrenamiento["estado"] == "ok":
+            st.success(resultado_entrenamiento["mensaje"])
+        elif resultado_entrenamiento["estado"] == "no_supera_baseline":
+            st.warning(resultado_entrenamiento["mensaje"])
+        else:
+            st.warning(resultado_entrenamiento["mensaje"])
+        if evaluacion:
+            m1, m2, m3 = st.columns(3)
+            m1.metric("MAE del modelo", f"{evaluacion['mae']:.2f} unidades")
+            m2.metric("MAE de referencia", f"{evaluacion['mae_baseline_7_dias']:.2f} unidades")
+            m3.metric("WAPE del modelo", f"{evaluacion['wape_porcentaje']:.1f}%")
+            st.caption(
+                f"Prueba cronológica: {evaluacion['fecha_inicio_prueba']} a "
+                f"{evaluacion['fecha_fin_prueba']}; "
+                f"{evaluacion['observaciones_prueba']} observaciones en "
+                f"{evaluacion['ventanas_prueba_7_dias']} ventanas de 7 días."
+            )
 
     productos = prediction.obtener_productos()
 
@@ -6122,8 +6166,15 @@ elif menu == "Predicción de demanda":
 
                 with c3:
                     st.metric(
-                        "Tendencia",
-                        resultado["tendencia"].capitalize()
+                        "Modelo",
+                        resultado["algoritmo"]
+                    )
+
+                evaluacion = resultado.get("evaluacion", {})
+                if evaluacion:
+                    st.caption(
+                        f"Error MAE en evaluación temporal: "
+                        f"{evaluacion['mae']:.2f} unidades por producto y día."
                     )
 
                 st.divider()
@@ -6170,7 +6221,7 @@ elif menu == "Predicción de demanda":
 
                 cantidad_sugerida = max(
                     0,
-                    round(
+                    math.ceil(
                         resultado["demanda_predicha"]
                         + stock_minimo
                         - stock_actual
@@ -6192,22 +6243,9 @@ elif menu == "Predicción de demanda":
                         "y el stock mínimo configurado."
                     )
 
-            elif resultado["estado"] == "datos_insuficientes":
-
-                st.warning(
-                    resultado["mensaje"]
-                )
-
-                st.write(
-                    "Registre ventas del mismo producto en diferentes "
-                    "días para poder generar una estimación."
-                )
-
             else:
 
-                st.info(
-                    resultado["mensaje"]
-                )
+                st.warning(resultado["mensaje"])
 
 
 with st.container(key="theme_toggle"):

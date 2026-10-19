@@ -5,6 +5,7 @@ __pycache__/
 .streamlit/secrets.toml
 .streamlit/cache/
 data/*.db
+data/*.joblib
 datamkdir/*
 app_backup.py
 .DS_Store
