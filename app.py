@@ -1,3 +1,4 @@
+import io
 import streamlit as st
 import pandas as pd
 import importlib
@@ -4731,6 +4732,75 @@ def obtener_productos():
     return resultado
 
 
+def generar_excel_productos(productos):
+    columnas = [
+        "ID",
+        "Código",
+        "Producto",
+        "Categoría",
+        "Precio compra (S/)",
+        "Precio venta (S/)",
+        "Stock",
+        "Stock mínimo",
+    ]
+    filas = [
+        {
+            "ID": p[0],
+            "Código": p[1],
+            "Producto": p[2],
+            "Categoría": p[3] or "",
+            "Precio compra (S/)": p[4],
+            "Precio venta (S/)": p[5],
+            "Stock": p[6],
+            "Stock mínimo": p[7],
+        }
+        for p in productos
+    ]
+
+    archivo = io.BytesIO()
+    with pd.ExcelWriter(archivo, engine="openpyxl") as escritor:
+        pd.DataFrame(filas, columns=columnas).to_excel(
+            escritor,
+            index=False,
+            sheet_name="Productos",
+        )
+        hoja = escritor.sheets["Productos"]
+        hoja.freeze_panes = "A2"
+        hoja.auto_filter.ref = hoja.dimensions
+
+        anchos = {
+            "A": 10,
+            "B": 18,
+            "C": 34,
+            "D": 24,
+            "E": 20,
+            "F": 20,
+            "G": 12,
+            "H": 16,
+        }
+        for columna, ancho in anchos.items():
+            hoja.column_dimensions[columna].width = ancho
+
+        if filas:
+            from openpyxl.worksheet.table import Table, TableStyleInfo
+
+            tabla = Table(
+                displayName="TablaProductos",
+                ref=hoja.dimensions,
+            )
+            tabla.tableStyleInfo = TableStyleInfo(
+                name="TableStyleMedium2",
+                showFirstColumn=False,
+                showLastColumn=False,
+                showRowStripes=True,
+                showColumnStripes=False,
+            )
+            hoja.add_table(tabla)
+
+    archivo.seek(0)
+    return archivo.getvalue()
+
+
 # ==========================================================
 # PRODUCTOS
 # ==========================================================
@@ -5853,6 +5923,19 @@ elif menu == "Productos":
                 width="stretch",
                 hide_index=True,
                 height=420,
+            )
+
+            st.download_button(
+                "Descargar productos en Excel",
+                data=generar_excel_productos(productos),
+                file_name=(
+                    f"productos_humbertito_{datetime.now():%Y%m%d_%H%M}.xlsx"
+                ),
+                mime=(
+                    "application/vnd.openxmlformats-officedocument."
+                    "spreadsheetml.sheet"
+                ),
+                key="descargar_productos_excel",
             )
 
             st.divider()
