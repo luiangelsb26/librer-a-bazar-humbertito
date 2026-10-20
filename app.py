@@ -4780,6 +4780,93 @@ def registrar_producto(
         con.close()
 
 
+def actualizar_producto(
+    producto_id,
+    codigo,
+    nombre,
+    categoria,
+    precio_compra,
+    precio_venta,
+    stock,
+    stock_minimo,
+):
+    con = conectar()
+
+    try:
+        cursor = con.execute("""
+            UPDATE productos
+            SET codigo = ?,
+                nombre = ?,
+                categoria = ?,
+                precio_compra = ?,
+                precio_venta = ?,
+                stock = ?,
+                stock_minimo = ?
+            WHERE id = ?
+        """, (
+            codigo,
+            nombre,
+            categoria,
+            precio_compra,
+            precio_venta,
+            stock,
+            stock_minimo,
+            producto_id,
+        ))
+        con.commit()
+
+        if cursor.rowcount == 0:
+            return False, "No se encontró el producto seleccionado."
+
+        return True, "Producto actualizado correctamente."
+
+    except Exception as e:
+        if database.es_error_integridad(e):
+            return False, "Ese código ya está asignado a otro producto."
+        return False, f"No se pudo actualizar el producto: {e}"
+
+    finally:
+        con.close()
+
+
+def eliminar_producto(producto_id):
+    con = conectar()
+
+    try:
+        ventas_asociadas = con.execute(
+            "SELECT COUNT(*) FROM detalle_ventas WHERE producto_id = ?",
+            (producto_id,),
+        ).fetchone()[0]
+        compras_asociadas = con.execute(
+            "SELECT COUNT(*) FROM detalle_compras WHERE producto_id = ?",
+            (producto_id,),
+        ).fetchone()[0]
+
+        if ventas_asociadas or compras_asociadas:
+            return (
+                False,
+                "No se puede eliminar porque el producto tiene movimientos "
+                "de venta o compra. Puedes editar sus datos y conservar el historial.",
+            )
+
+        cursor = con.execute(
+            "DELETE FROM productos WHERE id = ?",
+            (producto_id,),
+        )
+        con.commit()
+
+        if cursor.rowcount == 0:
+            return False, "No se encontró el producto seleccionado."
+
+        return True, "Producto eliminado correctamente."
+
+    except Exception as e:
+        return False, f"No se pudo eliminar el producto: {e}"
+
+    finally:
+        con.close()
+
+
 # ==========================================================
 # VENTAS
 # ==========================================================
@@ -5747,6 +5834,8 @@ elif menu == "Productos":
 
             tabla = []
 
+            productos_por_id = {p[0]: p for p in productos}
+
             for p in productos:
                 tabla.append({
                     "ID": p[0],
@@ -5765,6 +5854,127 @@ elif menu == "Productos":
                 hide_index=True,
                 height=420,
             )
+
+            st.divider()
+            st.subheader("Editar o eliminar un producto")
+            producto_id = st.selectbox(
+                "Selecciona el producto",
+                options=list(productos_por_id),
+                format_func=lambda identificador: (
+                    f"{productos_por_id[identificador][1]} — "
+                    f"{productos_por_id[identificador][2]}"
+                ),
+                key="producto_seleccionado_edicion",
+            )
+            producto = productos_por_id[producto_id]
+
+            with st.expander("Editar datos del producto"):
+                with st.form(f"form_editar_producto_{producto_id}"):
+                    edit_c1, edit_c2 = st.columns(2)
+
+                    with edit_c1:
+                        nuevo_codigo = st.text_input(
+                            "Código del producto",
+                            value=producto[1],
+                        )
+                        nuevo_nombre = st.text_input(
+                            "Nombre del producto",
+                            value=producto[2],
+                        )
+                        nueva_categoria = st.text_input(
+                            "Categoría",
+                            value=producto[3] or "",
+                        )
+                        nuevo_precio_compra = st.number_input(
+                            "Precio de compra",
+                            min_value=0.0,
+                            step=0.10,
+                            format="%.2f",
+                            value=float(producto[4] or 0),
+                        )
+
+                    with edit_c2:
+                        nuevo_precio_venta = st.number_input(
+                            "Precio de venta",
+                            min_value=0.0,
+                            step=0.10,
+                            format="%.2f",
+                            value=float(producto[5] or 0),
+                        )
+                        nuevo_stock = st.number_input(
+                            "Stock",
+                            min_value=0,
+                            step=1,
+                            value=int(producto[6] or 0),
+                        )
+                        nuevo_stock_minimo = st.number_input(
+                            "Stock mínimo",
+                            min_value=0,
+                            step=1,
+                            value=int(producto[7] or 0),
+                        )
+
+                    guardar_cambios = st.form_submit_button(
+                        "Guardar cambios",
+                        type="primary",
+                    )
+
+                    if guardar_cambios:
+                        if not nuevo_codigo.strip():
+                            st.error("Ingrese el código del producto.")
+                        elif not nuevo_nombre.strip():
+                            st.error("Ingrese el nombre del producto.")
+                        elif nuevo_precio_venta <= 0:
+                            st.error("El precio de venta debe ser mayor que 0.")
+                        else:
+                            ok, mensaje = actualizar_producto(
+                                producto_id,
+                                nuevo_codigo.strip(),
+                                nuevo_nombre.strip(),
+                                nueva_categoria.strip(),
+                                nuevo_precio_compra,
+                                nuevo_precio_venta,
+                                nuevo_stock,
+                                nuevo_stock_minimo,
+                            )
+
+                            if ok:
+                                notificar_exito(mensaje)
+                                st.rerun()
+                            else:
+                                st.error(mensaje)
+
+            with st.expander("Eliminar producto"):
+                st.warning(
+                    "La eliminación es permanente. Si el producto ya tiene "
+                    "ventas o compras registradas, se conservará para no "
+                    "alterar ese historial."
+                )
+
+                with st.form(f"form_eliminar_producto_{producto_id}"):
+                    confirmar_eliminacion = st.checkbox(
+                        f"Confirmo que deseo eliminar “{producto[2]}”."
+                    )
+                    eliminar = st.form_submit_button(
+                        "Eliminar producto",
+                        type="secondary",
+                    )
+
+                    if eliminar:
+                        if not confirmar_eliminacion:
+                            st.error("Marca la confirmación para continuar.")
+                        else:
+                            ok, mensaje = eliminar_producto(producto_id)
+
+                            if ok:
+                                notificar_exito(mensaje)
+                                st.session_state.pop(
+                                    "producto_seleccionado_edicion",
+                                    None,
+                                )
+                                st.rerun()
+                            else:
+                                st.error(mensaje)
 
         else:
 
