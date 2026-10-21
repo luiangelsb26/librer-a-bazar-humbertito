@@ -162,15 +162,10 @@ def crear_base_datos():
     """)
 
     # Registra si una venta afectó el stock para poder restaurarlo al borrar.
-    # Las ventas antiguas quedan en NULL porque no se puede inferir ese dato.
-    if usar_supabase():
-        cursor.execute(
-            "ALTER TABLE ventas ADD COLUMN IF NOT EXISTS stock_descontado INTEGER"
-        )
-        cursor.execute(
-            "ALTER TABLE ventas ADD COLUMN IF NOT EXISTS referencia TEXT"
-        )
-    else:
+    # En Supabase el esquema se actualiza mediante migración SQL, no en cada
+    # arranque de Streamlit, porque ALTER TABLE puede bloquearse si hay consultas
+    # concurrentes. Las ventas antiguas quedan en NULL.
+    if not usar_supabase():
         columnas_ventas = cursor.execute("PRAGMA table_info(ventas)").fetchall()
         if not any(columna[1] == "stock_descontado" for columna in columnas_ventas):
             cursor.execute(
