@@ -5329,6 +5329,49 @@ def eliminar_venta(venta_id, restaurar_stock_venta_antigua=False):
         con.close()
 
 
+def eliminar_todas_ventas():
+    """Elimina todas las ventas y sus detalles, reponiendo el stock descontado."""
+    con = conectar()
+
+    try:
+        cantidad_ventas = con.execute(
+            "SELECT COUNT(*) FROM ventas"
+        ).fetchone()[0]
+        if not cantidad_ventas:
+            return False, "No hay ventas registradas para eliminar."
+
+        stock_a_reponer = con.execute("""
+            SELECT dv.producto_id, SUM(dv.cantidad)
+            FROM detalle_ventas dv
+            JOIN ventas v ON v.id = dv.venta_id
+            WHERE v.stock_descontado = 1
+            GROUP BY dv.producto_id
+        """).fetchall()
+
+        for producto_id, cantidad in stock_a_reponer:
+            con.execute(
+                "UPDATE productos SET stock = stock + ? WHERE id = ?",
+                (cantidad, producto_id),
+            )
+
+        con.execute("DELETE FROM detalle_ventas")
+        con.execute("DELETE FROM ventas")
+        # Permite volver a importar los mismos archivos después de vaciar ventas.
+        con.execute("DELETE FROM importaciones_ventas")
+        con.commit()
+        return True, (
+            f"Se eliminaron {cantidad_ventas} ventas. El stock se restauró "
+            "para las ventas que estaban marcadas como descontadas."
+        )
+
+    except Exception as e:
+        con.rollback()
+        return False, f"No se pudieron eliminar todas las ventas: {e}"
+
+    finally:
+        con.close()
+
+
 def registrar_venta(
     producto_id,
     cantidad,
@@ -6719,6 +6762,50 @@ elif menu == "Ventas":
                             venta_id_seleccionada,
                             restaurar_stock_venta_antigua,
                         )
+                        if ok:
+                            notificar_exito(mensaje)
+                            st.rerun()
+                        else:
+                            st.error(mensaje)
+
+            cantidad_ventas_total = len({venta[0] for venta in ventas})
+            estados_stock_ventas = {venta[0]: venta[7] for venta in ventas}
+            ventas_stock_desconocido = sum(
+                estado is None for estado in estados_stock_ventas.values()
+            )
+
+            with st.expander("Eliminar todas las ventas"):
+                st.warning(
+                    f"Se eliminarán permanentemente las {cantidad_ventas_total} "
+                    "ventas y sus detalles. Se restaurará el stock solo de las "
+                    "ventas que el sistema marcó como descontadas."
+                )
+                if ventas_stock_desconocido:
+                    st.info(
+                        f"{ventas_stock_desconocido} ventas antiguas no tienen "
+                        "registro de si descontaron stock; su eliminación no cambiará "
+                        "el inventario."
+                    )
+                st.caption(
+                    "También se borrará el registro de archivos importados para "
+                    "que puedas importarlos nuevamente."
+                )
+                confirmar_eliminar_todas = st.checkbox(
+                    f"Confirmo que deseo eliminar todas las "
+                    f"{cantidad_ventas_total} ventas",
+                    key=f"confirmar_eliminar_todas_ventas_{cantidad_ventas_total}",
+                )
+                if st.button(
+                    "Eliminar todas las ventas",
+                    key="eliminar_todas_ventas",
+                    type="secondary",
+                ):
+                    if not confirmar_eliminar_todas:
+                        st.warning(
+                            "Marca la confirmación antes de eliminar todas las ventas."
+                        )
+                    else:
+                        ok, mensaje = eliminar_todas_ventas()
                         if ok:
                             notificar_exito(mensaje)
                             st.rerun()
