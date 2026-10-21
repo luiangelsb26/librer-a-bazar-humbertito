@@ -4017,7 +4017,8 @@ body:has(.hb-light-mode) [data-testid="stMain"] input[type="checkbox"],
 body:has(.hb-light-mode) [data-testid="stMain"] input[type="radio"] {
     accent-color:#238b7d;
 }
-.st-key-stock_historico_checkbox [data-testid="stCheckbox"] label {
+.st-key-stock_historico_checkbox [data-testid="stCheckbox"] label,
+[class*="st-key-restaurar_stock_venta_antigua_"] [data-testid="stCheckbox"] label {
     align-items:center !important;
 }
 body:has(.hb-light-mode) [data-testid="stTabs"] [role="tablist"] {
