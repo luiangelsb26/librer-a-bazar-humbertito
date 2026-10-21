@@ -3,6 +3,9 @@ import streamlit as st
 import pandas as pd
 import importlib
 import math
+import hashlib
+import re
+import unicodedata
 from datetime import datetime
 import analysis
 import prediction
@@ -4945,6 +4948,314 @@ def eliminar_producto(producto_id):
 # VENTAS
 # ==========================================================
 
+def crear_plantilla_ventas_excel():
+    """Genera una plantilla vacía para importar ventas históricas."""
+    archivo = io.BytesIO()
+    columnas = [
+        "Fecha",
+        "Código del producto",
+        "Cantidad",
+        "Precio unitario (S/)",
+        "N° Boleta",
+    ]
+
+    with pd.ExcelWriter(archivo, engine="openpyxl") as escritor:
+        pd.DataFrame(columns=columnas).to_excel(
+            escritor,
+            index=False,
+            sheet_name="Ventas",
+        )
+        hoja = escritor.sheets["Ventas"]
+        hoja.freeze_panes = "A2"
+        hoja.auto_filter.ref = "A1:E1"
+        for columna, ancho in {"A": 18, "B": 24, "C": 12, "D": 22, "E": 18}.items():
+            hoja.column_dimensions[columna].width = ancho
+
+        pd.DataFrame({
+            "Instrucciones": [
+                "Registra una fila por cada producto vendido.",
+                "Usa la fecha impresa en la boleta; no se aceptan fechas futuras.",
+                "El código debe coincidir con el catálogo de productos del sistema.",
+                "Cantidad debe ser un entero mayor que cero.",
+                "Usa el precio unitario que figura en la boleta.",
+                "N° Boleta es opcional; repite el mismo número para agrupar sus productos.",
+                "No agregues totales ni filas de resumen debajo de las ventas.",
+            ]
+        }).to_excel(escritor, index=False, sheet_name="Instrucciones")
+        escritor.sheets["Instrucciones"].column_dimensions["A"].width = 100
+
+    archivo.seek(0)
+    return archivo.getvalue()
+
+
+def _normalizar_encabezado_excel(valor):
+    texto = unicodedata.normalize("NFKD", str(valor))
+    texto = "".join(caracter for caracter in texto if not unicodedata.combining(caracter))
+    return re.sub(r"[^a-z0-9]+", " ", texto.lower()).strip()
+
+
+def _numero_excel(valor):
+    if pd.isna(valor):
+        return None
+    if isinstance(valor, (int, float)):
+        return float(valor)
+
+    texto = re.sub(r"[^0-9,.-]", "", str(valor).strip())
+    if not texto:
+        return None
+    if "," in texto and "." in texto:
+        if texto.rfind(",") > texto.rfind("."):
+            texto = texto.replace(".", "").replace(",", ".")
+        else:
+            texto = texto.replace(",", "")
+    elif "," in texto:
+        texto = texto.replace(",", ".")
+    try:
+        return float(texto)
+    except ValueError:
+        return None
+
+
+def validar_ventas_excel(contenido):
+    """Lee y valida el Excel sin modificar la base de datos."""
+    try:
+        original = pd.read_excel(io.BytesIO(contenido), sheet_name=0)
+    except Exception as e:
+        return [], [f"No se pudo leer el archivo Excel: {e}"], pd.DataFrame()
+
+    if original.empty:
+        return [], ["La primera hoja no contiene filas de ventas."], original
+
+    encabezados = {
+        "fecha": {"fecha", "fecha de venta", "fecha boleta"},
+        "codigo": {"codigo", "codigo producto", "codigo del producto", "sku"},
+        "producto": {"producto", "nombre producto", "nombre del producto"},
+        "cantidad": {"cantidad", "unidades"},
+        "precio": {
+            "precio unitario", "precio unitario s", "precio de venta", "precio venta", "precio"
+        },
+        "boleta": {
+            "boleta", "numero boleta", "numero de boleta", "n boleta",
+            "nro boleta", "ticket", "comprobante", "referencia"
+        },
+    }
+    columnas = {}
+    for columna in original.columns:
+        normalizado = _normalizar_encabezado_excel(columna)
+        for campo, alias in encabezados.items():
+            if normalizado in alias:
+                columnas[campo] = columna
+
+    requeridos = ["fecha", "cantidad", "precio"]
+    faltantes = [campo for campo in requeridos if campo not in columnas]
+    if "codigo" not in columnas and "producto" not in columnas:
+        faltantes.append("Código del producto o Producto")
+    if faltantes:
+        return [], [
+            "Faltan columnas requeridas: " + ", ".join(faltantes) + ". "
+            "Descarga la plantilla para ver los encabezados aceptados."
+        ], original
+
+    productos = obtener_productos()
+    por_codigo = {str(producto[1]).strip().casefold(): producto for producto in productos}
+    por_nombre = {}
+    for producto in productos:
+        por_nombre.setdefault(str(producto[2]).strip().casefold(), []).append(producto)
+
+    filas_validas = []
+    errores = []
+    hoy = datetime.now().date()
+
+    for indice, fila in original.iterrows():
+        valores = [fila[columna] for columna in original.columns]
+        if all(pd.isna(valor) or str(valor).strip() == "" for valor in valores):
+            continue
+
+        numero_fila = int(indice) + 2
+        errores_fila = []
+        producto = None
+
+        valor_codigo = fila[columnas["codigo"]] if "codigo" in columnas else None
+        valor_nombre = fila[columnas["producto"]] if "producto" in columnas else None
+        if not pd.isna(valor_codigo) and str(valor_codigo).strip():
+            producto = por_codigo.get(str(valor_codigo).strip().casefold())
+            if producto is None:
+                errores_fila.append(f"código de producto no registrado: {valor_codigo}")
+        elif not pd.isna(valor_nombre) and str(valor_nombre).strip():
+            coincidencias = por_nombre.get(str(valor_nombre).strip().casefold(), [])
+            if len(coincidencias) == 1:
+                producto = coincidencias[0]
+            elif len(coincidencias) > 1:
+                errores_fila.append(f"nombre ambiguo; usa su código: {valor_nombre}")
+            else:
+                errores_fila.append(f"producto no registrado: {valor_nombre}")
+        else:
+            errores_fila.append("falta el código o nombre del producto")
+
+        valor_fecha = fila[columnas["fecha"]]
+        fecha_parseada = None
+        if pd.isna(valor_fecha):
+            errores_fila.append("falta la fecha")
+        else:
+            try:
+                if isinstance(valor_fecha, (int, float)) and not isinstance(valor_fecha, bool):
+                    fecha_parseada = (
+                        pd.Timestamp("1899-12-30")
+                        + pd.to_timedelta(float(valor_fecha), unit="D")
+                    ).date()
+                else:
+                    fecha_convertida = pd.to_datetime(
+                        valor_fecha,
+                        dayfirst=True,
+                        format="mixed",
+                        errors="coerce",
+                    )
+                    if not pd.isna(fecha_convertida):
+                        fecha_parseada = fecha_convertida.date()
+            except (TypeError, ValueError, OverflowError):
+                fecha_parseada = None
+            if fecha_parseada is None:
+                errores_fila.append("fecha inválida")
+            elif fecha_parseada > hoy:
+                errores_fila.append("la fecha no puede ser futura")
+
+        cantidad_numero = _numero_excel(fila[columnas["cantidad"]])
+        if cantidad_numero is None or cantidad_numero <= 0 or not cantidad_numero.is_integer():
+            errores_fila.append("la cantidad debe ser un entero mayor que cero")
+
+        precio = _numero_excel(fila[columnas["precio"]])
+        if precio is None or precio <= 0:
+            errores_fila.append("el precio unitario debe ser mayor que cero")
+
+        referencia = ""
+        if "boleta" in columnas:
+            valor_referencia = fila[columnas["boleta"]]
+            if not pd.isna(valor_referencia):
+                referencia = str(valor_referencia).strip()
+                if referencia.endswith(".0") and referencia[:-2].isdigit():
+                    referencia = referencia[:-2]
+
+        if errores_fila:
+            errores.extend([f"Fila {numero_fila}: {error}" for error in errores_fila])
+            continue
+
+        filas_validas.append({
+            "fila_excel": numero_fila,
+            "fecha": fecha_parseada.isoformat() + " 12:00:00",
+            "producto_id": producto[0],
+            "codigo": producto[1],
+            "producto": producto[2],
+            "cantidad": int(cantidad_numero),
+            "precio_unitario": round(precio, 2),
+            "subtotal": round(precio * cantidad_numero, 2),
+            "referencia": referencia,
+        })
+
+    if not filas_validas and not errores:
+        errores.append("No se encontraron filas de ventas para importar.")
+    return filas_validas, errores, original
+
+
+def hash_importacion_registrada(hash_archivo):
+    con = conectar()
+    try:
+        return con.execute(
+            "SELECT nombre_archivo, fecha_importacion FROM importaciones_ventas "
+            "WHERE hash_archivo = ?",
+            (hash_archivo,),
+        ).fetchone()
+    finally:
+        con.close()
+
+
+def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=False):
+    """Importa todo el archivo en una transacción o no importa ninguna fila."""
+    con = conectar()
+    try:
+        existente = con.execute(
+            "SELECT 1 FROM importaciones_ventas WHERE hash_archivo = ?",
+            (hash_archivo,),
+        ).fetchone()
+        if existente:
+            return False, "Este mismo archivo ya fue importado."
+
+        cantidades = {}
+        for fila in filas:
+            cantidades[fila["producto_id"]] = (
+                cantidades.get(fila["producto_id"], 0) + fila["cantidad"]
+            )
+
+        if descontar_stock:
+            for producto_id, cantidad in cantidades.items():
+                stock = con.execute(
+                    "SELECT stock FROM productos WHERE id = ?",
+                    (producto_id,),
+                ).fetchone()
+                if stock is None or cantidad > stock[0]:
+                    nombre = next(
+                        fila["producto"] for fila in filas
+                        if fila["producto_id"] == producto_id
+                    )
+                    return False, (
+                        f"Stock insuficiente para {nombre}: se necesitan {cantidad} "
+                        f"unidades y hay {stock[0] if stock else 0}. No se importó el archivo."
+                    )
+
+        grupos = {}
+        for fila in filas:
+            clave = (
+                (fila["fecha"], fila["referencia"])
+                if fila["referencia"]
+                else (fila["fecha"], f"__fila_{fila['fila_excel']}")
+            )
+            grupos.setdefault(clave, []).append(fila)
+
+        for (fecha, referencia), detalles in grupos.items():
+            total = round(sum(detalle["subtotal"] for detalle in detalles), 2)
+            venta_id = con.execute(
+                "INSERT INTO ventas (fecha, total, stock_descontado, referencia) "
+                "VALUES (?, ?, ?, ?) RETURNING id",
+                (fecha, total, int(bool(descontar_stock)), referencia or None),
+            ).fetchone()[0]
+
+            for detalle in detalles:
+                con.execute(
+                    "INSERT INTO detalle_ventas "
+                    "(venta_id, producto_id, cantidad, precio_unitario, subtotal) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (
+                        venta_id,
+                        detalle["producto_id"],
+                        detalle["cantidad"],
+                        detalle["precio_unitario"],
+                        detalle["subtotal"],
+                    ),
+                )
+                if descontar_stock:
+                    con.execute(
+                        "UPDATE productos SET stock = stock - ? WHERE id = ?",
+                        (detalle["cantidad"], detalle["producto_id"]),
+                    )
+
+        con.execute(
+            "INSERT INTO importaciones_ventas "
+            "(hash_archivo, nombre_archivo, fecha_importacion, filas_importadas) "
+            "VALUES (?, ?, ?, ?)",
+            (
+                hash_archivo,
+                nombre_archivo,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                len(filas),
+            ),
+        )
+        con.commit()
+        return True, f"Se importaron {len(filas)} filas de venta correctamente."
+    except Exception as e:
+        con.rollback()
+        return False, f"No se pudo importar el archivo: {e}"
+    finally:
+        con.close()
+
 def obtener_ventas():
     con = conectar()
 
@@ -4957,7 +5268,8 @@ def obtener_ventas():
             dv.cantidad,
             dv.precio_unitario,
             dv.subtotal,
-            v.stock_descontado
+            v.stock_descontado,
+            v.referencia
         FROM ventas v
         JOIN detalle_ventas dv
             ON v.id = dv.venta_id
@@ -6221,6 +6533,107 @@ elif menu == "Ventas":
                 else:
                     st.error(mensaje)
 
+        st.divider()
+        st.subheader("Importar ventas desde Excel")
+        st.caption(
+            "Carga las ventas de tus boletas en bloque. Puedes usar la plantilla "
+            "o un archivo con columnas equivalentes."
+        )
+        st.download_button(
+            "Descargar plantilla de ventas",
+            data=crear_plantilla_ventas_excel(),
+            file_name="plantilla_ventas_humbertito.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="descargar_plantilla_ventas",
+        )
+
+        archivo_ventas_excel = st.file_uploader(
+            "Seleccionar archivo Excel de ventas (.xlsx)",
+            type=["xlsx"],
+            key="carga_masiva_ventas_excel",
+            help=(
+                "Cada fila representa un producto vendido. Comparte el mismo "
+                "N° Boleta entre filas para agruparlas en una venta."
+            ),
+        )
+
+        if archivo_ventas_excel is not None:
+            contenido_excel = archivo_ventas_excel.getvalue()
+            hash_archivo_excel = hashlib.sha256(contenido_excel).hexdigest()
+            importacion_existente = hash_importacion_registrada(hash_archivo_excel)
+            filas_excel, errores_excel, _ = validar_ventas_excel(contenido_excel)
+
+            if importacion_existente:
+                st.warning(
+                    "Este archivo ya fue importado el "
+                    f"{importacion_existente[1]} como "
+                    f"{importacion_existente[0]}. No se volverá a registrar."
+                )
+
+            if filas_excel:
+                vista_previa = pd.DataFrame([
+                    {
+                        "Fila Excel": fila["fila_excel"],
+                        "Fecha": fila["fecha"].split()[0],
+                        "Código": fila["codigo"],
+                        "Producto": fila["producto"],
+                        "Cantidad": fila["cantidad"],
+                        "Precio unitario": f"S/ {fila['precio_unitario']:.2f}",
+                        "Boleta": fila["referencia"],
+                    }
+                    for fila in filas_excel[:20]
+                ])
+                st.dataframe(
+                    vista_previa,
+                    width="stretch",
+                    hide_index=True,
+                )
+                st.caption(
+                    f"Filas válidas: {len(filas_excel)} · "
+                    f"Importe total: S/ {sum(fila['subtotal'] for fila in filas_excel):.2f}"
+                )
+                if len(filas_excel) > 20:
+                    st.caption("La vista previa muestra las primeras 20 filas.")
+
+            if errores_excel:
+                st.error(
+                    f"Se encontraron {len(errores_excel)} errores. Corrige el Excel "
+                    "para importar el archivo completo."
+                )
+                for error_excel in errores_excel[:20]:
+                    st.write(f"• {error_excel}")
+                if len(errores_excel) > 20:
+                    st.caption("Se muestran solo los primeros 20 errores.")
+
+            descontar_stock_importacion = st.checkbox(
+                "Descontar estas unidades del stock actual",
+                value=False,
+                key="importar_ventas_descontar_stock",
+                help=(
+                    "Déjalo desmarcado si el inventario actual ya considera estas "
+                    "ventas históricas. Márcalo solo si necesitas aplicar la salida "
+                    "al stock que muestra el sistema."
+                ),
+            )
+
+            if not errores_excel and filas_excel and not importacion_existente:
+                if st.button(
+                    "Importar ventas validadas",
+                    key="confirmar_importacion_ventas_excel",
+                    type="primary",
+                ):
+                    ok, mensaje = importar_ventas_excel(
+                        filas_excel,
+                        hash_archivo_excel,
+                        archivo_ventas_excel.name,
+                        descontar_stock_importacion,
+                    )
+                    if ok:
+                        notificar_exito(mensaje)
+                        st.rerun()
+                    else:
+                        st.error(mensaje)
+
         st.subheader("Historial de ventas")
 
         ventas = obtener_ventas()
@@ -6232,6 +6645,7 @@ elif menu == "Ventas":
             for venta in ventas:
                 tabla.append({
                     "Venta": venta[0],
+                    "Boleta": venta[8] or "",
                     "Fecha": venta[1],
                     "Total": f"S/ {venta[2]:.2f}",
                     "Producto": venta[3],
@@ -6257,6 +6671,11 @@ elif menu == "Ventas":
                         f"{ventas_por_id[venta_id][3]} · "
                         f"{ventas_por_id[venta_id][4]} u. · "
                         f"S/ {ventas_por_id[venta_id][2]:.2f}"
+                        + (
+                            f" · Boleta {ventas_por_id[venta_id][8]}"
+                            if ventas_por_id[venta_id][8]
+                            else ""
+                        )
                     ),
                     key="venta_a_eliminar",
                 )

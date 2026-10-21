@@ -156,7 +156,8 @@ def crear_base_datos():
             id {id_type},
             fecha TEXT NOT NULL,
             total {real_type} NOT NULL,
-            stock_descontado INTEGER
+            stock_descontado INTEGER,
+            referencia TEXT
         )
     """)
 
@@ -166,12 +167,26 @@ def crear_base_datos():
         cursor.execute(
             "ALTER TABLE ventas ADD COLUMN IF NOT EXISTS stock_descontado INTEGER"
         )
+        cursor.execute(
+            "ALTER TABLE ventas ADD COLUMN IF NOT EXISTS referencia TEXT"
+        )
     else:
         columnas_ventas = cursor.execute("PRAGMA table_info(ventas)").fetchall()
         if not any(columna[1] == "stock_descontado" for columna in columnas_ventas):
             cursor.execute(
                 "ALTER TABLE ventas ADD COLUMN stock_descontado INTEGER"
             )
+        if not any(columna[1] == "referencia" for columna in columnas_ventas):
+            cursor.execute("ALTER TABLE ventas ADD COLUMN referencia TEXT")
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS importaciones_ventas (
+            hash_archivo TEXT PRIMARY KEY,
+            nombre_archivo TEXT NOT NULL,
+            fecha_importacion TEXT NOT NULL,
+            filas_importadas INTEGER NOT NULL
+        )
+    """)
 
     cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS detalle_ventas (
@@ -221,6 +236,7 @@ def reiniciar_datos():
             "detalle_ventas",
             "detalle_compras",
             "ventas",
+            "importaciones_ventas",
             "compras",
             "productos",
         )
