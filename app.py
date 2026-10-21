@@ -4965,7 +4965,13 @@ def obtener_ventas():
     return resultado
 
 
-def registrar_venta(producto_id, cantidad):
+def registrar_venta(
+    producto_id,
+    cantidad,
+    fecha_venta=None,
+    precio_unitario=None,
+    descontar_stock=True,
+):
     con = conectar()
 
     try:
@@ -4980,14 +4986,27 @@ def registrar_venta(producto_id, cantidad):
 
         nombre, precio_venta, stock_actual = producto
 
+        if precio_unitario is None:
+            precio_unitario = precio_venta
+
         if cantidad <= 0:
             return False, "La cantidad debe ser mayor que 0."
 
-        if cantidad > stock_actual:
+        if precio_unitario <= 0:
+            return False, "El precio unitario debe ser mayor que 0."
+
+        if descontar_stock and cantidad > stock_actual:
             return False, f"Stock insuficiente. Stock disponible: {stock_actual}"
 
-        subtotal = precio_venta * cantidad
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        subtotal = precio_unitario * cantidad
+        if fecha_venta is None:
+            fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        elif fecha_venta == datetime.now().date():
+            fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            # Las boletas antiguas suelen tener solo fecha, sin hora. El mediodía
+            # evita que la fecha cambie al convertirla en zonas horarias distintas.
+            fecha = f"{fecha_venta.isoformat()} 12:00:00"
 
         cur = con.execute("""
             INSERT INTO ventas (fecha, total)
@@ -5010,17 +5029,18 @@ def registrar_venta(producto_id, cantidad):
             venta_id,
             producto_id,
             cantidad,
-            precio_venta,
+            precio_unitario,
             subtotal
         ))
 
-        nuevo_stock = stock_actual - cantidad
-
-        con.execute("""
-            UPDATE productos
-            SET stock = ?
-            WHERE id = ?
-        """, (nuevo_stock, producto_id))
+        nuevo_stock = stock_actual
+        if descontar_stock:
+            nuevo_stock = stock_actual - cantidad
+            con.execute("""
+                UPDATE productos
+                SET stock = ?
+                WHERE id = ?
+            """, (nuevo_stock, producto_id))
 
         con.commit()
 
@@ -5028,7 +5048,8 @@ def registrar_venta(producto_id, cantidad):
             f"Venta registrada correctamente. "
             f"Producto: {nombre}. "
             f"Total: S/ {subtotal:.2f}. "
-            f"Stock restante: {nuevo_stock}."
+            + (f"Stock restante: {nuevo_stock}." if descontar_stock else
+               " El stock actual no se modificó.")
         )
 
     except Exception as e:
@@ -6100,6 +6121,30 @@ elif menu == "Ventas":
                 value=1
             )
 
+            precio_unitario = st.number_input(
+                "Precio unitario de la boleta (S/)",
+                min_value=0.01,
+                value=float(productos[indice][5]),
+                step=0.10,
+                help="Si el precio de la boleta antigua difiere del actual, ingresa el que figura en ella."
+            )
+
+            fecha_venta = st.date_input(
+                "Fecha de la boleta",
+                value=datetime.now().date(),
+                max_value=datetime.now().date(),
+                help="Para boletas antiguas, selecciona la fecha impresa en el documento."
+            )
+
+            descontar_stock_historico = st.checkbox(
+                "También descontar esta venta histórica del stock actual",
+                value=False,
+                help=(
+                    "Déjalo desmarcado si el stock actual ya refleja las ventas que "
+                    "ocurrieron. Márcalo solo si todavía necesitas descontar esta cantidad."
+                )
+            )
+
             vender = st.form_submit_button(
                 "Registrar venta"
             )
@@ -6108,7 +6153,13 @@ elif menu == "Ventas":
 
                 ok, mensaje = registrar_venta(
                     productos[indice][0],
-                    cantidad
+                    cantidad,
+                    fecha_venta,
+                    precio_unitario,
+                    descontar_stock=(
+                        fecha_venta == datetime.now().date()
+                        or descontar_stock_historico
+                    )
                 )
 
                 if ok:
