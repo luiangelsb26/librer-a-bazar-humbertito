@@ -4017,6 +4017,9 @@ body:has(.hb-light-mode) [data-testid="stMain"] input[type="checkbox"],
 body:has(.hb-light-mode) [data-testid="stMain"] input[type="radio"] {
     accent-color:#238b7d;
 }
+.st-key-stock_historico_checkbox [data-testid="stCheckbox"] label {
+    align-items:center !important;
+}
 body:has(.hb-light-mode) [data-testid="stTabs"] [role="tablist"] {
     border-bottom:1px solid #d2e2e4 !important;
     background:rgba(255,255,255,.66) !important;
@@ -6139,6 +6142,7 @@ elif menu == "Ventas":
             descontar_stock_historico = st.checkbox(
                 "También descontar esta venta histórica del stock actual",
                 value=False,
+                key="stock_historico_checkbox",
                 help=(
                     "Déjalo desmarcado si el stock actual ya refleja las ventas que "
                     "ocurrieron. Márcalo solo si todavía necesitas descontar esta cantidad."
