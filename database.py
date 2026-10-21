@@ -155,9 +155,23 @@ def crear_base_datos():
         CREATE TABLE IF NOT EXISTS ventas (
             id {id_type},
             fecha TEXT NOT NULL,
-            total {real_type} NOT NULL
+            total {real_type} NOT NULL,
+            stock_descontado INTEGER
         )
     """)
+
+    # Registra si una venta afectó el stock para poder restaurarlo al borrar.
+    # Las ventas antiguas quedan en NULL porque no se puede inferir ese dato.
+    if usar_supabase():
+        cursor.execute(
+            "ALTER TABLE ventas ADD COLUMN IF NOT EXISTS stock_descontado INTEGER"
+        )
+    else:
+        columnas_ventas = cursor.execute("PRAGMA table_info(ventas)").fetchall()
+        if not any(columna[1] == "stock_descontado" for columna in columnas_ventas):
+            cursor.execute(
+                "ALTER TABLE ventas ADD COLUMN stock_descontado INTEGER"
+            )
 
     cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS detalle_ventas (

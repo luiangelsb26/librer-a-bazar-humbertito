@@ -4955,7 +4955,8 @@ def obtener_ventas():
             p.nombre,
             dv.cantidad,
             dv.precio_unitario,
-            dv.subtotal
+            dv.subtotal,
+            v.stock_descontado
         FROM ventas v
         JOIN detalle_ventas dv
             ON v.id = dv.venta_id
@@ -4966,6 +4967,53 @@ def obtener_ventas():
 
     con.close()
     return resultado
+
+
+def eliminar_venta(venta_id, restaurar_stock_venta_antigua=False):
+    """Elimina una venta y restaura el stock si esa venta lo había descontado."""
+    con = conectar()
+
+    try:
+        venta = con.execute(
+            "SELECT stock_descontado FROM ventas WHERE id = ?",
+            (venta_id,),
+        ).fetchone()
+
+        if venta is None:
+            return False, "No se encontró la venta seleccionada."
+
+        detalles = con.execute(
+            "SELECT producto_id, cantidad FROM detalle_ventas WHERE venta_id = ?",
+            (venta_id,),
+        ).fetchall()
+
+        stock_descontado = venta[0]
+        reponer_stock = (
+            stock_descontado == 1
+            or (stock_descontado is None and restaurar_stock_venta_antigua)
+        )
+
+        if reponer_stock:
+            for producto_id, cantidad in detalles:
+                con.execute(
+                    "UPDATE productos SET stock = stock + ? WHERE id = ?",
+                    (cantidad, producto_id),
+                )
+
+        con.execute("DELETE FROM detalle_ventas WHERE venta_id = ?", (venta_id,))
+        con.execute("DELETE FROM ventas WHERE id = ?", (venta_id,))
+        con.commit()
+
+        if reponer_stock:
+            return True, "Venta eliminada y stock restaurado."
+        return True, "Venta eliminada. El stock actual no se modificó."
+
+    except Exception as e:
+        con.rollback()
+        return False, f"No se pudo eliminar la venta: {e}"
+
+    finally:
+        con.close()
 
 
 def registrar_venta(
@@ -5012,10 +5060,10 @@ def registrar_venta(
             fecha = f"{fecha_venta.isoformat()} 12:00:00"
 
         cur = con.execute("""
-            INSERT INTO ventas (fecha, total)
-            VALUES (?, ?)
+            INSERT INTO ventas (fecha, total, stock_descontado)
+            VALUES (?, ?, ?)
             RETURNING id
-        """, (fecha, subtotal))
+        """, (fecha, subtotal, int(bool(descontar_stock))))
 
         venta_id = cur.fetchone()[0]
 
@@ -6197,6 +6245,65 @@ elif menu == "Ventas":
                 hide_index=True,
                 height=420,
             )
+
+            with st.expander("Eliminar una venta registrada por error"):
+                ventas_por_id = {venta[0]: venta for venta in ventas}
+                venta_id_seleccionada = st.selectbox(
+                    "Selecciona la venta",
+                    options=list(ventas_por_id),
+                    format_func=lambda venta_id: (
+                        f"Venta {venta_id} · {ventas_por_id[venta_id][1]} · "
+                        f"{ventas_por_id[venta_id][3]} · "
+                        f"{ventas_por_id[venta_id][4]} u. · "
+                        f"S/ {ventas_por_id[venta_id][2]:.2f}"
+                    ),
+                    key="venta_a_eliminar",
+                )
+                venta_seleccionada = ventas_por_id[venta_id_seleccionada]
+
+                restaurar_stock_venta_antigua = False
+                if venta_seleccionada[7] is None:
+                    st.info(
+                        "Esta venta es anterior al control de stock por venta. "
+                        "No se puede saber si descontó inventario."
+                    )
+                    restaurar_stock_venta_antigua = st.checkbox(
+                        "Restaurar al stock las unidades de esta venta",
+                        value=False,
+                        key=f"restaurar_stock_venta_antigua_{venta_id_seleccionada}",
+                        help=(
+                            "Márcalo solo si el stock actual ya incluye el descuento "
+                            "de esta venta."
+                        ),
+                    )
+                elif venta_seleccionada[7] == 1:
+                    st.caption("Al eliminarla, se devolverán sus unidades al stock.")
+                else:
+                    st.caption("Esta venta no modificó el stock al registrarse.")
+
+                confirmar_eliminacion = st.checkbox(
+                    f"Confirmo que deseo eliminar la venta {venta_id_seleccionada}",
+                    value=False,
+                    key=f"confirmar_eliminar_venta_{venta_id_seleccionada}",
+                )
+
+                if st.button(
+                    "Eliminar venta seleccionada",
+                    key=f"eliminar_venta_{venta_id_seleccionada}",
+                    type="secondary",
+                ):
+                    if not confirmar_eliminacion:
+                        st.warning("Marca la confirmación antes de eliminar la venta.")
+                    else:
+                        ok, mensaje = eliminar_venta(
+                            venta_id_seleccionada,
+                            restaurar_stock_venta_antigua,
+                        )
+                        if ok:
+                            notificar_exito(mensaje)
+                            st.rerun()
+                        else:
+                            st.error(mensaje)
 
         else:
 
