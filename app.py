@@ -8247,7 +8247,7 @@ elif menu == "Compras":
                     )
                     st.caption(
                         f"Filas válidas: {len(filas_compras)} · "
-                        f"Total de compras: S/ {total_compras_excel:.2f}"
+                        f"Total de compras: {formatear_soles(total_compras_excel)}"
                     )
 
                     actualizar_stock_compras = st.checkbox(
@@ -8288,10 +8288,10 @@ elif menu == "Compras":
         try:
             auditoria = obtener_auditoria_compras()
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Comprobantes", auditoria["compras"])
-            m2.metric("Total registrado", f"S/ {auditoria['total_encabezados']:.2f}")
-            m3.metric("Líneas de compra", auditoria["lineas"])
-            m4.metric("Total en detalle", f"S/ {auditoria['total_detalles']:.2f}")
+            m1.metric("Comprobantes", formatear_numero_es(auditoria["compras"]))
+            m2.metric("Total registrado", formatear_soles(auditoria["total_encabezados"]))
+            m3.metric("Líneas de compra", formatear_numero_es(auditoria["lineas"]))
+            m4.metric("Total en detalle", formatear_soles(auditoria["total_detalles"]))
             st.caption(
                 "Fechas registradas: "
                 f"{auditoria['primera_fecha'] or '—'} a {auditoria['ultima_fecha'] or '—'}. "
@@ -8325,12 +8325,12 @@ elif menu == "Compras":
                 tabla.append({
                     "Compra": compra[0],
                     "Fecha": compra[1],
-                    "Total": f"S/ {compra[2]:.2f}",
+                    "Total": formatear_soles(compra[2]),
                     "Comprobante": compra[3] or "",
                     "Producto": compra[4],
                     "Cantidad": compra[5],
-                    "Precio unitario": f"S/ {compra[6]:.2f}",
-                    "Subtotal": f"S/ {compra[7]:.2f}"
+                    "Precio unitario": formatear_soles(compra[6]),
+                    "Subtotal": formatear_soles(compra[7])
                 })
 
             st.dataframe(
