@@ -6624,19 +6624,46 @@ elif menu == "Ventas":
                         "Precio unitario": f"S/ {fila['precio_unitario']:.2f}",
                         "Boleta": fila["referencia"],
                     }
-                    for fila in filas_excel[:20]
+                    for fila in filas_excel
                 ])
                 st.dataframe(
                     vista_previa,
                     width="stretch",
                     hide_index=True,
+                    height=520,
+                    key=f"previsualizacion_ventas_{hash_archivo_excel[:12]}",
+                    column_config={
+                        "Fila Excel": st.column_config.NumberColumn(
+                            "Fila Excel", width=85
+                        ),
+                        "Fecha": st.column_config.TextColumn(
+                            "Fecha", width=125
+                        ),
+                        "Código": st.column_config.TextColumn(
+                            "Código", width=135
+                        ),
+                        "Producto": st.column_config.TextColumn(
+                            "Producto", width=250
+                        ),
+                        "Cantidad": st.column_config.NumberColumn(
+                            "Cantidad", width=85
+                        ),
+                        "Precio unitario": st.column_config.TextColumn(
+                            "Precio unitario", width=125
+                        ),
+                        "Boleta": st.column_config.TextColumn(
+                            "Boleta", width=230
+                        ),
+                    },
                 )
                 st.caption(
                     f"Filas válidas: {len(filas_excel)} · "
                     f"Importe total: S/ {sum(fila['subtotal'] for fila in filas_excel):.2f}"
                 )
-                if len(filas_excel) > 20:
-                    st.caption("La vista previa muestra las primeras 20 filas.")
+                st.caption(
+                    "La vista previa incluye todas las filas válidas. "
+                    "Desplázate hacia abajo dentro del recuadro para revisarlas."
+                )
 
             if errores_excel:
                 st.error(
