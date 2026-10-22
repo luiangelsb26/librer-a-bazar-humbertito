@@ -8629,7 +8629,7 @@ elif menu == "Predicción de demanda":
                         for fecha in resultado["fechas_prediccion"]
                     ],
                     "Unidades estimadas": [
-                        round(valor, 2)
+                        formatear_numero_es(valor, 2)
                         for valor in resultado["predicciones"]
                     ]
                 }
@@ -8676,7 +8676,13 @@ elif menu == "Predicción de demanda":
                 st.dataframe(
                     datos_tabla_pred,
                     width="stretch",
-                    hide_index=True
+                    hide_index=True,
+                    column_config={
+                        "Unidades estimadas": st.column_config.TextColumn(
+                            "Unidades estimadas",
+                            alignment="right",
+                        ),
+                    },
                 )
 
                 st.subheader("Necesidad de reposición")
