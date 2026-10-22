@@ -6039,6 +6039,11 @@ def resumen_dashboard():
         FROM ventas
     """).fetchone()
 
+    cantidad_lineas_venta = con.execute("""
+        SELECT COUNT(*)
+        FROM detalle_ventas
+    """).fetchone()[0]
+
     compras = con.execute("""
         SELECT COALESCE(SUM(total), 0)
         FROM compras
@@ -6052,14 +6057,17 @@ def resumen_dashboard():
 
     con.close()
 
-    return ventas, cantidad_ventas, compras, stock_bajo
+    return ventas, cantidad_ventas, cantidad_lineas_venta, compras, stock_bajo
 
 
 def resumen_operativo():
-    ventas, cantidad_ventas, compras, stock_bajo = resumen_dashboard()
+    ventas, cantidad_ventas, cantidad_lineas_venta, compras, stock_bajo = (
+        resumen_dashboard()
+    )
     return {
         "ventas": ventas,
         "cantidad_ventas": cantidad_ventas,
+        "cantidad_lineas_venta": cantidad_lineas_venta,
         "compras": compras,
         "stock_bajo": stock_bajo,
     }
@@ -6213,16 +6221,27 @@ if menu == "Inicio":
 
     st.caption(":material/database: Resumen operativo")
 
-    k1, k2, k3, k4 = st.columns(4)
+    k1, k2, k3, k4, k5 = st.columns(5)
     with k1:
         st.metric("Ingresos totales", f"S/ {operacion['ventas']:.2f}", border=True)
     with k2:
-        st.metric("Compras registradas", f"S/ {operacion['compras']:.2f}", border=True)
+        st.metric("Boletas / transacciones", operacion['cantidad_ventas'], border=True)
     with k3:
-        st.metric("Productos con stock crítico", operacion['stock_bajo'], border=True)
+        st.metric(
+            "Líneas de productos vendidos",
+            operacion['cantidad_lineas_venta'],
+            border=True,
+        )
     with k4:
-        st.metric("Transacciones registradas", operacion['cantidad_ventas'], border=True)
+        st.metric("Compras registradas", f"S/ {operacion['compras']:.2f}", border=True)
+    with k5:
+        st.metric("Productos con stock crítico", operacion['stock_bajo'], border=True)
 
+    st.caption(
+        "Una transacción agrupa una venta o boleta; las líneas cuentan cada "
+        "producto registrado dentro de esas ventas. "
+        "Por eso pueden ser valores distintos."
+    )
     st.caption(
         "El sistema no muestra margen neto: aún no guarda el costo histórico "
         "de cada producto vendido ni los gastos operativos."
@@ -6626,21 +6645,32 @@ elif menu == "Dashboard gerencial":
 
     st.header("Dashboard gerencial", icon=":material/dashboard:")
 
-    ventas, cantidad_ventas, compras, stock_bajo = resumen_dashboard()
+    ventas, cantidad_ventas, cantidad_lineas_venta, compras, stock_bajo = (
+        resumen_dashboard()
+    )
 
-    d1, d2, d3, d4 = st.columns(4)
+    d1, d2, d3, d4, d5 = st.columns(5)
 
     with d1:
         st.metric("Ingresos por ventas", f"S/ {ventas:.2f}")
 
     with d2:
-        st.metric("Transacciones", cantidad_ventas)
+        st.metric("Boletas / transacciones", cantidad_ventas)
 
     with d3:
-        st.metric("Compras acumuladas", f"S/ {compras:.2f}")
+        st.metric("Líneas de productos vendidos", cantidad_lineas_venta)
 
     with d4:
+        st.metric("Compras acumuladas", f"S/ {compras:.2f}")
+
+    with d5:
         st.metric("Productos con stock bajo", stock_bajo)
+
+    st.caption(
+        "Las transacciones agrupan las ventas por boleta cuando el Excel la "
+        "incluye. Las líneas cuentan cada producto de esas boletas; no equivalen "
+        "a las unidades vendidas."
+    )
 
     st.divider()
 
