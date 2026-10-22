@@ -35,7 +35,7 @@ def notificar_exito(mensaje):
     notificaciones.append(mensaje)
 
 
-def mostrar_grafico_estatico(figura, clave, descripcion):
+def mostrar_grafico_estatico(figura, clave):
     """Muestra una gráfica sin zoom, desplazamiento ni controles interactivos."""
     st.plotly_chart(
         figura,
@@ -49,7 +49,6 @@ def mostrar_grafico_estatico(figura, clave, descripcion):
         theme="streamlit",
         width="stretch",
         height=340,
-        alt=descripcion,
     )
 
 
@@ -6300,8 +6299,6 @@ def obtener_auditoria_compras():
                 COALESCE(SUM(COALESCE(d.lineas, 0)), 0) AS lineas,
                 MIN(c.fecha) AS primera_fecha,
                 MAX(c.fecha) AS ultima_fecha,
-                SUM(CASE WHEN UPPER(COALESCE(c.referencia, '')) LIKE 'DEMO%'
-                    THEN 1 ELSE 0 END) AS referencias_demo,
                 SUM(CASE WHEN d.compra_id IS NULL THEN 1 ELSE 0 END) AS sin_detalles
             FROM compras c
             LEFT JOIN (
@@ -6328,8 +6325,7 @@ def obtener_auditoria_compras():
             "lineas": resumen[3] or 0,
             "primera_fecha": resumen[4],
             "ultima_fecha": resumen[5],
-            "referencias_demo": resumen[6] or 0,
-            "sin_detalles": resumen[7] or 0,
+            "sin_detalles": resumen[6] or 0,
             "diferencias": diferencias,
         }
     finally:
@@ -7160,7 +7156,6 @@ elif menu == "Dashboard gerencial":
         mostrar_grafico_estatico(
             grafico_ventas_diarias,
             "grafico_ventas_diarias_estatico",
-            "Ventas totales por día, gráfico estático.",
         )
     else:
         st.info("No existen ventas para mostrar.")
@@ -7187,7 +7182,6 @@ elif menu == "Dashboard gerencial":
         mostrar_grafico_estatico(
             grafico_productos_mas_vendidos,
             "grafico_productos_mas_vendidos_estatico",
-            "Productos con mayor movimiento, gráfico estático.",
         )
     else:
         st.info("No existen ventas registradas.")
@@ -8161,7 +8155,7 @@ elif menu == "Compras":
             m1.metric("Comprobantes", auditoria["compras"])
             m2.metric("Total registrado", f"S/ {auditoria['total_encabezados']:.2f}")
             m3.metric("Líneas de compra", auditoria["lineas"])
-            m4.metric("Comprobantes DEMO", auditoria["referencias_demo"])
+            m4.metric("Total en detalle", f"S/ {auditoria['total_detalles']:.2f}")
             st.caption(
                 "Fechas registradas: "
                 f"{auditoria['primera_fecha'] or '—'} a {auditoria['ultima_fecha'] or '—'}. "
@@ -8176,20 +8170,13 @@ elif menu == "Compras":
                 )
             elif auditoria["compras"]:
                 st.success("Los totales registrados coinciden con las líneas de compra.")
-            if auditoria["referencias_demo"]:
-                st.warning(
-                    f"Se detectaron {auditoria['referencias_demo']} referencias con prefijo "
-                    "DEMO. Coteja cada una con su comprobante antes de incluirla como dato real."
-                )
             if auditoria["sin_detalles"]:
                 st.error(
                     f"Hay {auditoria['sin_detalles']} compras sin líneas de detalle."
                 )
         except Exception as error:
             st.warning(
-                "No se pudo mostrar la auditoría de compras. Vuelve a ejecutar "
-                "migracion_importar_compras.sql en Supabase SQL Editor para agregar "
-                f"el campo de seguimiento de stock. Detalle: {error}"
+                f"No se pudo mostrar la auditoría de compras. Detalle: {error}"
             )
 
         compras = obtener_compras()
@@ -8257,8 +8244,7 @@ elif menu == "Compras":
                     )
         except Exception as error:
             st.caption(
-                "El historial de archivos requiere volver a ejecutar la migración "
-                f"actualizada en Supabase. Detalle: {error}"
+                f"No se pudo cargar el historial de archivos importados. Detalle: {error}"
             )
 
 
@@ -8573,7 +8559,6 @@ elif menu == "Predicción de demanda":
                 mostrar_grafico_estatico(
                     grafico_prediccion,
                     "grafico_prediccion_estatico",
-                    "Demanda estimada por día. Gráfico estático.",
                 )
 
                 st.subheader("Detalle de la predicción")
