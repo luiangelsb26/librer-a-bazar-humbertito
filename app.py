@@ -65,6 +65,33 @@ def formatear_soles(valor):
     return f"S/ {formatear_numero_es(valor, 2)}"
 
 
+def mostrar_tabla_centrada(datos, *args, **kwargs):
+    """Centra de forma consistente los valores de las tablas interactivas."""
+    marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
+    configuracion = dict(kwargs.pop("column_config", {}) or {})
+
+    for columna in marco.columns:
+        if columna in configuracion:
+            continue
+        if pd.api.types.is_numeric_dtype(marco[columna]):
+            configuracion[columna] = st.column_config.NumberColumn(
+                str(columna),
+                alignment="center",
+            )
+        else:
+            configuracion[columna] = st.column_config.TextColumn(
+                str(columna),
+                alignment="center",
+            )
+
+    return st.dataframe(
+        datos,
+        *args,
+        column_config=configuracion,
+        **kwargs,
+    )
+
+
 for mensaje_notificacion in st.session_state.pop(
     "_notificaciones_exito",
     [],
@@ -6801,7 +6828,7 @@ if menu == "Inicio":
                     st.session_state.menu = "Productos"
                     st.rerun()
 
-            st.dataframe(
+            mostrar_tabla_centrada(
                 [
                     {
                         "Código": codigo,
@@ -6907,7 +6934,10 @@ elif menu == "Administrar usuarios":
 
         with st.container(key="registered_users_table"):
             st.table(
-                pd.DataFrame(tabla_usuarios).style.hide(axis="index"),
+                pd.DataFrame(tabla_usuarios)
+                .style
+                .hide(axis="index")
+                .set_properties(**{"text-align": "center"}),
                 width="stretch",
             )
 
@@ -7455,34 +7485,36 @@ elif menu == "Productos":
                     }
                     for fila in filas_productos_excel
                 ])
-                st.dataframe(
+                mostrar_tabla_centrada(
                     vista_productos_excel,
                     width="stretch",
                     hide_index=True,
                     height=420,
                     key=f"vista_productos_excel_{hash_productos_excel}",
                     column_config={
-                        "ID": st.column_config.TextColumn("ID", width=85),
+                        "ID": st.column_config.TextColumn(
+                            "ID", width=85, alignment="center"
+                        ),
                         "Código": st.column_config.TextColumn(
-                            "Código", width=125
+                            "Código", width=125, alignment="center"
                         ),
                         "Producto": st.column_config.TextColumn(
-                            "Producto", width=220
+                            "Producto", width=220, alignment="center"
                         ),
                         "Categoría": st.column_config.TextColumn(
-                            "Categoría", width=170
+                            "Categoría", width=170, alignment="center"
                         ),
                         "Precio compra": st.column_config.TextColumn(
-                            "Precio compra", width=130
+                            "Precio compra", width=130, alignment="center"
                         ),
                         "Precio venta": st.column_config.TextColumn(
-                            "Precio venta", width=130
+                            "Precio venta", width=130, alignment="center"
                         ),
                         "Stock": st.column_config.NumberColumn(
-                            "Stock", width=80
+                            "Stock", width=80, alignment="center"
                         ),
                         "Stock mínimo": st.column_config.NumberColumn(
-                            "Stock mínimo", width=100
+                            "Stock mínimo", width=100, alignment="center"
                         ),
                     },
                 )
@@ -7541,7 +7573,7 @@ elif menu == "Productos":
                     "Stock mínimo": p[7]
                 })
 
-            st.dataframe(
+            mostrar_tabla_centrada(
                 tabla,
                 width="stretch",
                 hide_index=True,
@@ -7854,7 +7886,7 @@ elif menu == "Ventas":
                     }
                     for fila in filas_excel
                 ])
-                st.dataframe(
+                mostrar_tabla_centrada(
                     vista_previa,
                     width="stretch",
                     hide_index=True,
@@ -7862,25 +7894,25 @@ elif menu == "Ventas":
                     key=f"previsualizacion_ventas_{hash_archivo_excel[:12]}",
                     column_config={
                         "Fila Excel": st.column_config.NumberColumn(
-                            "Fila Excel", width=85
+                            "Fila Excel", width=85, alignment="center"
                         ),
                         "Fecha": st.column_config.TextColumn(
-                            "Fecha", width=125
+                            "Fecha", width=125, alignment="center"
                         ),
                         "Código": st.column_config.TextColumn(
-                            "Código", width=135
+                            "Código", width=135, alignment="center"
                         ),
                         "Producto": st.column_config.TextColumn(
-                            "Producto", width=250
+                            "Producto", width=250, alignment="center"
                         ),
                         "Cantidad": st.column_config.NumberColumn(
-                            "Cantidad", width=85
+                            "Cantidad", width=85, alignment="center"
                         ),
                         "Precio unitario": st.column_config.TextColumn(
-                            "Precio unitario", width=125
+                            "Precio unitario", width=125, alignment="center"
                         ),
                         "Boleta": st.column_config.TextColumn(
-                            "Boleta", width=230
+                            "Boleta", width=230, alignment="center"
                         ),
                     },
                 )
@@ -7956,7 +7988,7 @@ elif menu == "Ventas":
                 "Numeración consecutiva desde 1, en el orden del historial. "
                 "Desliza hacia abajo dentro del recuadro para ver las demás filas."
             )
-            st.dataframe(
+            mostrar_tabla_centrada(
                 tabla,
                 width="stretch",
                 hide_index=True,
@@ -7964,28 +7996,28 @@ elif menu == "Ventas":
                 key="historial_ventas_id_asc",
                 column_config={
                     "N.º": st.column_config.NumberColumn(
-                        "N.º", width=65
+                        "N.º", width=65, alignment="center"
                     ),
                     "Boleta": st.column_config.TextColumn(
-                        "Boleta", width=205
+                        "Boleta", width=205, alignment="center"
                     ),
                     "Fecha": st.column_config.TextColumn(
-                        "Fecha", width=145
+                        "Fecha", width=145, alignment="center"
                     ),
                     "Total": st.column_config.TextColumn(
-                        "Total", width=85
+                        "Total", width=85, alignment="center"
                     ),
                     "Producto": st.column_config.TextColumn(
-                        "Producto", width=230
+                        "Producto", width=230, alignment="center"
                     ),
                     "Cantidad": st.column_config.NumberColumn(
-                        "Cantidad", width=85
+                        "Cantidad", width=85, alignment="center"
                     ),
                     "Precio unitario": st.column_config.TextColumn(
-                        "Precio unitario", width=120
+                        "Precio unitario", width=120, alignment="center"
                     ),
                     "Subtotal": st.column_config.TextColumn(
-                        "Subtotal", width=90
+                        "Subtotal", width=90, alignment="center"
                     ),
                 },
             )
@@ -8236,7 +8268,7 @@ elif menu == "Compras":
                         }
                         for fila in filas_compras
                     ]
-                    st.dataframe(
+                    mostrar_tabla_centrada(
                         tabla_compras_excel,
                         width="stretch",
                         hide_index=True,
@@ -8333,7 +8365,7 @@ elif menu == "Compras":
                     "Subtotal": formatear_soles(compra[7])
                 })
 
-            st.dataframe(
+            mostrar_tabla_centrada(
                 tabla,
                 width="stretch",
                 hide_index=True,
@@ -8373,7 +8405,7 @@ elif menu == "Compras":
                             "Filas": filas,
                             "Sumó al stock": estado_stock,
                         })
-                    st.dataframe(
+                    mostrar_tabla_centrada(
                         filas_importaciones,
                         width="stretch",
                         hide_index=True,
@@ -8442,7 +8474,7 @@ elif menu == "Análisis inteligente":
     top = analysis.productos_mas_vendidos()
 
     if not top.empty:
-        st.dataframe(top, width="stretch", hide_index=True, height=360)
+        mostrar_tabla_centrada(top, width="stretch", hide_index=True, height=360)
 
     else:
 
@@ -8455,7 +8487,7 @@ elif menu == "Análisis inteligente":
     bajo = analysis.productos_stock_bajo()
 
     if not bajo.empty:
-        st.dataframe(bajo, width="stretch", hide_index=True, height=360)
+        mostrar_tabla_centrada(bajo, width="stretch", hide_index=True, height=360)
 
     else:
 
@@ -8468,7 +8500,7 @@ elif menu == "Análisis inteligente":
     comportamiento = analysis.analisis_productos()
 
     if not comportamiento.empty:
-        st.dataframe(
+        mostrar_tabla_centrada(
             comportamiento[
                 [
                     "codigo",
@@ -8707,14 +8739,14 @@ elif menu == "Predicción de demanda":
 
                 st.subheader("Detalle de la predicción")
 
-                st.dataframe(
+                mostrar_tabla_centrada(
                     datos_tabla_pred,
                     width="stretch",
                     hide_index=True,
                     column_config={
                         "Unidades estimadas": st.column_config.TextColumn(
                             "Unidades estimadas",
-                            alignment="right",
+                            alignment="center",
                         ),
                     },
                 )
@@ -8809,7 +8841,7 @@ st.markdown("""
     border: 0 !important;
     border-right: 1px solid #cbdde0 !important;
     border-bottom: 1px solid #cbdde0 !important;
-    text-align: left !important;
+    text-align: center !important;
     vertical-align: middle !important;
 }
 
