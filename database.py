@@ -130,6 +130,14 @@ def conectar():
 def crear_base_datos():
     """Crea las tablas principales en SQLite o PostgreSQL."""
     conexion = conectar()
+
+    # El esquema de Supabase se administra con migraciones explícitas desde el
+    # Dashboard. Ejecutar DDL en cada rerun de Streamlit puede esperar bloqueos
+    # de tabla y cancelar el arranque de la aplicación.
+    if usar_supabase():
+        conexion.close()
+        return
+
     cursor = conexion.cursor()
     id_type = (
         "SERIAL PRIMARY KEY"
