@@ -6329,7 +6329,7 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
                 fila["precio_unitario"],
                 fila["subtotal"],
             )
-            for compra_id, fila in zip(ids_compras, filas)
+            for fila in filas
         ]
         for inicio in range(0, len(detalles), 150):
             lote = detalles[inicio:inicio + 150]
