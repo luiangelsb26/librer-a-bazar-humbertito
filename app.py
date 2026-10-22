@@ -4808,6 +4808,211 @@ def generar_excel_productos(productos):
     return archivo.getvalue()
 
 
+def crear_plantilla_productos_excel():
+    """Genera una plantilla para registrar productos desde Excel."""
+    columnas = [
+        "Código",
+        "Producto",
+        "Categoría",
+        "Precio compra (S/)",
+        "Precio venta (S/)",
+        "Stock",
+        "Stock mínimo",
+    ]
+    archivo = io.BytesIO()
+    with pd.ExcelWriter(archivo, engine="openpyxl") as escritor:
+        pd.DataFrame(columns=columnas).to_excel(
+            escritor,
+            index=False,
+            sheet_name="Productos",
+        )
+        hoja = escritor.sheets["Productos"]
+        hoja.freeze_panes = "A2"
+        hoja.auto_filter.ref = "A1:G1"
+        for columna, ancho in {
+            "A": 20,
+            "B": 34,
+            "C": 26,
+            "D": 20,
+            "E": 20,
+            "F": 12,
+            "G": 16,
+        }.items():
+            hoja.column_dimensions[columna].width = ancho
+
+        pd.DataFrame({
+            "Instrucciones": [
+                "Una fila por producto; no cambies los encabezados.",
+                "Código y Producto son obligatorios y el código debe ser único.",
+                "Precio compra y Precio venta deben ser números no negativos; la venta debe ser mayor que cero.",
+                "Stock y Stock mínimo deben ser números enteros no negativos.",
+                "Categoría puede quedar vacía. Si Stock mínimo queda vacío, se usará 5.",
+                "No incluyas filas de totales ni resúmenes debajo de los productos.",
+            ]
+        }).to_excel(escritor, index=False, sheet_name="Instrucciones")
+        escritor.sheets["Instrucciones"].column_dimensions["A"].width = 105
+
+    archivo.seek(0)
+    return archivo.getvalue()
+
+
+def validar_productos_excel(contenido):
+    """Valida el catálogo de productos de Excel sin modificar la base de datos."""
+    try:
+        original = pd.read_excel(io.BytesIO(contenido), sheet_name=0)
+    except Exception as e:
+        return [], [f"No se pudo leer el archivo Excel: {e}"]
+
+    if original.empty:
+        return [], ["La primera hoja no contiene productos."]
+
+    alias = {
+        "codigo": {"codigo", "codigo producto", "codigo del producto", "sku"},
+        "nombre": {"producto", "nombre", "nombre producto", "nombre del producto"},
+        "categoria": {"categoria", "category"},
+        "precio_compra": {
+            "precio compra", "precio compra s", "precio de compra", "costo",
+            "costo unitario", "precio costo",
+        },
+        "precio_venta": {
+            "precio venta", "precio venta s", "precio de venta",
+            "precio de venta s", "precio",
+        },
+        "stock": {"stock", "stock inicial", "existencias"},
+        "stock_minimo": {
+            "stock minimo", "stock min", "minimo", "stock minimo recomendado",
+        },
+    }
+    columnas = {}
+    for columna in original.columns:
+        encabezado = _normalizar_encabezado_excel(columna)
+        for campo, nombres in alias.items():
+            if encabezado in nombres:
+                columnas[campo] = columna
+
+    requeridos = [
+        "codigo", "nombre", "precio_compra", "precio_venta", "stock",
+    ]
+    faltantes = [campo for campo in requeridos if campo not in columnas]
+    if faltantes:
+        nombres = {
+            "codigo": "Código",
+            "nombre": "Producto",
+            "precio_compra": "Precio compra",
+            "precio_venta": "Precio venta",
+            "stock": "Stock",
+        }
+        return [], [
+            "Faltan columnas requeridas: "
+            + ", ".join(nombres[campo] for campo in faltantes)
+            + ". Descarga la plantilla para ver los encabezados aceptados."
+        ]
+
+    codigos_existentes = {
+        str(producto[1]).strip().casefold()
+        for producto in obtener_productos()
+    }
+    codigos_archivo = set()
+    filas_validas = []
+    errores = []
+
+    for indice, fila in original.iterrows():
+        if all(pd.isna(valor) or str(valor).strip() == "" for valor in fila):
+            continue
+
+        numero_fila = int(indice) + 2
+        errores_fila = []
+
+        valor_codigo = fila[columnas["codigo"]]
+        if pd.isna(valor_codigo) or not str(valor_codigo).strip():
+            codigo = ""
+            errores_fila.append("falta el código")
+        elif isinstance(valor_codigo, float) and valor_codigo.is_integer():
+            codigo = str(int(valor_codigo))
+        else:
+            codigo = str(valor_codigo).strip()
+
+        clave_codigo = codigo.casefold()
+        if clave_codigo:
+            if clave_codigo in codigos_existentes:
+                errores_fila.append(f"el código {codigo} ya está registrado")
+            if clave_codigo in codigos_archivo:
+                errores_fila.append(f"el código {codigo} está repetido en el Excel")
+            codigos_archivo.add(clave_codigo)
+
+        valor_nombre = fila[columnas["nombre"]]
+        nombre = "" if pd.isna(valor_nombre) else str(valor_nombre).strip()
+        if not nombre:
+            errores_fila.append("falta el nombre del producto")
+
+        def valor_numerico(campo, etiqueta, predicado, mensaje):
+            numero = _numero_excel(fila[columnas[campo]])
+            if numero is None or not predicado(numero):
+                errores_fila.append(f"{etiqueta} {mensaje}")
+                return None
+            return numero
+
+        precio_compra = valor_numerico(
+            "precio_compra", "Precio compra", lambda n: n >= 0,
+            "debe ser un número mayor o igual a cero",
+        )
+        precio_venta = valor_numerico(
+            "precio_venta", "Precio venta", lambda n: n > 0,
+            "debe ser mayor que cero",
+        )
+        stock = valor_numerico(
+            "stock", "Stock", lambda n: n >= 0 and n.is_integer(),
+            "debe ser un entero no negativo",
+        )
+
+        valor_stock_minimo = (
+            fila[columnas["stock_minimo"]]
+            if "stock_minimo" in columnas
+            else None
+        )
+        stock_minimo = (
+            5.0 if pd.isna(valor_stock_minimo) or str(valor_stock_minimo).strip() == ""
+            else _numero_excel(valor_stock_minimo)
+        )
+        if (
+            stock_minimo is None
+            or stock_minimo < 0
+            or not stock_minimo.is_integer()
+        ):
+            errores_fila.append("Stock mínimo debe ser un entero no negativo")
+            stock_minimo = None
+
+        valor_categoria = (
+            fila[columnas["categoria"]]
+            if "categoria" in columnas
+            else ""
+        )
+        categoria = (
+            "" if pd.isna(valor_categoria) else str(valor_categoria).strip()
+        )
+
+        if errores_fila:
+            errores.extend(
+                f"Fila {numero_fila}: {error}." for error in errores_fila
+            )
+            continue
+
+        filas_validas.append({
+            "codigo": codigo,
+            "nombre": nombre,
+            "categoria": categoria,
+            "precio_compra": round(precio_compra, 2),
+            "precio_venta": round(precio_venta, 2),
+            "stock": int(stock),
+            "stock_minimo": int(stock_minimo),
+            "fila_excel": numero_fila,
+        })
+
+    if not filas_validas and not errores:
+        errores.append("No se encontraron filas de productos para importar.")
+    return filas_validas, errores
+
+
 # ==========================================================
 # PRODUCTOS
 # ==========================================================
@@ -4940,6 +5145,89 @@ def eliminar_producto(producto_id):
     except Exception as e:
         return False, f"No se pudo eliminar el producto: {e}"
 
+    finally:
+        con.close()
+
+
+def importar_productos_excel(filas):
+    """Importa todos los productos validados en una sola transacción."""
+    con = conectar()
+    try:
+        existentes = {
+            str(fila[0]).strip().casefold()
+            for fila in con.execute("SELECT codigo FROM productos").fetchall()
+        }
+        repetidos = [
+            fila["codigo"] for fila in filas
+            if fila["codigo"].strip().casefold() in existentes
+        ]
+        if repetidos:
+            return False, (
+                "No se importó ningún producto porque estos códigos ya existen: "
+                + ", ".join(repetidos[:10])
+            )
+
+        con.executemany(
+            """
+            INSERT INTO productos (
+                codigo, nombre, categoria, precio_compra, precio_venta,
+                stock, stock_minimo
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    fila["codigo"],
+                    fila["nombre"],
+                    fila["categoria"],
+                    fila["precio_compra"],
+                    fila["precio_venta"],
+                    fila["stock"],
+                    fila["stock_minimo"],
+                )
+                for fila in filas
+            ],
+        )
+        con.commit()
+        return True, f"Se importaron {len(filas)} productos correctamente."
+    except Exception as e:
+        con.rollback()
+        if database.es_error_integridad(e):
+            return False, "No se importó ningún producto porque hay códigos repetidos."
+        return False, f"No se pudieron importar los productos: {e}"
+    finally:
+        con.close()
+
+
+def eliminar_todos_productos():
+    """Elimina el catálogo solo si no tiene ventas ni compras asociadas."""
+    con = conectar()
+    try:
+        cantidad_productos = con.execute(
+            "SELECT COUNT(*) FROM productos"
+        ).fetchone()[0]
+        if not cantidad_productos:
+            return False, "No hay productos registrados para eliminar."
+
+        ventas_asociadas = con.execute(
+            "SELECT COUNT(*) FROM detalle_ventas"
+        ).fetchone()[0]
+        compras_asociadas = con.execute(
+            "SELECT COUNT(*) FROM detalle_compras"
+        ).fetchone()[0]
+        if ventas_asociadas or compras_asociadas:
+            return False, (
+                "No se eliminó ningún producto para proteger el historial. "
+                f"Hay {ventas_asociadas} detalle(s) de venta y "
+                f"{compras_asociadas} detalle(s) de compra asociados. "
+                "Elimina o conserva esos movimientos antes de borrar el catálogo."
+            )
+
+        con.execute("DELETE FROM productos")
+        con.commit()
+        return True, f"Se eliminaron {cantidad_productos} productos."
+    except Exception as e:
+        con.rollback()
+        return False, f"No se pudieron eliminar los productos: {e}"
     finally:
         con.close()
 
@@ -6326,6 +6614,116 @@ elif menu == "Productos":
 
     with tab2:
 
+        st.subheader("Cargar productos desde Excel")
+        col_plantilla, col_archivo = st.columns([1, 2])
+        with col_plantilla:
+            st.download_button(
+                "Descargar plantilla de productos",
+                data=crear_plantilla_productos_excel(),
+                file_name="plantilla_productos_humbertito.xlsx",
+                mime=(
+                    "application/vnd.openxmlformats-officedocument."
+                    "spreadsheetml.sheet"
+                ),
+                key="descargar_plantilla_productos_excel",
+            )
+        with col_archivo:
+            version_carga_productos = st.session_state.setdefault(
+                "version_carga_productos_excel", 0
+            )
+            archivo_productos_excel = st.file_uploader(
+                "Seleccionar archivo Excel de productos (.xlsx)",
+                type=["xlsx"],
+                key=f"carga_productos_excel_{version_carga_productos}",
+            )
+
+        if archivo_productos_excel is not None:
+            contenido_productos_excel = archivo_productos_excel.getvalue()
+            hash_productos_excel = hashlib.sha256(
+                contenido_productos_excel
+            ).hexdigest()[:12]
+            filas_productos_excel, errores_productos_excel = (
+                validar_productos_excel(contenido_productos_excel)
+            )
+
+            if filas_productos_excel:
+                vista_productos_excel = pd.DataFrame([
+                    {
+                        "Código": fila["codigo"],
+                        "Producto": fila["nombre"],
+                        "Categoría": fila["categoria"],
+                        "Precio compra": f"S/ {fila['precio_compra']:.2f}",
+                        "Precio venta": f"S/ {fila['precio_venta']:.2f}",
+                        "Stock": fila["stock"],
+                        "Stock mínimo": fila["stock_minimo"],
+                    }
+                    for fila in filas_productos_excel
+                ])
+                st.dataframe(
+                    vista_productos_excel,
+                    width="stretch",
+                    hide_index=True,
+                    height=420,
+                    key=f"vista_productos_excel_{hash_productos_excel}",
+                    column_config={
+                        "Código": st.column_config.TextColumn(
+                            "Código", width=125
+                        ),
+                        "Producto": st.column_config.TextColumn(
+                            "Producto", width=220
+                        ),
+                        "Categoría": st.column_config.TextColumn(
+                            "Categoría", width=170
+                        ),
+                        "Precio compra": st.column_config.TextColumn(
+                            "Precio compra", width=130
+                        ),
+                        "Precio venta": st.column_config.TextColumn(
+                            "Precio venta", width=130
+                        ),
+                        "Stock": st.column_config.NumberColumn(
+                            "Stock", width=80
+                        ),
+                        "Stock mínimo": st.column_config.NumberColumn(
+                            "Stock mínimo", width=100
+                        ),
+                    },
+                )
+                st.caption(
+                    f"Productos válidos: {len(filas_productos_excel)}. "
+                    "La importación se realizará completa, sin omitir filas."
+                )
+
+            if errores_productos_excel:
+                st.error(
+                    f"Se encontraron {len(errores_productos_excel)} errores. "
+                    "Corrige el archivo; no se importará parcialmente."
+                )
+                for error_producto_excel in errores_productos_excel[:20]:
+                    st.write(f"• {error_producto_excel}")
+                if len(errores_productos_excel) > 20:
+                    st.caption("Se muestran los primeros 20 errores.")
+
+            if filas_productos_excel and not errores_productos_excel:
+                if st.button(
+                    "Importar productos validados",
+                    key="confirmar_importacion_productos_excel",
+                    type="primary",
+                ):
+                    ok, mensaje = importar_productos_excel(
+                        filas_productos_excel
+                    )
+                    if ok:
+                        st.session_state[
+                            "version_carga_productos_excel"
+                        ] += 1
+                        notificar_exito(mensaje)
+                        st.rerun()
+                    else:
+                        st.error(mensaje)
+
+        st.divider()
+
         productos = obtener_productos()
 
         if productos:
@@ -6477,6 +6875,38 @@ elif menu == "Productos":
                         else:
                             ok, mensaje = eliminar_producto(producto_id)
 
+                            if ok:
+                                notificar_exito(mensaje)
+                                st.session_state.pop(
+                                    "producto_seleccionado_edicion",
+                                    None,
+                                )
+                                st.rerun()
+                            else:
+                                st.error(mensaje)
+
+            with st.expander("Eliminar todos los productos"):
+                st.warning(
+                    "Esto elimina el catálogo completo. Si existen ventas o "
+                    "compras asociadas, el sistema conservará los productos para "
+                    "proteger ese historial."
+                )
+                with st.form("form_eliminar_todos_productos"):
+                    confirmar_eliminacion_total = st.checkbox(
+                        "Confirmo que deseo eliminar todos los productos registrados."
+                    )
+                    eliminar_todos = st.form_submit_button(
+                        "Eliminar todos los productos",
+                        type="secondary",
+                    )
+
+                    if eliminar_todos:
+                        if not confirmar_eliminacion_total:
+                            st.error(
+                                "Marca la confirmación para eliminar el catálogo."
+                            )
+                        else:
+                            ok, mensaje = eliminar_todos_productos()
                             if ok:
                                 notificar_exito(mensaje)
                                 st.session_state.pop(
