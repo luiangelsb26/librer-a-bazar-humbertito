@@ -1,3 +1,4 @@
+-- Alternativa si la conexión de la aplicación no tiene permiso para crear tablas.
 -- Ejecutar una sola vez en Supabase > SQL Editor para conservar el modelo
 -- entrenado entre reinicios y despliegues de la aplicación.
 CREATE TABLE IF NOT EXISTS public.modelo_demanda (

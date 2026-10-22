@@ -8344,8 +8344,9 @@ elif menu == "Predicción de demanda":
         ):
             st.warning(
                 "Este modelo solo está guardado en el almacenamiento temporal del "
-                "servidor. Ejecute migracion_modelo_demanda.sql en Supabase y "
-                "vuelva a entrenarlo para conservarlo entre reinicios."
+                "servidor. Al entrenar, la aplicación intenta crear la tabla de "
+                "Supabase automáticamente. Si la conexión no tiene permiso, ejecute "
+                "migracion_modelo_demanda.sql en Supabase y vuelva a entrenarlo."
             )
         st.caption(
             "Las ventas nuevas se usan como contexto para pronosticar. "

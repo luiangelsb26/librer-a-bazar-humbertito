@@ -45,7 +45,7 @@ def _cargar_artefacto(joblib):
 
 
 def _guardar_artefacto(artefacto, joblib):
-    """Guarda el modelo en la base activa y conserva un respaldo local."""
+    """Prepara la tabla si hace falta, guarda en la base y conserva respaldo local."""
     try:
         buffer = io.BytesIO()
         joblib.dump(artefacto, buffer, compress=3)
@@ -55,6 +55,22 @@ def _guardar_artefacto(artefacto, joblib):
     error_base = None
     con = conectar()
     try:
+        if database.usar_supabase():
+            con.execute("""
+                CREATE TABLE IF NOT EXISTS public.modelo_demanda (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    artefacto BYTEA NOT NULL,
+                    actualizado_en TEXT NOT NULL
+                )
+            """)
+        else:
+            con.execute("""
+                CREATE TABLE IF NOT EXISTS modelo_demanda (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    artefacto BLOB NOT NULL,
+                    actualizado_en TEXT NOT NULL
+                )
+            """)
         con.execute(
             """
             INSERT INTO modelo_demanda (id, artefacto, actualizado_en)
@@ -406,8 +422,10 @@ def entrenar_modelo():
             "estado": "ok_local",
             "mensaje": (
                 "El modelo se entrenó y quedó disponible en este servidor, pero "
-                "no se guardó de forma persistente en Supabase. Ejecute la migración "
-                "migracion_modelo_demanda.sql y vuelva a entrenarlo."
+                "no se guardó de forma persistente en Supabase. La aplicación intentó "
+                "crear la tabla automáticamente; si la conexión no tiene permiso para "
+                "crear tablas, ejecute migracion_modelo_demanda.sql en Supabase y vuelva "
+                "a entrenarlo."
             ),
             "evaluacion": evaluacion,
             "almacenamiento": almacenamiento,
