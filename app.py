@@ -4732,7 +4732,7 @@ def obtener_productos():
             stock,
             stock_minimo
         FROM productos
-        ORDER BY nombre
+        ORDER BY id ASC
     """)
     resultado = cur.fetchall()
     con.close()
@@ -4811,6 +4811,7 @@ def generar_excel_productos(productos):
 def crear_plantilla_productos_excel():
     """Genera una plantilla para registrar productos desde Excel."""
     columnas = [
+        "ID",
         "Código",
         "Producto",
         "Categoría",
@@ -4828,21 +4829,23 @@ def crear_plantilla_productos_excel():
         )
         hoja = escritor.sheets["Productos"]
         hoja.freeze_panes = "A2"
-        hoja.auto_filter.ref = "A1:G1"
+        hoja.auto_filter.ref = "A1:H1"
         for columna, ancho in {
-            "A": 20,
-            "B": 34,
-            "C": 26,
-            "D": 20,
+            "A": 10,
+            "B": 20,
+            "C": 34,
+            "D": 26,
             "E": 20,
-            "F": 12,
-            "G": 16,
+            "F": 20,
+            "G": 12,
+            "H": 16,
         }.items():
             hoja.column_dimensions[columna].width = ancho
 
         pd.DataFrame({
             "Instrucciones": [
                 "Una fila por producto; no cambies los encabezados.",
+                "ID es opcional: conserva el ID exportado para actualizar el mismo producto; déjalo vacío para uno nuevo.",
                 "Código y Producto son obligatorios y el código debe ser único.",
                 "Precio compra y Precio venta deben ser números no negativos; la venta debe ser mayor que cero.",
                 "Stock y Stock mínimo deben ser números enteros no negativos.",
@@ -4867,6 +4870,7 @@ def validar_productos_excel(contenido):
         return [], ["La primera hoja no contiene productos."]
 
     alias = {
+        "id": {"id", "id producto", "identificador"},
         "codigo": {"codigo", "codigo producto", "codigo del producto", "sku"},
         "nombre": {"producto", "nombre", "nombre producto", "nombre del producto"},
         "categoria": {"categoria", "category"},
@@ -4908,11 +4912,14 @@ def validar_productos_excel(contenido):
             + ". Descarga la plantilla para ver los encabezados aceptados."
         ]
 
-    codigos_existentes = {
-        str(producto[1]).strip().casefold()
-        for producto in obtener_productos()
+    productos_existentes = obtener_productos()
+    existentes_por_id = {producto[0]: producto for producto in productos_existentes}
+    existentes_por_codigo = {
+        str(producto[1]).strip().casefold(): producto
+        for producto in productos_existentes
     }
     codigos_archivo = set()
+    ids_archivo = set()
     filas_validas = []
     errores = []
 
@@ -4922,6 +4929,25 @@ def validar_productos_excel(contenido):
 
         numero_fila = int(indice) + 2
         errores_fila = []
+
+        id_producto = None
+        if "id" in columnas:
+            valor_id = fila[columnas["id"]]
+            if not pd.isna(valor_id) and str(valor_id).strip():
+                numero_id = _numero_excel(valor_id)
+                if (
+                    numero_id is None
+                    or numero_id <= 0
+                    or not numero_id.is_integer()
+                ):
+                    errores_fila.append("ID debe ser un entero positivo")
+                else:
+                    id_producto = int(numero_id)
+                    if id_producto in ids_archivo:
+                        errores_fila.append(
+                            f"el ID {id_producto} está repetido en el Excel"
+                        )
+                    ids_archivo.add(id_producto)
 
         valor_codigo = fila[columnas["codigo"]]
         if pd.isna(valor_codigo) or not str(valor_codigo).strip():
@@ -4934,11 +4960,28 @@ def validar_productos_excel(contenido):
 
         clave_codigo = codigo.casefold()
         if clave_codigo:
-            if clave_codigo in codigos_existentes:
-                errores_fila.append(f"el código {codigo} ya está registrado")
             if clave_codigo in codigos_archivo:
                 errores_fila.append(f"el código {codigo} está repetido en el Excel")
             codigos_archivo.add(clave_codigo)
+
+            producto_por_codigo = existentes_por_codigo.get(clave_codigo)
+            producto_por_id = existentes_por_id.get(id_producto)
+            if id_producto is None and producto_por_codigo:
+                errores_fila.append(
+                    f"el código {codigo} ya está registrado con ID "
+                    f"{producto_por_codigo[0]}; conserva ese ID en el Excel para actualizarlo"
+                )
+            elif id_producto is not None and producto_por_id:
+                if str(producto_por_id[1]).strip().casefold() != clave_codigo:
+                    errores_fila.append(
+                        f"el ID {id_producto} ya pertenece al código "
+                        f"{producto_por_id[1]}"
+                    )
+            elif producto_por_codigo and producto_por_codigo[0] != id_producto:
+                errores_fila.append(
+                    f"el código {codigo} ya pertenece al ID "
+                    f"{producto_por_codigo[0]}"
+                )
 
         valor_nombre = fila[columnas["nombre"]]
         nombre = "" if pd.isna(valor_nombre) else str(valor_nombre).strip()
@@ -4998,6 +5041,7 @@ def validar_productos_excel(contenido):
             continue
 
         filas_validas.append({
+            "id": id_producto,
             "codigo": codigo,
             "nombre": nombre,
             "categoria": categoria,
@@ -5150,45 +5194,95 @@ def eliminar_producto(producto_id):
 
 
 def importar_productos_excel(filas):
-    """Importa todos los productos validados en una sola transacción."""
+    """Importa o actualiza por ID todos los productos en una transacción."""
     con = conectar()
     try:
-        existentes = {
-            str(fila[0]).strip().casefold()
-            for fila in con.execute("SELECT codigo FROM productos").fetchall()
-        }
-        repetidos = [
-            fila["codigo"] for fila in filas
-            if fila["codigo"].strip().casefold() in existentes
-        ]
-        if repetidos:
-            return False, (
-                "No se importó ningún producto porque estos códigos ya existen: "
-                + ", ".join(repetidos[:10])
+        for fila in filas:
+            valores = (
+                fila["codigo"],
+                fila["nombre"],
+                fila["categoria"],
+                fila["precio_compra"],
+                fila["precio_venta"],
+                fila["stock"],
+                fila["stock_minimo"],
             )
-
-        con.executemany(
-            """
-            INSERT INTO productos (
-                codigo, nombre, categoria, precio_compra, precio_venta,
-                stock, stock_minimo
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                (
-                    fila["codigo"],
-                    fila["nombre"],
-                    fila["categoria"],
-                    fila["precio_compra"],
-                    fila["precio_venta"],
-                    fila["stock"],
-                    fila["stock_minimo"],
+            id_producto = fila.get("id")
+            if id_producto is not None:
+                existente = con.execute(
+                    "SELECT codigo FROM productos WHERE id = ?",
+                    (id_producto,),
+                ).fetchone()
+                if existente:
+                    if str(existente[0]).strip().casefold() != fila["codigo"].casefold():
+                        raise ValueError(
+                            f"El ID {id_producto} ya pertenece a "
+                            f"{existente[0]}; no se modificó ningún producto."
+                        )
+                    con.execute(
+                        """
+                        UPDATE productos SET
+                            codigo = ?, nombre = ?, categoria = ?,
+                            precio_compra = ?, precio_venta = ?, stock = ?,
+                            stock_minimo = ?
+                        WHERE id = ?
+                        """,
+                        (*valores, id_producto),
+                    )
+                else:
+                    codigo_existente = con.execute(
+                        "SELECT id FROM productos WHERE LOWER(codigo) = LOWER(?)",
+                        (fila["codigo"],),
+                    ).fetchone()
+                    if codigo_existente:
+                        raise ValueError(
+                            f"El código {fila['codigo']} ya pertenece al ID "
+                            f"{codigo_existente[0]}; no se modificó ningún producto."
+                        )
+                    con.execute(
+                        """
+                        INSERT INTO productos (
+                            id, codigo, nombre, categoria, precio_compra,
+                            precio_venta, stock, stock_minimo
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (id_producto, *valores),
+                    )
+            else:
+                codigo_existente = con.execute(
+                    "SELECT id FROM productos WHERE LOWER(codigo) = LOWER(?)",
+                    (fila["codigo"],),
+                ).fetchone()
+                if codigo_existente:
+                    raise ValueError(
+                        f"El código {fila['codigo']} ya existe con ID "
+                        f"{codigo_existente[0]}; no se modificó ningún producto."
+                    )
+                con.execute(
+                    """
+                    INSERT INTO productos (
+                        codigo, nombre, categoria, precio_compra, precio_venta,
+                        stock, stock_minimo
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    valores,
                 )
-                for fila in filas
-            ],
-        )
+
+        if database.usar_supabase():
+            con.execute(
+                """
+                SELECT setval(
+                    pg_get_serial_sequence('productos', 'id'),
+                    COALESCE((SELECT MAX(id) FROM productos), 1),
+                    EXISTS(SELECT 1 FROM productos)
+                )
+                """
+            )
         con.commit()
-        return True, f"Se importaron {len(filas)} productos correctamente."
+        return True, (
+            f"Se procesaron {len(filas)} productos. Los IDs incluidos en el "
+            "Excel se conservaron; los vacíos se asignaron automáticamente."
+        )
     except Exception as e:
         con.rollback()
         if database.es_error_integridad(e):
@@ -5223,6 +5317,14 @@ def eliminar_todos_productos():
             )
 
         con.execute("DELETE FROM productos")
+        if database.usar_supabase():
+            con.execute(
+                "SELECT setval(pg_get_serial_sequence('productos', 'id'), 1, false)"
+            )
+        else:
+            con.execute(
+                "DELETE FROM sqlite_sequence WHERE name = 'productos'"
+            )
         con.commit()
         return True, f"Se eliminaron {cantidad_productos} productos."
     except Exception as e:
@@ -5557,13 +5659,14 @@ def obtener_ventas():
             dv.precio_unitario,
             dv.subtotal,
             v.stock_descontado,
-            v.referencia
+            v.referencia,
+            dv.id
         FROM ventas v
         JOIN detalle_ventas dv
             ON v.id = dv.venta_id
         JOIN productos p
             ON dv.producto_id = p.id
-        ORDER BY v.id ASC, dv.id ASC
+        ORDER BY dv.id ASC
     """).fetchall()
 
     con.close()
@@ -5646,6 +5749,18 @@ def eliminar_todas_ventas():
         con.execute("DELETE FROM ventas")
         # Permite volver a importar los mismos archivos después de vaciar ventas.
         con.execute("DELETE FROM importaciones_ventas")
+        if database.usar_supabase():
+            con.execute(
+                "SELECT setval(pg_get_serial_sequence('ventas', 'id'), 1, false)"
+            )
+            con.execute(
+                "SELECT setval(pg_get_serial_sequence('detalle_ventas', 'id'), 1, false)"
+            )
+        else:
+            con.execute(
+                "DELETE FROM sqlite_sequence "
+                "WHERE name IN ('ventas', 'detalle_ventas')"
+            )
         con.commit()
         return True, (
             f"Se eliminaron {cantidad_ventas} ventas. El stock se restauró "
@@ -6649,6 +6764,9 @@ elif menu == "Productos":
             if filas_productos_excel:
                 vista_productos_excel = pd.DataFrame([
                     {
+                        "ID": (
+                            fila["id"] if fila["id"] is not None else "Automático"
+                        ),
                         "Código": fila["codigo"],
                         "Producto": fila["nombre"],
                         "Categoría": fila["categoria"],
@@ -6666,6 +6784,7 @@ elif menu == "Productos":
                     height=420,
                     key=f"vista_productos_excel_{hash_productos_excel}",
                     column_config={
+                        "ID": st.column_config.TextColumn("ID", width=85),
                         "Código": st.column_config.TextColumn(
                             "Código", width=125
                         ),
@@ -6749,6 +6868,7 @@ elif menu == "Productos":
                 width="stretch",
                 hide_index=True,
                 height=420,
+                key="productos_registrados_orden_id_asc",
             )
 
             st.download_button(
@@ -7142,9 +7262,9 @@ elif menu == "Ventas":
 
             tabla = []
 
-            for numero_fila, venta in enumerate(ventas, start=1):
+            for venta in ventas:
                 tabla.append({
-                    "Venta": numero_fila,
+                    "ID": venta[9],
                     "Boleta": venta[8] or "",
                     "Fecha": venta[1],
                     "Total": f"S/ {venta[2]:.2f}",
@@ -7155,18 +7275,18 @@ elif menu == "Ventas":
                 })
 
             st.caption(
-                "Historial completo numerado desde 1 y ordenado desde la venta más "
-                "antigua. Desliza hacia abajo dentro del recuadro para ver las demás "
-                "filas."
+                "Historial ordenado por ID ascendente. Desliza hacia abajo dentro "
+                "del recuadro para ver las demás filas."
             )
             st.dataframe(
                 tabla,
                 width="stretch",
                 hide_index=True,
                 height=600,
+                key="historial_ventas_id_asc",
                 column_config={
-                    "Venta": st.column_config.NumberColumn(
-                        "Venta", width=65
+                    "ID": st.column_config.NumberColumn(
+                        "ID", width=65
                     ),
                     "Boleta": st.column_config.TextColumn(
                         "Boleta", width=205
