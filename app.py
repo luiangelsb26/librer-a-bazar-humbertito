@@ -5927,25 +5927,48 @@ def registrar_venta(
 def obtener_compras():
     con = conectar()
 
-    resultado = con.execute("""
-        SELECT
-            c.id,
-            c.fecha,
-            c.total,
-            p.nombre,
-            dc.cantidad,
-            dc.precio_unitario,
-            dc.subtotal
-        FROM compras c
-        JOIN detalle_compras dc
-            ON c.id = dc.compra_id
-        JOIN productos p
-            ON dc.producto_id = p.id
-        ORDER BY c.id DESC
-    """).fetchall()
-
-    con.close()
-    return resultado
+    try:
+        return con.execute("""
+            SELECT
+                c.id,
+                c.fecha,
+                c.total,
+                c.referencia,
+                p.nombre,
+                dc.cantidad,
+                dc.precio_unitario,
+                dc.subtotal
+            FROM compras c
+            JOIN detalle_compras dc
+                ON c.id = dc.compra_id
+            JOIN productos p
+                ON dc.producto_id = p.id
+            ORDER BY c.id DESC
+        """).fetchall()
+    except Exception:
+        # Permite consultar compras existentes si aún no se aplicó la migración
+        # que añade el número de comprobante al esquema remoto.
+        con.close()
+        con = conectar()
+        return con.execute("""
+            SELECT
+                c.id,
+                c.fecha,
+                c.total,
+                NULL,
+                p.nombre,
+                dc.cantidad,
+                dc.precio_unitario,
+                dc.subtotal
+            FROM compras c
+            JOIN detalle_compras dc
+                ON c.id = dc.compra_id
+            JOIN productos p
+                ON dc.producto_id = p.id
+            ORDER BY c.id DESC
+        """).fetchall()
+    finally:
+        con.close()
 
 
 def registrar_compra(producto_id, cantidad, precio_compra):
@@ -6023,6 +6046,333 @@ def registrar_compra(producto_id, cantidad, precio_compra):
         con.rollback()
         return False, f"Error al registrar compra: {e}"
 
+    finally:
+        con.close()
+
+
+def crear_plantilla_compras_excel():
+    """Crea una plantilla vacía y una hoja separada con filas de demostración."""
+    archivo = io.BytesIO()
+    columnas = [
+        "Fecha",
+        "Código del producto",
+        "Cantidad",
+        "Precio de compra unitario (S/)",
+        "Comprobante",
+    ]
+
+    with pd.ExcelWriter(archivo, engine="openpyxl") as escritor:
+        pd.DataFrame(columns=columnas).to_excel(
+            escritor,
+            index=False,
+            sheet_name="Compras",
+        )
+        hoja = escritor.sheets["Compras"]
+        hoja.freeze_panes = "A2"
+        hoja.auto_filter.ref = "A1:D1"
+        for columna, ancho in {
+            "A": 18, "B": 24, "C": 12, "D": 32, "E": 24
+        }.items():
+            hoja.column_dimensions[columna].width = ancho
+
+        pd.DataFrame({
+            "Fecha": ["2026-10-01", "2026-10-01", "2026-10-02", "2026-10-03"],
+            "Código del producto": [
+                "ESC-001", "DEMO-ESC-002", "DEMO-CUA-001", "DEMO-PAP-001"
+            ],
+            "Cantidad": [24, 24, 12, 30],
+            "Precio de compra unitario (S/)": [0.50, 0.70, 2.50, 0.50],
+            "Comprobante": [
+                "COMP-DEMO-001", "COMP-DEMO-001", "COMP-DEMO-002", "COMP-DEMO-003"
+            ],
+        }).to_excel(escritor, index=False, sheet_name="Ejemplo DEMO - NO IMPORTAR")
+        ejemplo = escritor.sheets["Ejemplo DEMO - NO IMPORTAR"]
+        ejemplo.freeze_panes = "A2"
+        ejemplo.auto_filter.ref = "A1:E5"
+        for columna, ancho in {
+            "A": 18, "B": 24, "C": 12, "D": 32, "E": 24
+        }.items():
+            ejemplo.column_dimensions[columna].width = ancho
+
+        pd.DataFrame({
+            "Instrucciones": [
+                "La hoja Compras está vacía y es la que lee el sistema.",
+                "La hoja Ejemplo DEMO - NO IMPORTAR contiene valores ficticios para reemplazar.",
+                "Copia las filas necesarias del ejemplo a Compras y reemplaza todos los valores por los del comprobante real.",
+                "Cada fila representa un producto comprado; una misma factura puede ocupar varias filas.",
+                "Repite el mismo Comprobante y Fecha en las filas de productos de una misma compra.",
+                "Usa la fecha del comprobante, el código registrado en el sistema, cantidad entera y costo unitario real.",
+                "No subas filas de demostración: los códigos DEMO y precios son solo ilustrativos.",
+            ]
+        }).to_excel(escritor, index=False, sheet_name="Instrucciones")
+        escritor.sheets["Instrucciones"].column_dimensions["A"].width = 110
+
+    archivo.seek(0)
+    return archivo.getvalue()
+
+
+def validar_compras_excel(contenido):
+    """Valida las compras del Excel antes de insertar o modificar el inventario."""
+    try:
+        original = pd.read_excel(io.BytesIO(contenido), sheet_name="Compras")
+    except ValueError:
+        try:
+            original = pd.read_excel(io.BytesIO(contenido), sheet_name=0)
+        except Exception as e:
+            return [], [f"No se pudo leer la hoja Compras: {e}"], pd.DataFrame()
+    except Exception as e:
+        return [], [f"No se pudo leer el archivo Excel: {e}"], pd.DataFrame()
+
+    if original.empty:
+        return [], ["La hoja Compras no contiene filas para importar."], original
+
+    encabezados = {
+        "fecha": {"fecha", "fecha de compra", "fecha comprobante"},
+        "codigo": {"codigo", "codigo producto", "codigo del producto", "sku"},
+        "producto": {"producto", "nombre producto", "nombre del producto"},
+        "cantidad": {"cantidad", "unidades", "cantidad comprada"},
+        "precio": {
+            "precio unitario", "precio de compra", "precio de compra unitario",
+            "precio de compra unitario s", "precio unitario s", "costo unitario",
+            "costo", "precio",
+        },
+        "referencia": {
+            "comprobante", "numero comprobante", "n comprobante", "nro comprobante",
+            "factura", "numero factura", "boleta", "referencia",
+        },
+    }
+    columnas = {}
+    for columna in original.columns:
+        normalizado = _normalizar_encabezado_excel(columna)
+        for campo, alias in encabezados.items():
+            if normalizado in alias:
+                columnas[campo] = columna
+
+    faltantes = [campo for campo in ("fecha", "cantidad", "precio") if campo not in columnas]
+    if "codigo" not in columnas and "producto" not in columnas:
+        faltantes.append("Código del producto o Producto")
+    if faltantes:
+        return [], [
+            "Faltan columnas requeridas: " + ", ".join(faltantes) + ". "
+            "Descarga la plantilla para ver el formato aceptado."
+        ], original
+
+    productos = obtener_productos()
+    por_codigo = {str(producto[1]).strip().casefold(): producto for producto in productos}
+    por_nombre = {}
+    for producto in productos:
+        por_nombre.setdefault(str(producto[2]).strip().casefold(), []).append(producto)
+
+    filas_validas = []
+    errores = []
+    hoy = datetime.now().date()
+
+    for indice, fila in original.iterrows():
+        if all(pd.isna(valor) or str(valor).strip() == "" for valor in fila.tolist()):
+            continue
+
+        numero_fila = int(indice) + 2
+        errores_fila = []
+        producto = None
+        valor_codigo = fila[columnas["codigo"]] if "codigo" in columnas else None
+        valor_nombre = fila[columnas["producto"]] if "producto" in columnas else None
+        if not pd.isna(valor_codigo) and str(valor_codigo).strip():
+            producto = por_codigo.get(str(valor_codigo).strip().casefold())
+            if producto is None:
+                errores_fila.append(f"código de producto no registrado: {valor_codigo}")
+        elif not pd.isna(valor_nombre) and str(valor_nombre).strip():
+            coincidencias = por_nombre.get(str(valor_nombre).strip().casefold(), [])
+            if len(coincidencias) == 1:
+                producto = coincidencias[0]
+            elif len(coincidencias) > 1:
+                errores_fila.append(f"nombre ambiguo; usa su código: {valor_nombre}")
+            else:
+                errores_fila.append(f"producto no registrado: {valor_nombre}")
+        else:
+            errores_fila.append("falta el código o nombre del producto")
+
+        valor_fecha = fila[columnas["fecha"]]
+        fecha_parseada = None
+        if pd.isna(valor_fecha):
+            errores_fila.append("falta la fecha")
+        else:
+            try:
+                if isinstance(valor_fecha, (int, float)) and not isinstance(valor_fecha, bool):
+                    fecha_parseada = (
+                        pd.Timestamp("1899-12-30")
+                        + pd.to_timedelta(float(valor_fecha), unit="D")
+                    ).date()
+                else:
+                    fecha_convertida = pd.to_datetime(
+                        valor_fecha,
+                        dayfirst=True,
+                        format="mixed",
+                        errors="coerce",
+                    )
+                    if not pd.isna(fecha_convertida):
+                        fecha_parseada = fecha_convertida.date()
+            except (TypeError, ValueError, OverflowError):
+                fecha_parseada = None
+            if fecha_parseada is None:
+                errores_fila.append("fecha inválida")
+            elif fecha_parseada > hoy:
+                errores_fila.append("la fecha no puede ser futura")
+
+        cantidad_numero = _numero_excel(fila[columnas["cantidad"]])
+        if cantidad_numero is None or cantidad_numero <= 0 or not cantidad_numero.is_integer():
+            errores_fila.append("la cantidad debe ser un entero mayor que cero")
+
+        precio = _numero_excel(fila[columnas["precio"]])
+        if precio is None or precio <= 0:
+            errores_fila.append("el precio de compra unitario debe ser mayor que cero")
+
+        referencia = ""
+        if "referencia" in columnas:
+            valor_referencia = fila[columnas["referencia"]]
+            if not pd.isna(valor_referencia):
+                referencia = str(valor_referencia).strip()
+                if referencia.endswith(".0") and referencia[:-2].isdigit():
+                    referencia = referencia[:-2]
+
+        if errores_fila:
+            errores.extend([f"Fila {numero_fila}: {error}" for error in errores_fila])
+            continue
+
+        filas_validas.append({
+            "fila_excel": numero_fila,
+            "fecha": fecha_parseada.isoformat() + " 12:00:00",
+            "producto_id": producto[0],
+            "codigo": producto[1],
+            "producto": producto[2],
+            "cantidad": int(cantidad_numero),
+            "precio_unitario": round(precio, 2),
+            "subtotal": round(precio * cantidad_numero, 2),
+            "referencia": referencia,
+        })
+
+    if not filas_validas and not errores:
+        errores.append("No se encontraron filas de compras para importar.")
+    return filas_validas, errores, original
+
+
+def hash_importacion_compras_registrada(hash_archivo):
+    con = conectar()
+    try:
+        return con.execute(
+            "SELECT nombre_archivo, fecha_importacion FROM importaciones_compras "
+            "WHERE hash_archivo = ?",
+            (hash_archivo,),
+        ).fetchone()
+    except Exception as error:
+        return {"error": str(error)}
+    finally:
+        con.close()
+
+
+def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock=False):
+    """Importa el archivo completo o no importa filas; opcionalmente suma al stock."""
+    con = conectar()
+    try:
+        existente = con.execute(
+            "SELECT 1 FROM importaciones_compras WHERE hash_archivo = ?",
+            (hash_archivo,),
+        ).fetchone()
+        if existente:
+            return False, "Este mismo archivo de compras ya fue importado."
+
+        cantidades = {}
+        precios_recientes = {}
+        for fila in filas:
+            producto_id = fila["producto_id"]
+            cantidades[producto_id] = cantidades.get(producto_id, 0) + fila["cantidad"]
+            precios_recientes[producto_id] = fila["precio_unitario"]
+
+        grupos = {}
+        for fila in filas:
+            clave = (
+                (fila["fecha"], fila["referencia"])
+                if fila["referencia"]
+                else (fila["fecha"], f"__fila_{fila['fila_excel']}")
+            )
+            grupos.setdefault(clave, []).append(fila)
+
+        grupos_lista = list(grupos.items())
+        ids_por_grupo = {}
+        for inicio in range(0, len(grupos_lista), 250):
+            lote = grupos_lista[inicio:inicio + 250]
+            valores = [
+                (
+                    detalles_grupo[0]["fecha"],
+                    round(sum(detalle["subtotal"] for detalle in detalles_grupo), 2),
+                    referencia or None,
+                )
+                for (_, referencia), detalles_grupo in lote
+            ]
+            marcadores = ", ".join("(?, ?, ?)" for _ in valores)
+            insertadas = con.execute(
+                "INSERT INTO compras (fecha, total, referencia) VALUES "
+                f"{marcadores} RETURNING id",
+                tuple(valor for compra in valores for valor in compra),
+            ).fetchall()
+            for ((clave, _), (compra_id,)) in zip(lote, insertadas):
+                ids_por_grupo[clave] = compra_id
+
+        detalles = [
+            (
+                ids_por_grupo[
+                    (fila["fecha"], fila["referencia"])
+                    if fila["referencia"]
+                    else (fila["fecha"], f"__fila_{fila['fila_excel']}")
+                ],
+                fila["producto_id"],
+                fila["cantidad"],
+                fila["precio_unitario"],
+                fila["subtotal"],
+            )
+            for compra_id, fila in zip(ids_compras, filas)
+        ]
+        for inicio in range(0, len(detalles), 150):
+            lote = detalles[inicio:inicio + 150]
+            marcadores = ", ".join("(?, ?, ?, ?, ?)" for _ in lote)
+            con.execute(
+                "INSERT INTO detalle_compras "
+                "(compra_id, producto_id, cantidad, precio_unitario, subtotal) "
+                f"VALUES {marcadores}",
+                tuple(valor for detalle in lote for valor in detalle),
+            )
+
+        if actualizar_stock:
+            for producto_id, cantidad in cantidades.items():
+                con.execute(
+                    "UPDATE productos SET stock = stock + ?, precio_compra = ? "
+                    "WHERE id = ?",
+                    (cantidad, precios_recientes[producto_id], producto_id),
+                )
+
+        con.execute(
+            "INSERT INTO importaciones_compras "
+            "(hash_archivo, nombre_archivo, fecha_importacion, filas_importadas) "
+            "VALUES (?, ?, ?, ?)",
+            (
+                hash_archivo,
+                nombre_archivo,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                len(filas),
+            ),
+        )
+        con.commit()
+        mensaje_stock = (
+            " Se sumaron las unidades al stock y se actualizó el último costo."
+            if actualizar_stock
+            else " El stock actual y los costos de catálogo no se modificaron."
+        )
+        return True, (
+            f"Se importaron {len(filas)} líneas en {len(grupos_lista)} compras."
+            f"{mensaje_stock}"
+        )
+    except Exception as e:
+        con.rollback()
+        return False, f"No se pudo importar el archivo de compras: {e}"
     finally:
         con.close()
 
@@ -7567,6 +7917,125 @@ elif menu == "Compras":
                 else:
                     st.error(mensaje)
 
+        st.divider()
+        st.subheader("Importar compras desde Excel")
+        st.caption(
+            "La plantilla trae una hoja vacía para tus datos y otra con filas "
+            "ficticias marcadas como DEMO. Reemplaza el ejemplo por los datos "
+            "de tus comprobantes reales antes de importarlo."
+        )
+        st.download_button(
+            "Descargar plantilla de compras",
+            data=crear_plantilla_compras_excel(),
+            file_name="plantilla_compras_humbertito.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="descargar_plantilla_compras",
+        )
+
+        archivo_compras_excel = st.file_uploader(
+            "Seleccionar archivo Excel de compras (.xlsx)",
+            type=["xlsx"],
+            key="carga_masiva_compras_excel",
+            help=(
+                "Cada fila representa una línea de compra. El sistema guarda "
+                "la fecha, producto, cantidad y costo unitario del archivo."
+            ),
+        )
+
+        if archivo_compras_excel is not None:
+            contenido_compras = archivo_compras_excel.getvalue()
+            hash_archivo_compras = hashlib.sha256(contenido_compras).hexdigest()
+            importacion_existente = hash_importacion_compras_registrada(
+                hash_archivo_compras
+            )
+
+            if isinstance(importacion_existente, dict) and "error" in importacion_existente:
+                st.error(
+                    "La importación de compras todavía no está habilitada en la "
+                    "base de datos. Ejecuta una vez "
+                    "migracion_importar_compras.sql en Supabase SQL Editor."
+                )
+            elif importacion_existente:
+                st.warning(
+                    "Este mismo archivo ya se importó el "
+                    f"{importacion_existente[1]}. No se volverá a cargar para "
+                    "evitar duplicar compras y stock."
+                )
+            else:
+                filas_compras, errores_compras, _ = validar_compras_excel(
+                    contenido_compras
+                )
+                if errores_compras:
+                    st.error(
+                        f"Se encontraron {len(errores_compras)} errores. "
+                        "Corrige el Excel para importar el archivo completo."
+                    )
+                    for error_excel in errores_compras[:20]:
+                        st.write(f"• {error_excel}")
+                    if len(errores_compras) > 20:
+                        st.caption("Se muestran solo los primeros 20 errores.")
+
+                if filas_compras:
+                    tabla_compras_excel = [
+                        {
+                            "Fila Excel": fila["fila_excel"],
+                            "Fecha": fila["fecha"][:10],
+                            "Código": fila["codigo"],
+                            "Producto": fila["producto"],
+                            "Comprobante": fila["referencia"],
+                            "Cantidad": fila["cantidad"],
+                            "Precio compra unitario": f"S/ {fila['precio_unitario']:.2f}",
+                            "Subtotal": f"S/ {fila['subtotal']:.2f}",
+                        }
+                        for fila in filas_compras
+                    ]
+                    st.dataframe(
+                        tabla_compras_excel,
+                        width="stretch",
+                        hide_index=True,
+                        height=min(420, 40 + 35 * min(len(filas_compras), 10)),
+                    )
+                    total_compras_excel = sum(
+                        fila["subtotal"] for fila in filas_compras
+                    )
+                    st.caption(
+                        f"Filas válidas: {len(filas_compras)} · "
+                        f"Total de compras: S/ {total_compras_excel:.2f}"
+                    )
+
+                    actualizar_stock_compras = st.checkbox(
+                        "Sumar estas unidades al stock actual",
+                        value=False,
+                        key="importar_compras_actualizar_stock",
+                        help=(
+                            "Déjalo desmarcado al importar compras históricas si el "
+                            "stock actual ya refleja esos ingresos. Márcalo solo si "
+                            "esas unidades todavía no están incluidas en el stock."
+                        ),
+                    )
+                    if not actualizar_stock_compras:
+                        st.caption(
+                            "El archivo se guardará como historial sin cambiar el "
+                            "stock ni el costo actual del catálogo."
+                        )
+
+                    if not errores_compras and st.button(
+                        "Importar compras validadas",
+                        key="confirmar_importacion_compras_excel",
+                        type="primary",
+                    ):
+                        ok, mensaje = importar_compras_excel(
+                            filas_compras,
+                            hash_archivo_compras,
+                            archivo_compras_excel.name,
+                            actualizar_stock_compras,
+                        )
+                        if ok:
+                            notificar_exito(mensaje)
+                            st.rerun()
+                        else:
+                            st.error(mensaje)
+
         st.subheader("Historial de compras")
 
         compras = obtener_compras()
@@ -7580,10 +8049,11 @@ elif menu == "Compras":
                     "Compra": compra[0],
                     "Fecha": compra[1],
                     "Total": f"S/ {compra[2]:.2f}",
-                    "Producto": compra[3],
-                    "Cantidad": compra[4],
-                    "Precio unitario": f"S/ {compra[5]:.2f}",
-                    "Subtotal": f"S/ {compra[6]:.2f}"
+                    "Comprobante": compra[3] or "",
+                    "Producto": compra[4],
+                    "Cantidad": compra[5],
+                    "Precio unitario": f"S/ {compra[6]:.2f}",
+                    "Subtotal": f"S/ {compra[7]:.2f}"
                 })
 
             st.dataframe(

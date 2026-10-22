@@ -192,6 +192,15 @@ def crear_base_datos():
     """)
 
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS importaciones_compras (
+            hash_archivo TEXT PRIMARY KEY,
+            nombre_archivo TEXT NOT NULL,
+            fecha_importacion TEXT NOT NULL,
+            filas_importadas INTEGER NOT NULL
+        )
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS modelo_demanda (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             artefacto BLOB NOT NULL,
@@ -216,9 +225,15 @@ def crear_base_datos():
         CREATE TABLE IF NOT EXISTS compras (
             id {id_type},
             fecha TEXT NOT NULL,
-            total {real_type} NOT NULL
+            total {real_type} NOT NULL,
+            referencia TEXT
         )
     """)
+
+    if not usar_supabase():
+        columnas_compras = cursor.execute("PRAGMA table_info(compras)").fetchall()
+        if not any(columna[1] == "referencia" for columna in columnas_compras):
+            cursor.execute("ALTER TABLE compras ADD COLUMN referencia TEXT")
 
     cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS detalle_compras (
@@ -248,6 +263,7 @@ def reiniciar_datos():
             "detalle_compras",
             "ventas",
             "importaciones_ventas",
+            "importaciones_compras",
             "compras",
             "productos",
         )
