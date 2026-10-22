@@ -6698,15 +6698,41 @@ elif menu == "Ventas":
                 })
 
             st.caption(
-                "Historial completo con cada fila numerada desde 1, ordenado desde "
-                "la venta más antigua. "
-                "Desplázate por la página para recorrer todas las ventas."
+                "Historial completo numerado desde 1 y ordenado desde la venta más "
+                "antigua. Desliza hacia abajo dentro del recuadro para ver las demás "
+                "filas."
             )
             st.dataframe(
                 tabla,
                 width="stretch",
                 hide_index=True,
-                height="content",
+                height=600,
+                column_config={
+                    "Venta": st.column_config.NumberColumn(
+                        "Venta", width=65
+                    ),
+                    "Boleta": st.column_config.TextColumn(
+                        "Boleta", width=205
+                    ),
+                    "Fecha": st.column_config.TextColumn(
+                        "Fecha", width=145
+                    ),
+                    "Total": st.column_config.TextColumn(
+                        "Total", width=85
+                    ),
+                    "Producto": st.column_config.TextColumn(
+                        "Producto", width=230
+                    ),
+                    "Cantidad": st.column_config.NumberColumn(
+                        "Cantidad", width=85
+                    ),
+                    "Precio unitario": st.column_config.TextColumn(
+                        "Precio unitario", width=120
+                    ),
+                    "Subtotal": st.column_config.TextColumn(
+                        "Subtotal", width=90
+                    ),
+                },
             )
 
             with st.expander("Eliminar una venta registrada por error"):
