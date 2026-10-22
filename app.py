@@ -4021,6 +4021,7 @@ body:has(.hb-light-mode) [data-testid="stMain"] input[type="radio"] {
     accent-color:#238b7d;
 }
 .st-key-stock_historico_checkbox [data-testid="stCheckbox"] label,
+[class*="st-key-importar_ventas_descontar_stock"] [data-testid="stCheckbox"] label,
 [class*="st-key-restaurar_stock_venta_antigua_"] [data-testid="stCheckbox"] label {
     align-items:center !important;
 }
@@ -5575,7 +5576,10 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
                 cantidades.get(fila["producto_id"], 0) + fila["cantidad"]
             )
 
-        if descontar_stock:
+        descontar_stock_aplicado = bool(descontar_stock)
+        aviso_stock = ""
+        if descontar_stock_aplicado:
+            productos_sin_stock = []
             for producto_id, cantidad in cantidades.items():
                 stock = con.execute(
                     "SELECT stock FROM productos WHERE id = ?",
@@ -5586,10 +5590,21 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
                         fila["producto"] for fila in filas
                         if fila["producto_id"] == producto_id
                     )
-                    return False, (
-                        f"Stock insuficiente para {nombre}: se necesitan {cantidad} "
-                        f"unidades y hay {stock[0] if stock else 0}. No se importó el archivo."
+                    productos_sin_stock.append(
+                        f"{nombre} (se necesitan {cantidad}, hay {stock[0] if stock else 0})"
                     )
+            if productos_sin_stock:
+                # El historial debe poder cargarse aunque el inventario actual ya
+                # refleje esas ventas o no alcance para volver a descontarlas.
+                # No descontamos ningún producto para evitar una actualización parcial.
+                descontar_stock_aplicado = False
+                lista_productos = "; ".join(productos_sin_stock[:3])
+                if len(productos_sin_stock) > 3:
+                    lista_productos += f" y {len(productos_sin_stock) - 3} más"
+                aviso_stock = (
+                    " No se descontó stock porque no alcanza para: "
+                    f"{lista_productos}."
+                )
 
         grupos = {}
         for fila in filas:
@@ -5605,7 +5620,7 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
             venta_id = con.execute(
                 "INSERT INTO ventas (fecha, total, stock_descontado, referencia) "
                 "VALUES (?, ?, ?, ?) RETURNING id",
-                (fecha, total, int(bool(descontar_stock)), referencia or None),
+                (fecha, total, int(descontar_stock_aplicado), referencia or None),
             ).fetchone()[0]
 
             for detalle in detalles:
@@ -5621,7 +5636,7 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
                         detalle["subtotal"],
                     ),
                 )
-                if descontar_stock:
+                if descontar_stock_aplicado:
                     con.execute(
                         "UPDATE productos SET stock = stock - ? WHERE id = ?",
                         (detalle["cantidad"], detalle["producto_id"]),
@@ -5639,7 +5654,9 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
             ),
         )
         con.commit()
-        return True, f"Se importaron {len(filas)} filas de venta correctamente."
+        return True, (
+            f"Se importaron {len(filas)} filas de venta correctamente.{aviso_stock}"
+        )
     except Exception as e:
         con.rollback()
         return False, f"No se pudo importar el archivo: {e}"
@@ -7226,13 +7243,13 @@ elif menu == "Ventas":
                     st.caption("Se muestran solo los primeros 20 errores.")
 
             descontar_stock_importacion = st.checkbox(
-                "Descontar estas unidades del stock actual",
+                "Descontar estas unidades del stock actual al importar",
                 value=False,
                 key="importar_ventas_descontar_stock",
                 help=(
-                    "Déjalo desmarcado si el inventario actual ya considera estas "
-                    "ventas históricas. Márcalo solo si necesitas aplicar la salida "
-                    "al stock que muestra el sistema."
+                    "Marca esta opción solo si estas ventas todavía deben restarse "
+                    "del inventario actual. Si el stock no alcanza, las ventas se "
+                    "registrarán igualmente y no se modificará ningún stock."
                 ),
             )
 
