@@ -7154,26 +7154,26 @@ elif menu == "Dashboard gerencial":
     st.subheader("Evolución de las ventas")
 
     datos_dia = analysis.obtener_datos_ventas()
-    top = analysis.productos_mas_vendidos()
+    top = pd.DataFrame()
     selector_periodo, detalle_periodo = st.columns([1, 2], vertical_alignment="bottom")
     with selector_periodo:
         periodo_grafico = st.segmented_control(
             "Periodo del gráfico",
-            ["30 días", "90 días", "6 meses", "Todo"],
+            ["30 días", "60 días", "90 días"],
             default="90 días",
             key="dashboard_periodo_ventas",
             width="stretch",
         )
     with detalle_periodo:
         st.caption(
-            "Selecciona un periodo para cambiar la vista. Los indicadores y "
-            "el Top 12 consideran todo el historial."
+            "El periodo seleccionado se aplica a los dos gráficos. Las tarjetas "
+            "del resumen conservan los totales de todo el historial."
         )
 
     dias_por_periodo = {
         "30 días": 30,
+        "60 días": 60,
         "90 días": 90,
-        "6 meses": 183,
     }
     if not datos_dia.empty and periodo_grafico in dias_por_periodo:
         fechas_ventas = pd.to_datetime(datos_dia["fecha"])
@@ -7181,6 +7181,15 @@ elif menu == "Dashboard gerencial":
             days=dias_por_periodo[periodo_grafico] - 1
         )
         datos_dia = datos_dia.loc[fechas_ventas >= fecha_limite].copy()
+        top = (
+            datos_dia.groupby(
+                ["producto_id", "codigo", "nombre", "categoria"],
+                as_index=False,
+            )["cantidad"]
+            .sum()
+            .sort_values("cantidad", ascending=False)
+            .rename(columns={"cantidad": "unidades_vendidas"})
+        )
 
     panel_ventas, panel_productos = st.columns([1.2, 1], gap="large")
 
@@ -7253,7 +7262,7 @@ elif menu == "Dashboard gerencial":
             st.markdown("#### Productos más vendidos")
             if not top.empty:
                 top_12 = top.head(12).iloc[::-1]
-                st.caption(f"Top {len(top_12)} · historial completo")
+                st.caption(f"Top {len(top_12)} · {periodo_grafico.lower()}")
                 max_unidades = max(float(top_12["unidades_vendidas"].max()), 1)
 
                 grafico_productos_mas_vendidos = go.Figure(
