@@ -8391,26 +8391,32 @@ elif menu == "Análisis inteligente":
     with a1:
         st.metric(
             "Ventas",
-            f"S/ {resumen['total_ventas']:.2f}"
+            formatear_soles(resumen["total_ventas"])
         )
 
     with a2:
         st.metric(
             "Unidades vendidas",
-            int(resumen["unidades_vendidas"])
+            formatear_numero_es(resumen["unidades_vendidas"])
         )
 
     with a3:
         st.metric(
             "Días con ventas",
-            int(resumen["dias_con_ventas"])
+            formatear_numero_es(resumen["dias_con_ventas"])
         )
 
     with a4:
         st.metric(
             "Promedio diario",
-            f"S/ {resumen['promedio_diario']:.2f}"
+            formatear_soles(resumen["promedio_diario"])
         )
+
+    st.caption(
+        "Las unidades suman las cantidades vendidas; pueden ser más que las "
+        "líneas de productos registradas. El promedio diario se calcula sobre "
+        "los días que sí tuvieron ventas."
+    )
 
     st.divider()
 
