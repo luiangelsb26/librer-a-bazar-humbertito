@@ -1,6 +1,7 @@
 import io
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 import importlib
 import math
 import hashlib
@@ -8467,13 +8468,13 @@ elif menu == "Predicción de demanda":
                     "los días sin registros se interpretan como cero ventas."
                 )
 
-                datos_grafico_pred = {
-                    "Fecha": pd.to_datetime(resultado["fechas_prediccion"]),
-                    "Unidades estimadas": [
-                        round(valor, 2)
-                        for valor in resultado["predicciones"]
-                    ],
-                }
+                fechas_grafico_pred = pd.to_datetime(
+                    resultado["fechas_prediccion"]
+                )
+                valores_grafico_pred = [
+                    round(valor, 2)
+                    for valor in resultado["predicciones"]
+                ]
                 datos_tabla_pred = {
                     "Fecha": [
                         pd.to_datetime(fecha).strftime("%d/%m/%Y")
@@ -8485,10 +8486,49 @@ elif menu == "Predicción de demanda":
                     ]
                 }
 
-                st.line_chart(
-                    datos_grafico_pred,
-                    x="Fecha",
-                    y="Unidades estimadas"
+                grafico_prediccion = go.Figure(
+                    go.Scatter(
+                        x=fechas_grafico_pred,
+                        y=valores_grafico_pred,
+                        mode="lines+markers",
+                        line={"color": "#2a9d8f", "width": 3},
+                        marker={"size": 7, "color": "#2a9d8f"},
+                        hovertemplate=(
+                            "%{x|%d/%m/%Y}<br>"
+                            "Unidades estimadas: %{y:.2f}<extra></extra>"
+                        ),
+                    )
+                )
+                grafico_prediccion.update_layout(
+                    height=340,
+                    margin={"l": 20, "r": 20, "t": 20, "b": 20},
+                    xaxis={
+                        "title": None,
+                        "tickmode": "array",
+                        "tickvals": fechas_grafico_pred,
+                        "tickformat": "%d/%m",
+                        "fixedrange": True,
+                    },
+                    yaxis={
+                        "title": "Unidades estimadas",
+                        "rangemode": "tozero",
+                        "fixedrange": True,
+                    },
+                    dragmode=False,
+                )
+                st.plotly_chart(
+                    grafico_prediccion,
+                    config={
+                        "staticPlot": True,
+                        "scrollZoom": False,
+                        "displayModeBar": False,
+                        "doubleClick": False,
+                    },
+                    key="grafico_prediccion_estatico",
+                    theme="streamlit",
+                    width="stretch",
+                    height=340,
+                    alt="Demanda estimada por día. Gráfico estático.",
                 )
 
                 st.subheader("Detalle de la predicción")
