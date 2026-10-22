@@ -6663,19 +6663,27 @@ if menu == "Inicio":
 
     k1, k2, k3, k4, k5 = st.columns(5)
     with k1:
-        st.metric("Ingresos totales", f"S/ {operacion['ventas']:.2f}", border=True)
+        st.metric("Ingresos totales", formatear_soles(operacion["ventas"]), border=True)
     with k2:
-        st.metric("Boletas / transacciones", operacion['cantidad_ventas'], border=True)
+        st.metric(
+            "Boletas / transacciones",
+            formatear_numero_es(operacion["cantidad_ventas"]),
+            border=True,
+        )
     with k3:
         st.metric(
             "Líneas de productos vendidos",
-            operacion['cantidad_lineas_venta'],
+            formatear_numero_es(operacion["cantidad_lineas_venta"]),
             border=True,
         )
     with k4:
-        st.metric("Compras registradas", f"S/ {operacion['compras']:.2f}", border=True)
+        st.metric("Compras registradas", formatear_soles(operacion["compras"]), border=True)
     with k5:
-        st.metric("Productos con stock crítico", operacion['stock_bajo'], border=True)
+        st.metric(
+            "Productos con stock crítico",
+            formatear_numero_es(operacion["stock_bajo"]),
+            border=True,
+        )
 
     st.caption(
         "Una transacción agrupa una venta o boleta; las líneas cuentan cada "
