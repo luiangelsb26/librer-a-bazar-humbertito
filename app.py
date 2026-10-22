@@ -35,15 +35,16 @@ def notificar_exito(mensaje):
     notificaciones.append(mensaje)
 
 
-def mostrar_grafico_estatico(figura, clave):
-    """Muestra una gráfica sin zoom, desplazamiento ni controles interactivos."""
+def mostrar_grafico_interactivo(figura, clave):
+    """Muestra una gráfica navegable sin usar la rueda para hacer zoom."""
     st.plotly_chart(
         figura,
         config={
-            "staticPlot": True,
             "scrollZoom": False,
-            "displayModeBar": False,
-            "doubleClick": False,
+            "displayModeBar": True,
+            "displaylogo": False,
+            "modeBarButtonsToRemove": ["select2d", "lasso2d"],
+            "responsive": True,
         },
         key=clave,
         theme="streamlit",
@@ -7128,6 +7129,33 @@ elif menu == "Dashboard gerencial":
 
     datos_dia = analysis.obtener_datos_ventas()
     top = analysis.productos_mas_vendidos()
+    selector_periodo, detalle_periodo = st.columns([1, 2], vertical_alignment="bottom")
+    with selector_periodo:
+        periodo_grafico = st.segmented_control(
+            "Periodo del gráfico",
+            ["30 días", "90 días", "6 meses", "Todo"],
+            default="90 días",
+            key="dashboard_periodo_ventas",
+            width="stretch",
+        )
+    with detalle_periodo:
+        st.caption(
+            "Arrastra para desplazarte; usa la barra para acercar o restablecer. "
+            "Los indicadores y el Top 12 consideran todo el historial."
+        )
+
+    dias_por_periodo = {
+        "30 días": 30,
+        "90 días": 90,
+        "6 meses": 183,
+    }
+    if not datos_dia.empty and periodo_grafico in dias_por_periodo:
+        fechas_ventas = pd.to_datetime(datos_dia["fecha"])
+        fecha_limite = fechas_ventas.max() - pd.Timedelta(
+            days=dias_por_periodo[periodo_grafico] - 1
+        )
+        datos_dia = datos_dia.loc[fechas_ventas >= fecha_limite].copy()
+
     panel_ventas, panel_productos = st.columns([1.2, 1], gap="large")
 
     with panel_ventas:
@@ -7164,14 +7192,14 @@ elif menu == "Dashboard gerencial":
                     height=430,
                     margin={"l": 8, "r": 12, "t": 12, "b": 12},
                     showlegend=False,
-                    hovermode=False,
+                    hovermode="x unified",
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     xaxis={
                         "title": None,
                         "tickformat": "%d/%m",
                         "nticks": 8,
-                        "fixedrange": True,
+                        "fixedrange": False,
                         "showgrid": False,
                         "automargin": True,
                     },
@@ -7179,16 +7207,17 @@ elif menu == "Dashboard gerencial":
                         "title": None,
                         "tickprefix": "S/ ",
                         "tickformat": ",.0f",
-                        "fixedrange": True,
+                        "fixedrange": False,
                         "rangemode": "tozero",
                         "gridcolor": "rgba(145, 160, 174, 0.16)",
                         "zeroline": False,
                     },
-                    dragmode=False,
+                    dragmode="pan",
+                    uirevision="dashboard-ventas",
                 )
-                mostrar_grafico_estatico(
+                mostrar_grafico_interactivo(
                     grafico_ventas_diarias,
-                    "grafico_ventas_diarias_estatico",
+                    "grafico_ventas_diarias",
                 )
             else:
                 st.info("Aún no hay ventas para mostrar en este periodo.")
@@ -7198,7 +7227,7 @@ elif menu == "Dashboard gerencial":
             st.markdown("#### Productos más vendidos")
             if not top.empty:
                 top_12 = top.head(12).iloc[::-1]
-                st.caption(f"Top {len(top_12)} · unidades vendidas")
+                st.caption(f"Top {len(top_12)} · historial completo")
                 max_unidades = max(float(top_12["unidades_vendidas"].max()), 1)
 
                 grafico_productos_mas_vendidos = go.Figure(
@@ -7220,28 +7249,29 @@ elif menu == "Dashboard gerencial":
                     height=430,
                     margin={"l": 8, "r": 34, "t": 12, "b": 12},
                     showlegend=False,
-                    hovermode=False,
+                    hovermode="closest",
                     bargap=0.32,
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     xaxis={
                         "title": None,
                         "range": [0, max_unidades * 1.18],
-                        "fixedrange": True,
+                        "fixedrange": False,
                         "showgrid": True,
                         "gridcolor": "rgba(145, 160, 174, 0.16)",
                         "zeroline": False,
                     },
                     yaxis={
                         "title": None,
-                        "fixedrange": True,
+                        "fixedrange": False,
                         "automargin": True,
                     },
-                    dragmode=False,
+                    dragmode="pan",
+                    uirevision="dashboard-productos",
                 )
-                mostrar_grafico_estatico(
+                mostrar_grafico_interactivo(
                     grafico_productos_mas_vendidos,
-                    "grafico_productos_mas_vendidos_estatico",
+                    "grafico_productos_mas_vendidos",
                 )
             else:
                 st.info("Aún no hay productos vendidos para comparar.")
@@ -8600,25 +8630,27 @@ elif menu == "Predicción de demanda":
                     )
                 )
                 grafico_prediccion.update_layout(
-                    height=340,
+                    height=430,
                     margin={"l": 20, "r": 20, "t": 20, "b": 20},
+                    hovermode="x unified",
                     xaxis={
                         "title": None,
                         "tickmode": "array",
                         "tickvals": fechas_grafico_pred,
                         "tickformat": "%d/%m",
-                        "fixedrange": True,
+                        "fixedrange": False,
                     },
                     yaxis={
                         "title": "Unidades estimadas",
                         "rangemode": "tozero",
-                        "fixedrange": True,
+                        "fixedrange": False,
                     },
-                    dragmode=False,
+                    dragmode="pan",
+                    uirevision="prediccion-demanda",
                 )
-                mostrar_grafico_estatico(
+                mostrar_grafico_interactivo(
                     grafico_prediccion,
-                    "grafico_prediccion_estatico",
+                    "grafico_prediccion_demanda",
                 )
 
                 st.subheader("Detalle de la predicción")
