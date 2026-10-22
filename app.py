@@ -5579,20 +5579,23 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
         descontar_stock_aplicado = bool(descontar_stock)
         aviso_stock = ""
         if descontar_stock_aplicado:
-            productos_sin_stock = []
-            for producto_id, cantidad in cantidades.items():
-                stock = con.execute(
-                    "SELECT stock FROM productos WHERE id = ?",
-                    (producto_id,),
-                ).fetchone()
-                if stock is None or cantidad > stock[0]:
-                    nombre = next(
-                        fila["producto"] for fila in filas
-                        if fila["producto_id"] == producto_id
-                    )
-                    productos_sin_stock.append(
-                        f"{nombre} (se necesitan {cantidad}, hay {stock[0] if stock else 0})"
-                    )
+            ids_productos = list(cantidades)
+            marcadores = ", ".join("?" for _ in ids_productos)
+            stocks = con.execute(
+                f"SELECT id, stock FROM productos WHERE id IN ({marcadores})",
+                tuple(ids_productos),
+            ).fetchall()
+            stock_por_producto = {producto_id: stock for producto_id, stock in stocks}
+            nombres_producto = {
+                fila["producto_id"]: fila["producto"] for fila in filas
+            }
+            productos_sin_stock = [
+                f"{nombres_producto[producto_id]} (se necesitan {cantidad}, "
+                f"hay {stock_por_producto.get(producto_id, 0)})"
+                for producto_id, cantidad in cantidades.items()
+                if producto_id not in stock_por_producto
+                or cantidad > stock_por_producto[producto_id]
+            ]
             if productos_sin_stock:
                 # El historial debe poder cargarse aunque el inventario actual ya
                 # refleje esas ventas o no alcance para volver a descontarlas.
@@ -5615,32 +5618,62 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
             )
             grupos.setdefault(clave, []).append(fila)
 
-        for (fecha, referencia), detalles in grupos.items():
-            total = round(sum(detalle["subtotal"] for detalle in detalles), 2)
-            venta_id = con.execute(
-                "INSERT INTO ventas (fecha, total, stock_descontado, referencia) "
-                "VALUES (?, ?, ?, ?) RETURNING id",
-                (fecha, total, int(descontar_stock_aplicado), referencia or None),
-            ).fetchone()[0]
+        grupos_lista = list(grupos.items())
+        detalles_para_insertar = []
+        for inicio in range(0, len(grupos_lista), 250):
+            lote_grupos = grupos_lista[inicio:inicio + 250]
+            valores_ventas = []
+            for (fecha, referencia), detalles in lote_grupos:
+                total = round(sum(detalle["subtotal"] for detalle in detalles), 2)
+                valores_ventas.append(
+                    (fecha, total, int(descontar_stock_aplicado), referencia or None)
+                )
 
-            for detalle in detalles:
-                con.execute(
-                    "INSERT INTO detalle_ventas "
-                    "(venta_id, producto_id, cantidad, precio_unitario, subtotal) "
-                    "VALUES (?, ?, ?, ?, ?)",
+            marcadores = ", ".join("(?, ?, ?, ?)" for _ in valores_ventas)
+            ids_ventas = con.execute(
+                "INSERT INTO ventas (fecha, total, stock_descontado, referencia) "
+                f"VALUES {marcadores} RETURNING id",
+                tuple(valor for venta in valores_ventas for valor in venta),
+            ).fetchall()
+
+            for (_, detalles), (venta_id,) in zip(lote_grupos, ids_ventas):
+                detalles_para_insertar.extend(
                     (
                         venta_id,
                         detalle["producto_id"],
                         detalle["cantidad"],
                         detalle["precio_unitario"],
                         detalle["subtotal"],
-                    ),
-                )
-                if descontar_stock_aplicado:
-                    con.execute(
-                        "UPDATE productos SET stock = stock - ? WHERE id = ?",
-                        (detalle["cantidad"], detalle["producto_id"]),
                     )
+                    for detalle in detalles
+                )
+
+        for inicio in range(0, len(detalles_para_insertar), 150):
+            lote_detalles = detalles_para_insertar[inicio:inicio + 150]
+            marcadores = ", ".join("(?, ?, ?, ?, ?)" for _ in lote_detalles)
+            con.execute(
+                "INSERT INTO detalle_ventas "
+                "(venta_id, producto_id, cantidad, precio_unitario, subtotal) "
+                f"VALUES {marcadores}",
+                tuple(valor for detalle in lote_detalles for valor in detalle),
+            )
+
+        if descontar_stock_aplicado:
+            productos_lote = list(cantidades.items())
+            for inicio in range(0, len(productos_lote), 250):
+                lote_productos = productos_lote[inicio:inicio + 250]
+                casos = " ".join("WHEN ? THEN ?" for _ in lote_productos)
+                ids_sql = ", ".join("?" for _ in lote_productos)
+                parametros = tuple(
+                    valor
+                    for producto_id, cantidad in lote_productos
+                    for valor in (producto_id, cantidad)
+                ) + tuple(producto_id for producto_id, _ in lote_productos)
+                con.execute(
+                    "UPDATE productos SET stock = stock - CASE id "
+                    f"{casos} ELSE 0 END WHERE id IN ({ids_sql})",
+                    parametros,
+                )
 
         con.execute(
             "INSERT INTO importaciones_ventas "
@@ -7279,9 +7312,9 @@ elif menu == "Ventas":
 
             tabla = []
 
-            for venta in ventas:
+            for numero_fila, venta in enumerate(ventas, start=1):
                 tabla.append({
-                    "ID": venta[9],
+                    "N.º": numero_fila,
                     "Boleta": venta[8] or "",
                     "Fecha": venta[1],
                     "Total": f"S/ {venta[2]:.2f}",
@@ -7292,8 +7325,8 @@ elif menu == "Ventas":
                 })
 
             st.caption(
-                "Historial ordenado por ID ascendente. Desliza hacia abajo dentro "
-                "del recuadro para ver las demás filas."
+                "Numeración consecutiva desde 1, en el orden del historial. "
+                "Desliza hacia abajo dentro del recuadro para ver las demás filas."
             )
             st.dataframe(
                 tabla,
@@ -7302,8 +7335,8 @@ elif menu == "Ventas":
                 height=600,
                 key="historial_ventas_id_asc",
                 column_config={
-                    "ID": st.column_config.NumberColumn(
-                        "ID", width=65
+                    "N.º": st.column_config.NumberColumn(
+                        "N.º", width=65
                     ),
                     "Boleta": st.column_config.TextColumn(
                         "Boleta", width=205
