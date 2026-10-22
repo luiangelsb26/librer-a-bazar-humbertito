@@ -48,7 +48,7 @@ def mostrar_grafico_estatico(figura, clave):
         key=clave,
         theme="streamlit",
         width="stretch",
-        height=340,
+        height=430,
     )
 
 
@@ -7127,64 +7127,124 @@ elif menu == "Dashboard gerencial":
     st.subheader("Evolución de las ventas")
 
     datos_dia = analysis.obtener_datos_ventas()
-
-    if not datos_dia.empty:
-        diario = (
-            datos_dia.groupby(
-                datos_dia["fecha"].dt.date
-            )["subtotal"]
-            .sum()
-            .rename("Ventas")
-        )
-
-        grafico_ventas_diarias = go.Figure(
-            go.Scatter(
-                x=pd.to_datetime(diario.index),
-                y=diario.values,
-                mode="lines+markers",
-                line={"color": "#2a9d8f", "width": 3},
-                marker={"size": 6, "color": "#2a9d8f"},
-            )
-        )
-        grafico_ventas_diarias.update_layout(
-            height=340,
-            margin={"l": 20, "r": 20, "t": 20, "b": 20},
-            xaxis={"title": None, "tickformat": "%d/%m", "fixedrange": True},
-            yaxis={"title": "Ventas (S/)", "fixedrange": True},
-            dragmode=False,
-        )
-        mostrar_grafico_estatico(
-            grafico_ventas_diarias,
-            "grafico_ventas_diarias_estatico",
-        )
-    else:
-        st.info("No existen ventas para mostrar.")
-
-    st.subheader("Productos con mayor movimiento")
-
     top = analysis.productos_mas_vendidos()
+    panel_ventas, panel_productos = st.columns([1.2, 1], gap="large")
 
-    if not top.empty:
-        grafico_productos_mas_vendidos = go.Figure(
-            go.Bar(
-                x=top["nombre"],
-                y=top["unidades_vendidas"],
-                marker_color="#2a9d8f",
-            )
-        )
-        grafico_productos_mas_vendidos.update_layout(
-            height=340,
-            margin={"l": 20, "r": 20, "t": 20, "b": 60},
-            xaxis={"title": None, "tickangle": -30, "fixedrange": True},
-            yaxis={"title": "Unidades vendidas", "fixedrange": True},
-            dragmode=False,
-        )
-        mostrar_grafico_estatico(
-            grafico_productos_mas_vendidos,
-            "grafico_productos_mas_vendidos_estatico",
-        )
-    else:
-        st.info("No existen ventas registradas.")
+    with panel_ventas:
+        with st.container(border=True):
+            st.markdown("#### Ventas diarias")
+            st.caption("Importe vendido por fecha · soles")
+
+            if not datos_dia.empty:
+                diario = (
+                    datos_dia.groupby(
+                        datos_dia["fecha"].dt.date
+                    )["subtotal"]
+                    .sum()
+                    .rename("Ventas")
+                )
+
+                grafico_ventas_diarias = go.Figure(
+                    go.Scatter(
+                        x=pd.to_datetime(diario.index),
+                        y=diario.values,
+                        mode="lines+markers",
+                        line={"color": "#2a9d8f", "width": 2.5},
+                        marker={
+                            "size": 5,
+                            "color": "#2a9d8f",
+                            "line": {"width": 1, "color": "#101820"},
+                        },
+                        fill="tozeroy",
+                        fillcolor="rgba(42, 157, 143, 0.10)",
+                        hovertemplate="%{x|%d/%m/%Y}<br>Ventas: S/ %{y:,.2f}<extra></extra>",
+                    )
+                )
+                grafico_ventas_diarias.update_layout(
+                    height=430,
+                    margin={"l": 8, "r": 12, "t": 12, "b": 12},
+                    showlegend=False,
+                    hovermode=False,
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    xaxis={
+                        "title": None,
+                        "tickformat": "%d/%m",
+                        "nticks": 8,
+                        "fixedrange": True,
+                        "showgrid": False,
+                        "automargin": True,
+                    },
+                    yaxis={
+                        "title": None,
+                        "tickprefix": "S/ ",
+                        "tickformat": ",.0f",
+                        "fixedrange": True,
+                        "rangemode": "tozero",
+                        "gridcolor": "rgba(145, 160, 174, 0.16)",
+                        "zeroline": False,
+                    },
+                    dragmode=False,
+                )
+                mostrar_grafico_estatico(
+                    grafico_ventas_diarias,
+                    "grafico_ventas_diarias_estatico",
+                )
+            else:
+                st.info("Aún no hay ventas para mostrar en este periodo.")
+
+    with panel_productos:
+        with st.container(border=True):
+            st.markdown("#### Productos más vendidos")
+            if not top.empty:
+                top_12 = top.head(12).iloc[::-1]
+                st.caption(f"Top {len(top_12)} · unidades vendidas")
+                max_unidades = max(float(top_12["unidades_vendidas"].max()), 1)
+
+                grafico_productos_mas_vendidos = go.Figure(
+                    go.Bar(
+                        x=top_12["unidades_vendidas"],
+                        y=top_12["nombre"],
+                        orientation="h",
+                        marker={
+                            "color": "#2a9d8f",
+                            "line": {"width": 0},
+                        },
+                        text=top_12["unidades_vendidas"],
+                        textposition="outside",
+                        cliponaxis=False,
+                        hovertemplate="%{y}<br>Unidades: %{x}<extra></extra>",
+                    )
+                )
+                grafico_productos_mas_vendidos.update_layout(
+                    height=430,
+                    margin={"l": 8, "r": 34, "t": 12, "b": 12},
+                    showlegend=False,
+                    hovermode=False,
+                    bargap=0.32,
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    xaxis={
+                        "title": None,
+                        "range": [0, max_unidades * 1.18],
+                        "fixedrange": True,
+                        "showgrid": True,
+                        "gridcolor": "rgba(145, 160, 174, 0.16)",
+                        "zeroline": False,
+                    },
+                    yaxis={
+                        "title": None,
+                        "fixedrange": True,
+                        "automargin": True,
+                    },
+                    dragmode=False,
+                )
+                mostrar_grafico_estatico(
+                    grafico_productos_mas_vendidos,
+                    "grafico_productos_mas_vendidos_estatico",
+                )
+            else:
+                st.info("Aún no hay productos vendidos para comparar.")
 
 
 # ==========================================================
