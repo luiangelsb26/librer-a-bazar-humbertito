@@ -5275,7 +5275,7 @@ def obtener_ventas():
             ON v.id = dv.venta_id
         JOIN productos p
             ON dv.producto_id = p.id
-        ORDER BY v.id DESC
+        ORDER BY v.id ASC, dv.id ASC
     """).fetchall()
 
     con.close()
@@ -6697,6 +6697,10 @@ elif menu == "Ventas":
                     "Subtotal": f"S/ {venta[6]:.2f}"
                 })
 
+            st.caption(
+                "Historial completo ordenado desde la venta más antigua. "
+                "Desplázate dentro de la tabla para ver las siguientes ventas."
+            )
             st.dataframe(
                 tabla,
                 width="stretch",
