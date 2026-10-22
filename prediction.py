@@ -1,7 +1,8 @@
 """Entrenamiento y prediccion de demanda con Random Forest."""
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import hashlib
+import io
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +19,81 @@ RANDOM_STATE = 42
 
 def conectar():
     return database.conectar()
+
+
+def _cargar_artefacto(joblib):
+    """Busca primero el modelo persistido en la base y luego el archivo local."""
+    con = conectar()
+    try:
+        fila = con.execute(
+            "SELECT artefacto FROM modelo_demanda WHERE id = 1"
+        ).fetchone()
+        if fila and fila[0]:
+            return joblib.load(io.BytesIO(bytes(fila[0]))), "base de datos"
+    except Exception:
+        # Permite usar un modelo local mientras se aplica la migración remota.
+        pass
+    finally:
+        con.close()
+
+    if MODEL_PATH.is_file():
+        try:
+            return joblib.load(MODEL_PATH), "archivo local"
+        except Exception:
+            return None, None
+    return None, None
+
+
+def _guardar_artefacto(artefacto, joblib):
+    """Guarda el modelo en la base activa y conserva un respaldo local."""
+    try:
+        buffer = io.BytesIO()
+        joblib.dump(artefacto, buffer, compress=3)
+        contenido = buffer.getvalue()
+    except Exception as error:
+        return None, error
+    error_base = None
+    con = conectar()
+    try:
+        con.execute(
+            """
+            INSERT INTO modelo_demanda (id, artefacto, actualizado_en)
+            VALUES (1, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                artefacto = excluded.artefacto,
+                actualizado_en = excluded.actualizado_en
+            """,
+            (contenido, datetime.now().isoformat(timespec="seconds")),
+        )
+        con.commit()
+        guardado_en_base = True
+    except Exception as error:
+        con.rollback()
+        error_base = error
+        guardado_en_base = False
+    finally:
+        con.close()
+
+    error_local = None
+    ruta_temporal = MODEL_PATH.with_name(
+        f".{MODEL_PATH.stem}.tmp{MODEL_PATH.suffix}"
+    )
+    try:
+        MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(artefacto, ruta_temporal, compress=3)
+        ruta_temporal.replace(MODEL_PATH)
+    except Exception as error:
+        error_local = error
+        try:
+            ruta_temporal.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    if guardado_en_base:
+        return "base de datos", None
+    if error_local is None:
+        return "archivo local", error_base
+    return None, error_base or error_local
 
 
 def obtener_productos():
@@ -314,28 +390,47 @@ def entrenar_modelo():
         "evaluacion": evaluacion,
         "algoritmo": "RandomForestRegressor",
     }
-    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(artefacto, MODEL_PATH)
+    almacenamiento, error_guardado = _guardar_artefacto(artefacto, joblib)
+    if almacenamiento is None:
+        return {
+            "estado": "error_guardar_modelo",
+            "mensaje": (
+                "El modelo se entrenó, pero no se pudo guardar en la base ni "
+                f"en el servidor local. Detalle: {error_guardado}"
+            ),
+            "evaluacion": evaluacion,
+        }
+
+    if almacenamiento == "archivo local" and database.usar_supabase():
+        return {
+            "estado": "ok_local",
+            "mensaje": (
+                "El modelo se entrenó y quedó disponible en este servidor, pero "
+                "no se guardó de forma persistente en Supabase. Ejecute la migración "
+                "migracion_modelo_demanda.sql y vuelva a entrenarlo."
+            ),
+            "evaluacion": evaluacion,
+            "almacenamiento": almacenamiento,
+        }
 
     return {
         "estado": "ok",
-        "mensaje": "Modelo entrenado, evaluado y activado.",
+        "mensaje": "Modelo entrenado, evaluado y guardado de forma persistente.",
         "evaluacion": evaluacion,
         "ruta_modelo": str(MODEL_PATH),
+        "almacenamiento": almacenamiento,
     }
 
 
 def estado_modelo():
-    if not MODEL_PATH.is_file():
-        return {
-            "estado": "modelo_no_entrenado",
-            "mensaje": "Todavia no hay un modelo entrenado y validado.",
-        }
-
     try:
         import joblib
-
-        artefacto = joblib.load(MODEL_PATH)
+        artefacto, almacenamiento = _cargar_artefacto(joblib)
+        if artefacto is None:
+            return {
+                "estado": "modelo_no_entrenado",
+                "mensaje": "Todavia no hay un modelo entrenado y validado.",
+            }
         df_ventas = _obtener_ventas_diarias()
         firma_actual = _firma_historial(
             df_ventas, artefacto.get("fecha_firma_exclusiva", "0001-01-01")
@@ -350,12 +445,13 @@ def estado_modelo():
             "algoritmo": artefacto.get("algoritmo", "RandomForestRegressor"),
             "fecha_entrenamiento": artefacto.get("fecha_entrenamiento"),
             "fecha_fin_historial": artefacto.get("fecha_fin_historial"),
+            "almacenamiento": almacenamiento,
             "evaluacion": artefacto.get("evaluacion", {}),
         }
     except Exception:
         return {
             "estado": "modelo_invalido",
-            "mensaje": "No se pudo leer el archivo del modelo. Vuelva a entrenarlo.",
+            "mensaje": "No se pudo leer el modelo guardado. Vuelva a entrenarlo.",
         }
 
 
@@ -372,6 +468,19 @@ def obtener_ventas_producto(producto_id):
 
 def predecir_demanda(producto_id, dias_futuro=7):
     try:
+        dias_futuro = int(dias_futuro)
+    except (TypeError, ValueError):
+        return {
+            "estado": "horizonte_invalido",
+            "mensaje": "Indique un horizonte de predicción entre 1 y 30 días.",
+        }
+    if not 1 <= dias_futuro <= 30:
+        return {
+            "estado": "horizonte_invalido",
+            "mensaje": "Indique un horizonte de predicción entre 1 y 30 días.",
+        }
+
+    try:
         import joblib
     except ImportError:
         return {
@@ -379,18 +488,17 @@ def predecir_demanda(producto_id, dias_futuro=7):
             "mensaje": "Instale las dependencias del proyecto con pip install -r requirements.txt.",
         }
 
-    if not MODEL_PATH.is_file():
-        return {
-            "estado": "modelo_no_entrenado",
-            "mensaje": "Primero entrene y valide el modelo con el historial disponible.",
-        }
-
     try:
-        artefacto = joblib.load(MODEL_PATH)
+        artefacto, _ = _cargar_artefacto(joblib)
     except Exception:
         return {
             "estado": "modelo_invalido",
             "mensaje": "No se pudo leer el modelo. Vuelva a entrenarlo.",
+        }
+    if artefacto is None:
+        return {
+            "estado": "modelo_no_entrenado",
+            "mensaje": "Primero entrene y valide el modelo con el historial disponible.",
         }
 
     df_ventas = _obtener_ventas_diarias()
@@ -427,28 +535,48 @@ def predecir_demanda(producto_id, dias_futuro=7):
             "mensaje": "No existen ventas registradas para este producto.",
         }
 
+    ventas_producto = df_ventas[df_ventas["producto_id"] == producto_id]
+    fecha_ultima_venta_producto = pd.to_datetime(
+        ventas_producto["fecha"]
+    ).max().date()
+
     historial = list(serie["valores"])
-    if len(historial) < MIN_LAG_DAYS:
+    dias_historicos_observados = len(historial)
+    if dias_historicos_observados < MIN_LAG_DAYS:
         return {
             "estado": "datos_insuficientes",
             "mensaje": f"Se requieren al menos {MIN_LAG_DAYS} dias calendario de historial para este producto.",
-            "dias_disponibles": len(historial),
+            "dias_disponibles": dias_historicos_observados,
         }
 
+    # Proyecta desde hoy (o desde la última fecha futura registrada), no desde
+    # una fecha antigua si el registro se quedó varios días sin actualizar.
+    fecha_base = max(ultima_fecha, date.today())
+    dias_sin_registro = (fecha_base - ultima_fecha).days
+    if dias_sin_registro > 0:
+        historial.extend([0.0] * dias_sin_registro)
+
     pronosticos = []
+    fechas_prediccion = []
     for paso in range(1, int(dias_futuro) + 1):
-        fecha_objetivo = ultima_fecha + timedelta(days=paso)
+        fecha_objetivo = fecha_base + timedelta(days=paso)
         vector = _crear_vector(historial, fecha_objetivo, codigo_producto, product_codes)
         estimacion = max(0.0, float(artefacto["modelo"].predict([vector])[0]))
         pronosticos.append(estimacion)
+        fechas_prediccion.append(fecha_objetivo.isoformat())
         historial.append(estimacion)
 
     return {
         "estado": "ok",
         "algoritmo": artefacto.get("algoritmo", "RandomForestRegressor"),
-        "dias_historicos": len(serie["valores"]),
+        "dias_historicos": dias_historicos_observados,
+        "fecha_base_prediccion": fecha_base.isoformat(),
+        "fecha_ultima_venta_producto": fecha_ultima_venta_producto.isoformat(),
+        "fechas_prediccion": fechas_prediccion,
         "demanda_predicha": float(sum(pronosticos)),
-        "demanda_7_dias": float(sum(pronosticos)),
+        "demanda_7_dias": (
+            float(sum(pronosticos[:7])) if len(pronosticos) >= 7 else None
+        ),
         "promedio_diario_predicho": float(np.mean(pronosticos)),
         "predicciones": pronosticos,
         "historial": obtener_ventas_producto(producto_id),

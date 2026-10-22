@@ -191,6 +191,14 @@ def crear_base_datos():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS modelo_demanda (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            artefacto BLOB NOT NULL,
+            actualizado_en TEXT NOT NULL
+        )
+    """)
+
     cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS detalle_ventas (
             id {id_type},

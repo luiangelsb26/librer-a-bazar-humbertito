@@ -6057,15 +6057,11 @@ def resumen_dashboard():
 
 def resumen_operativo():
     ventas, cantidad_ventas, compras, stock_bajo = resumen_dashboard()
-    margen_neto = ventas - compras
-    costo_promedio = compras / cantidad_ventas if cantidad_ventas else 0
     return {
         "ventas": ventas,
         "cantidad_ventas": cantidad_ventas,
         "compras": compras,
         "stock_bajo": stock_bajo,
-        "margen_neto": margen_neto,
-        "costo_promedio_por_venta": costo_promedio,
     }
 
 
@@ -6221,11 +6217,16 @@ if menu == "Inicio":
     with k1:
         st.metric("Ingresos totales", f"S/ {operacion['ventas']:.2f}", border=True)
     with k2:
-        st.metric("Margen neto", f"S/ {operacion['margen_neto']:.2f}", border=True)
+        st.metric("Compras registradas", f"S/ {operacion['compras']:.2f}", border=True)
     with k3:
-        st.metric("Stock crítico", operacion['stock_bajo'], border=True)
+        st.metric("Productos con stock crítico", operacion['stock_bajo'], border=True)
     with k4:
-        st.metric("Ventas registradas", operacion['cantidad_ventas'], border=True)
+        st.metric("Transacciones registradas", operacion['cantidad_ventas'], border=True)
+
+    st.caption(
+        "El sistema no muestra margen neto: aún no guarda el costo histórico "
+        "de cada producto vendido ni los gastos operativos."
+    )
 
     st.subheader("Accesos rápidos", icon=":material/bolt:")
     a1, a2, a3, a4 = st.columns(4)
@@ -6630,10 +6631,10 @@ elif menu == "Dashboard gerencial":
     d1, d2, d3, d4 = st.columns(4)
 
     with d1:
-        st.metric("Ventas acumuladas", f"S/ {ventas:.2f}")
+        st.metric("Ingresos por ventas", f"S/ {ventas:.2f}")
 
     with d2:
-        st.metric("Número de ventas", cantidad_ventas)
+        st.metric("Transacciones", cantidad_ventas)
 
     with d3:
         st.metric("Compras acumuladas", f"S/ {compras:.2f}")
@@ -7698,6 +7699,19 @@ elif menu == "Predicción de demanda":
             f"Entrenado el {estado_actual['fecha_entrenamiento']}; "
             f"historial hasta {estado_actual['fecha_fin_historial']}."
         )
+        if (
+            estado_actual.get("almacenamiento") == "archivo local"
+            and database.usar_supabase()
+        ):
+            st.warning(
+                "Este modelo solo está guardado en el almacenamiento temporal del "
+                "servidor. Ejecute migracion_modelo_demanda.sql en Supabase y "
+                "vuelva a entrenarlo para conservarlo entre reinicios."
+            )
+        st.caption(
+            "Las ventas nuevas se usan como contexto para pronosticar. "
+            "Vuelve a entrenar para que el modelo aprenda también de esos registros."
+        )
         evaluacion_actual = estado_actual.get("evaluacion", {})
         if evaluacion_actual:
             st.caption(
@@ -7800,16 +7814,31 @@ elif menu == "Predicción de demanda":
                 st.divider()
 
                 st.subheader(
-                    f"Demanda estimada para los próximos {int(dias)} días"
+                    f"Demanda estimada del "
+                    f"{pd.to_datetime(resultado['fechas_prediccion'][0]).strftime('%d/%m/%Y')} "
+                    f"al {pd.to_datetime(resultado['fechas_prediccion'][-1]).strftime('%d/%m/%Y')}"
                 )
 
-                nombres_dias = [
-                    f"Día {i}"
-                    for i in range(1, int(dias) + 1)
-                ]
+                st.caption(
+                    "Última venta registrada del producto: "
+                    f"{pd.to_datetime(resultado['fecha_ultima_venta_producto']).strftime('%d/%m/%Y')}. "
+                    "La predicción parte del día posterior a la fecha de corte "
+                    f"{pd.to_datetime(resultado['fecha_base_prediccion']).strftime('%d/%m/%Y')}; "
+                    "los días sin registros se interpretan como cero ventas."
+                )
 
-                datos_pred = {
-                    "Día": nombres_dias,
+                datos_grafico_pred = {
+                    "Fecha": pd.to_datetime(resultado["fechas_prediccion"]),
+                    "Unidades estimadas": [
+                        round(valor, 2)
+                        for valor in resultado["predicciones"]
+                    ],
+                }
+                datos_tabla_pred = {
+                    "Fecha": [
+                        pd.to_datetime(fecha).strftime("%d/%m/%Y")
+                        for fecha in resultado["fechas_prediccion"]
+                    ],
                     "Unidades estimadas": [
                         round(valor, 2)
                         for valor in resultado["predicciones"]
@@ -7817,15 +7846,15 @@ elif menu == "Predicción de demanda":
                 }
 
                 st.line_chart(
-                    datos_pred,
-                    x="Día",
+                    datos_grafico_pred,
+                    x="Fecha",
                     y="Unidades estimadas"
                 )
 
                 st.subheader("Detalle de la predicción")
 
                 st.dataframe(
-                    datos_pred,
+                    datos_tabla_pred,
                     width="stretch",
                     hide_index=True
                 )
