@@ -6684,10 +6684,17 @@ elif menu == "Ventas":
         if ventas:
 
             tabla = []
+            numeracion_ventas = {
+                venta_id: numero
+                for numero, venta_id in enumerate(
+                    dict.fromkeys(venta[0] for venta in ventas),
+                    start=1,
+                )
+            }
 
             for venta in ventas:
                 tabla.append({
-                    "Venta": venta[0],
+                    "Venta": numeracion_ventas[venta[0]],
                     "Boleta": venta[8] or "",
                     "Fecha": venta[1],
                     "Total": f"S/ {venta[2]:.2f}",
@@ -6698,7 +6705,8 @@ elif menu == "Ventas":
                 })
 
             st.caption(
-                "Historial completo ordenado desde la venta más antigua. "
+                "Historial completo numerado desde 1 y ordenado desde la venta más "
+                "antigua. "
                 "Desplázate por la página para recorrer todas las ventas."
             )
             st.dataframe(
