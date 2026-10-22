@@ -196,9 +196,19 @@ def crear_base_datos():
             hash_archivo TEXT PRIMARY KEY,
             nombre_archivo TEXT NOT NULL,
             fecha_importacion TEXT NOT NULL,
-            filas_importadas INTEGER NOT NULL
+            filas_importadas INTEGER NOT NULL,
+            stock_actualizado INTEGER
         )
     """)
+
+    if not usar_supabase():
+        columnas_importaciones = cursor.execute(
+            "PRAGMA table_info(importaciones_compras)"
+        ).fetchall()
+        if not any(columna[1] == "stock_actualizado" for columna in columnas_importaciones):
+            cursor.execute(
+                "ALTER TABLE importaciones_compras ADD COLUMN stock_actualizado INTEGER"
+            )
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS modelo_demanda (

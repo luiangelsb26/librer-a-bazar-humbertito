@@ -6069,7 +6069,7 @@ def crear_plantilla_compras_excel():
         )
         hoja = escritor.sheets["Compras"]
         hoja.freeze_panes = "A2"
-        hoja.auto_filter.ref = "A1:D1"
+        hoja.auto_filter.ref = "A1:E1"
         for columna, ancho in {
             "A": 18, "B": 24, "C": 12, "D": 32, "E": 24
         }.items():
@@ -6269,6 +6269,67 @@ def hash_importacion_compras_registrada(hash_archivo):
         con.close()
 
 
+def obtener_auditoria_compras():
+    """Resume consistencia interna de compras; no sustituye cotejar comprobantes."""
+    con = conectar()
+    try:
+        resumen = con.execute("""
+            SELECT
+                COUNT(*) AS compras,
+                COALESCE(SUM(c.total), 0) AS total_encabezados,
+                COALESCE(SUM(COALESCE(d.suma_detalles, 0)), 0) AS total_detalles,
+                COALESCE(SUM(COALESCE(d.lineas, 0)), 0) AS lineas,
+                MIN(c.fecha) AS primera_fecha,
+                MAX(c.fecha) AS ultima_fecha,
+                SUM(CASE WHEN UPPER(COALESCE(c.referencia, '')) LIKE 'DEMO%'
+                    THEN 1 ELSE 0 END) AS referencias_demo,
+                SUM(CASE WHEN d.compra_id IS NULL THEN 1 ELSE 0 END) AS sin_detalles
+            FROM compras c
+            LEFT JOIN (
+                SELECT compra_id, SUM(subtotal) AS suma_detalles, COUNT(*) AS lineas
+                FROM detalle_compras
+                GROUP BY compra_id
+            ) d ON d.compra_id = c.id
+        """).fetchone()
+        diferencias = con.execute("""
+            SELECT COUNT(*)
+            FROM (
+                SELECT c.id
+                FROM compras c
+                LEFT JOIN detalle_compras dc ON dc.compra_id = c.id
+                GROUP BY c.id, c.total
+                HAVING COUNT(dc.id) = 0
+                    OR ABS(c.total - COALESCE(SUM(dc.subtotal), 0)) > 0.01
+            ) inconsistentes
+        """).fetchone()[0]
+        return {
+            "compras": resumen[0] or 0,
+            "total_encabezados": float(resumen[1] or 0),
+            "total_detalles": float(resumen[2] or 0),
+            "lineas": resumen[3] or 0,
+            "primera_fecha": resumen[4],
+            "ultima_fecha": resumen[5],
+            "referencias_demo": resumen[6] or 0,
+            "sin_detalles": resumen[7] or 0,
+            "diferencias": diferencias,
+        }
+    finally:
+        con.close()
+
+
+def obtener_historial_importaciones_compras():
+    """Devuelve auditoría de cargas; NULL indica que la versión antigua no guardó el dato."""
+    con = conectar()
+    try:
+        return con.execute("""
+            SELECT nombre_archivo, fecha_importacion, filas_importadas, stock_actualizado
+            FROM importaciones_compras
+            ORDER BY fecha_importacion DESC
+        """).fetchall()
+    finally:
+        con.close()
+
+
 def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock=False):
     """Importa el archivo completo o no importa filas; opcionalmente suma al stock."""
     con = conectar()
@@ -6351,13 +6412,14 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
 
         con.execute(
             "INSERT INTO importaciones_compras "
-            "(hash_archivo, nombre_archivo, fecha_importacion, filas_importadas) "
-            "VALUES (?, ?, ?, ?)",
+            "(hash_archivo, nombre_archivo, fecha_importacion, filas_importadas, stock_actualizado) "
+            "VALUES (?, ?, ?, ?, ?)",
             (
                 hash_archivo,
                 nombre_archivo,
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 len(filas),
+                actualizar_stock,
             ),
         )
         con.commit()
@@ -8038,6 +8100,43 @@ elif menu == "Compras":
 
         st.subheader("Historial de compras")
 
+        try:
+            auditoria = obtener_auditoria_compras()
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Comprobantes", auditoria["compras"])
+            m2.metric("Total registrado", f"S/ {auditoria['total_encabezados']:.2f}")
+            m3.metric("Líneas de compra", auditoria["lineas"])
+            m4.metric("Comprobantes DEMO", auditoria["referencias_demo"])
+            st.caption(
+                "Fechas registradas: "
+                f"{auditoria['primera_fecha'] or '—'} a {auditoria['ultima_fecha'] or '—'}. "
+                "La conciliación verifica que los encabezados coincidan con sus líneas; "
+                "no confirma por sí sola que importes y fechas coincidan con los comprobantes."
+            )
+            if auditoria["diferencias"]:
+                st.error(
+                    f"Hay {auditoria['diferencias']} comprobantes cuyo total no coincide "
+                    "con sus líneas o que no tienen detalle. Revisa el historial antes "
+                    "de usarlo en el informe."
+                )
+            elif auditoria["compras"]:
+                st.success("Los totales registrados coinciden con las líneas de compra.")
+            if auditoria["referencias_demo"]:
+                st.warning(
+                    f"Se detectaron {auditoria['referencias_demo']} referencias con prefijo "
+                    "DEMO. Coteja cada una con su comprobante antes de incluirla como dato real."
+                )
+            if auditoria["sin_detalles"]:
+                st.error(
+                    f"Hay {auditoria['sin_detalles']} compras sin líneas de detalle."
+                )
+        except Exception as error:
+            st.warning(
+                "No se pudo mostrar la auditoría de compras. Vuelve a ejecutar "
+                "migracion_importar_compras.sql en Supabase SQL Editor para agregar "
+                f"el campo de seguimiento de stock. Detalle: {error}"
+            )
+
         compras = obtener_compras()
 
         if compras:
@@ -8063,9 +8162,49 @@ elif menu == "Compras":
                 height=420,
             )
 
+            salida_compras = io.BytesIO()
+            with pd.ExcelWriter(salida_compras, engine="openpyxl") as escritor:
+                pd.DataFrame(tabla).to_excel(
+                    escritor, index=False, sheet_name="Historial de compras"
+                )
+            st.download_button(
+                "Descargar historial de compras en Excel",
+                data=salida_compras.getvalue(),
+                file_name="historial_compras_humbertito.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="descargar_historial_compras",
+            )
+
         else:
 
             st.info("Todavía no hay compras registradas.")
+
+        try:
+            historial_importaciones = obtener_historial_importaciones_compras()
+            if historial_importaciones:
+                with st.expander("Auditoría de archivos importados"):
+                    filas_importaciones = []
+                    for nombre, fecha, filas, stock_actualizado in historial_importaciones:
+                        if stock_actualizado is None:
+                            estado_stock = "No registrado en esa versión"
+                        else:
+                            estado_stock = "Sí" if stock_actualizado else "No"
+                        filas_importaciones.append({
+                            "Archivo": nombre,
+                            "Fecha de importación": fecha,
+                            "Filas": filas,
+                            "Sumó al stock": estado_stock,
+                        })
+                    st.dataframe(
+                        filas_importaciones,
+                        width="stretch",
+                        hide_index=True,
+                    )
+        except Exception as error:
+            st.caption(
+                "El historial de archivos requiere volver a ejecutar la migración "
+                f"actualizada en Supabase. Detalle: {error}"
+            )
 
 
 # ==========================================================
