@@ -35,6 +35,24 @@ def notificar_exito(mensaje):
     notificaciones.append(mensaje)
 
 
+def mostrar_grafico_estatico(figura, clave, descripcion):
+    """Muestra una gráfica sin zoom, desplazamiento ni controles interactivos."""
+    st.plotly_chart(
+        figura,
+        config={
+            "staticPlot": True,
+            "scrollZoom": False,
+            "displayModeBar": False,
+            "doubleClick": False,
+        },
+        key=clave,
+        theme="streamlit",
+        width="stretch",
+        height=340,
+        alt=descripcion,
+    )
+
+
 for mensaje_notificacion in st.session_state.pop(
     "_notificaciones_exito",
     [],
@@ -7123,7 +7141,27 @@ elif menu == "Dashboard gerencial":
             .rename("Ventas")
         )
 
-        st.line_chart(diario)
+        grafico_ventas_diarias = go.Figure(
+            go.Scatter(
+                x=pd.to_datetime(diario.index),
+                y=diario.values,
+                mode="lines+markers",
+                line={"color": "#2a9d8f", "width": 3},
+                marker={"size": 6, "color": "#2a9d8f"},
+            )
+        )
+        grafico_ventas_diarias.update_layout(
+            height=340,
+            margin={"l": 20, "r": 20, "t": 20, "b": 20},
+            xaxis={"title": None, "tickformat": "%d/%m", "fixedrange": True},
+            yaxis={"title": "Ventas (S/)", "fixedrange": True},
+            dragmode=False,
+        )
+        mostrar_grafico_estatico(
+            grafico_ventas_diarias,
+            "grafico_ventas_diarias_estatico",
+            "Ventas totales por día, gráfico estático.",
+        )
     else:
         st.info("No existen ventas para mostrar.")
 
@@ -7132,8 +7170,24 @@ elif menu == "Dashboard gerencial":
     top = analysis.productos_mas_vendidos()
 
     if not top.empty:
-        st.bar_chart(
-            top.set_index("nombre")["unidades_vendidas"]
+        grafico_productos_mas_vendidos = go.Figure(
+            go.Bar(
+                x=top["nombre"],
+                y=top["unidades_vendidas"],
+                marker_color="#2a9d8f",
+            )
+        )
+        grafico_productos_mas_vendidos.update_layout(
+            height=340,
+            margin={"l": 20, "r": 20, "t": 20, "b": 60},
+            xaxis={"title": None, "tickangle": -30, "fixedrange": True},
+            yaxis={"title": "Unidades vendidas", "fixedrange": True},
+            dragmode=False,
+        )
+        mostrar_grafico_estatico(
+            grafico_productos_mas_vendidos,
+            "grafico_productos_mas_vendidos_estatico",
+            "Productos con mayor movimiento, gráfico estático.",
         )
     else:
         st.info("No existen ventas registradas.")
@@ -8516,19 +8570,10 @@ elif menu == "Predicción de demanda":
                     },
                     dragmode=False,
                 )
-                st.plotly_chart(
+                mostrar_grafico_estatico(
                     grafico_prediccion,
-                    config={
-                        "staticPlot": True,
-                        "scrollZoom": False,
-                        "displayModeBar": False,
-                        "doubleClick": False,
-                    },
-                    key="grafico_prediccion_estatico",
-                    theme="streamlit",
-                    width="stretch",
-                    height=340,
-                    alt="Demanda estimada por día. Gráfico estático.",
+                    "grafico_prediccion_estatico",
+                    "Demanda estimada por día. Gráfico estático.",
                 )
 
                 st.subheader("Detalle de la predicción")
