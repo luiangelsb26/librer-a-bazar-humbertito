@@ -6699,13 +6699,13 @@ elif menu == "Ventas":
 
             st.caption(
                 "Historial completo ordenado desde la venta más antigua. "
-                "Desplázate dentro de la tabla para ver las siguientes ventas."
+                "Desplázate por la página para recorrer todas las ventas."
             )
             st.dataframe(
                 tabla,
                 width="stretch",
                 hide_index=True,
-                height=420,
+                height="content",
             )
 
             with st.expander("Eliminar una venta registrada por error"):
