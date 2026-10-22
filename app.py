@@ -35,15 +35,17 @@ def notificar_exito(mensaje):
     notificaciones.append(mensaje)
 
 
-def mostrar_grafico_interactivo(figura, clave):
-    """Muestra una gráfica navegable sin usar la rueda para hacer zoom."""
+def mostrar_grafico_fijo(figura, clave):
+    """Muestra una gráfica fija, conserva la información emergente al pasar."""
+    figura.update_xaxes(fixedrange=True)
+    figura.update_yaxes(fixedrange=True)
+    figura.update_layout(dragmode=False)
     st.plotly_chart(
         figura,
         config={
             "scrollZoom": False,
-            "displayModeBar": True,
+            "displayModeBar": False,
             "displaylogo": False,
-            "modeBarButtonsToRemove": ["select2d", "lasso2d"],
             "responsive": True,
         },
         key=clave,
@@ -51,6 +53,16 @@ def mostrar_grafico_interactivo(figura, clave):
         width="stretch",
         height=430,
     )
+
+
+def formatear_numero_es(valor, decimales=0):
+    """Usa punto para miles y coma para decimales, como en formato local."""
+    numero = f"{float(valor):,.{decimales}f}"
+    return numero.replace(",", "\0").replace(".", ",").replace("\0", ".")
+
+
+def formatear_soles(valor):
+    return f"S/ {formatear_numero_es(valor, 2)}"
 
 
 for mensaje_notificacion in st.session_state.pop(
@@ -7080,19 +7092,25 @@ elif menu == "Dashboard gerencial":
     d1, d2, d3, d4, d5 = st.columns(5)
 
     with d1:
-        st.metric("Ingresos por ventas", f"S/ {ventas:.2f}")
+        st.metric("Ingresos por ventas", formatear_soles(ventas))
 
     with d2:
-        st.metric("Boletas / transacciones", cantidad_ventas)
+        st.metric(
+            "Boletas / transacciones",
+            formatear_numero_es(cantidad_ventas),
+        )
 
     with d3:
-        st.metric("Líneas de productos vendidos", cantidad_lineas_venta)
+        st.metric(
+            "Líneas de productos vendidos",
+            formatear_numero_es(cantidad_lineas_venta),
+        )
 
     with d4:
-        st.metric("Compras acumuladas", f"S/ {compras:.2f}")
+        st.metric("Compras acumuladas", formatear_soles(compras))
 
     with d5:
-        st.metric("Productos con stock bajo", stock_bajo)
+        st.metric("Productos con stock bajo", formatear_numero_es(stock_bajo))
 
     st.caption(
         "Las transacciones agrupan las ventas por boleta cuando el Excel la "
@@ -7110,19 +7128,19 @@ elif menu == "Dashboard gerencial":
     with s1:
         st.metric(
             "Unidades vendidas",
-            int(resumen["unidades_vendidas"])
+            formatear_numero_es(resumen["unidades_vendidas"])
         )
 
     with s2:
         st.metric(
             "Días con ventas",
-            int(resumen["dias_con_ventas"])
+            formatear_numero_es(resumen["dias_con_ventas"])
         )
 
     with s3:
         st.metric(
             "Promedio diario",
-            f"S/ {resumen['promedio_diario']:.2f}"
+            formatear_soles(resumen["promedio_diario"])
         )
 
     st.subheader("Evolución de las ventas")
@@ -7140,8 +7158,8 @@ elif menu == "Dashboard gerencial":
         )
     with detalle_periodo:
         st.caption(
-            "Arrastra para desplazarte; usa la barra para acercar o restablecer. "
-            "Los indicadores y el Top 12 consideran todo el historial."
+            "Selecciona un periodo para cambiar la vista. Los indicadores y "
+            "el Top 12 consideran todo el historial."
         )
 
     dias_por_periodo = {
@@ -7199,7 +7217,7 @@ elif menu == "Dashboard gerencial":
                         "title": None,
                         "tickformat": "%d/%m",
                         "nticks": 8,
-                        "fixedrange": False,
+                        "fixedrange": True,
                         "showgrid": False,
                         "automargin": True,
                     },
@@ -7207,15 +7225,15 @@ elif menu == "Dashboard gerencial":
                         "title": None,
                         "tickprefix": "S/ ",
                         "tickformat": ",.0f",
-                        "fixedrange": False,
+                        "fixedrange": True,
                         "rangemode": "tozero",
                         "gridcolor": "rgba(145, 160, 174, 0.16)",
                         "zeroline": False,
                     },
-                    dragmode="pan",
+                    separators=",.",
                     uirevision="dashboard-ventas",
                 )
-                mostrar_grafico_interactivo(
+                mostrar_grafico_fijo(
                     grafico_ventas_diarias,
                     "grafico_ventas_diarias",
                 )
@@ -7256,20 +7274,20 @@ elif menu == "Dashboard gerencial":
                     xaxis={
                         "title": None,
                         "range": [0, max_unidades * 1.18],
-                        "fixedrange": False,
+                        "fixedrange": True,
                         "showgrid": True,
                         "gridcolor": "rgba(145, 160, 174, 0.16)",
                         "zeroline": False,
                     },
                     yaxis={
                         "title": None,
-                        "fixedrange": False,
+                        "fixedrange": True,
                         "automargin": True,
                     },
-                    dragmode="pan",
+                    separators=",.",
                     uirevision="dashboard-productos",
                 )
-                mostrar_grafico_interactivo(
+                mostrar_grafico_fijo(
                     grafico_productos_mas_vendidos,
                     "grafico_productos_mas_vendidos",
                 )
@@ -8638,17 +8656,17 @@ elif menu == "Predicción de demanda":
                         "tickmode": "array",
                         "tickvals": fechas_grafico_pred,
                         "tickformat": "%d/%m",
-                        "fixedrange": False,
+                        "fixedrange": True,
                     },
                     yaxis={
                         "title": "Unidades estimadas",
                         "rangemode": "tozero",
-                        "fixedrange": False,
+                        "fixedrange": True,
                     },
-                    dragmode="pan",
+                    separators=",.",
                     uirevision="prediccion-demanda",
                 )
-                mostrar_grafico_interactivo(
+                mostrar_grafico_fijo(
                     grafico_prediccion,
                     "grafico_prediccion_demanda",
                 )
