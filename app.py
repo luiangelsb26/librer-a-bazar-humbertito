@@ -5661,13 +5661,18 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
                 )
 
             marcadores = ", ".join("(?, ?, ?, ?)" for _ in valores_ventas)
-            ids_ventas = con.execute(
+            ventas_insertadas = con.execute(
                 "INSERT INTO ventas (fecha, total, stock_descontado, referencia) "
-                f"VALUES {marcadores} RETURNING id",
+                f"VALUES {marcadores} RETURNING id, fecha, referencia",
                 tuple(valor for venta in valores_ventas for valor in venta),
             ).fetchall()
+            ids_por_clave = {
+                (str(fecha), referencia): venta_id
+                for venta_id, fecha, referencia in ventas_insertadas
+            }
 
-            for (_, detalles), (venta_id,) in zip(lote_grupos, ids_ventas):
+            for (fecha, referencia), detalles in lote_grupos:
+                venta_id = ids_por_clave[(fecha, referencia or None)]
                 detalles_para_insertar.extend(
                     (
                         venta_id,
@@ -6398,12 +6403,18 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
                 for (_, referencia), detalles_grupo in lote
             ]
             marcadores = ", ".join("(?, ?, ?)" for _ in valores)
-            insertadas = con.execute(
+            compras_insertadas = con.execute(
                 "INSERT INTO compras (fecha, total, referencia) VALUES "
-                f"{marcadores} RETURNING id",
+                f"{marcadores} RETURNING id, fecha, referencia",
                 tuple(valor for compra in valores for valor in compra),
             ).fetchall()
-            for ((clave, _), (compra_id,)) in zip(lote, insertadas):
+            ids_por_clave = {
+                (str(fecha), referencia): compra_id
+                for compra_id, fecha, referencia in compras_insertadas
+            }
+            for clave, detalles_grupo in lote:
+                fecha, referencia = clave
+                compra_id = ids_por_clave[(str(fecha), referencia or None)]
                 ids_por_grupo[clave] = compra_id
 
         detalles = [

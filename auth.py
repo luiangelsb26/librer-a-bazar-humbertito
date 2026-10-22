@@ -1,6 +1,12 @@
 import hashlib
+import hmac
+import secrets
 from datetime import datetime
 import database
+
+
+PASSWORD_HASH_ITERATIONS = 600_000
+PASSWORD_HASH_PREFIX = "pbkdf2_sha256"
 
 
 # ==========================================================
@@ -16,9 +22,47 @@ def conectar():
 # ==========================================================
 
 def generar_hash(password):
-    return hashlib.sha256(
-        password.encode("utf-8")
-    ).hexdigest()
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt,
+        PASSWORD_HASH_ITERATIONS,
+    )
+    return (
+        f"{PASSWORD_HASH_PREFIX}${PASSWORD_HASH_ITERATIONS}$"
+        f"{salt.hex()}${digest.hex()}"
+    )
+
+
+def verificar_hash(password, hash_guardado):
+    """Verifica hashes PBKDF2 nuevos y SHA-256 legado durante la transición."""
+    if not isinstance(hash_guardado, str):
+        return False, False
+
+    partes = hash_guardado.split("$")
+    if len(partes) == 4 and partes[0] == PASSWORD_HASH_PREFIX:
+        try:
+            iteraciones = int(partes[1])
+            sal = bytes.fromhex(partes[2])
+            digest_guardado = bytes.fromhex(partes[3])
+        except (ValueError, TypeError):
+            return False, False
+
+        if not 100_000 <= iteraciones <= 1_000_000 or len(sal) < 16:
+            return False, False
+
+        digest_calculado = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            sal,
+            iteraciones,
+        )
+        return hmac.compare_digest(digest_calculado, digest_guardado), False
+
+    hash_legado = hashlib.sha256(password.encode("utf-8")).hexdigest()
+    valido = hmac.compare_digest(hash_legado, hash_guardado)
+    return valido, valido
 
 
 # ==========================================================
@@ -167,8 +211,6 @@ def verificar_usuario(
 
     username = username.strip()
 
-    password_hash = generar_hash(password)
-
     con = conectar()
     cur = con.cursor()
 
@@ -178,23 +220,36 @@ def verificar_usuario(
             username,
             nombre,
             rol,
-            activo
+            activo,
+            password
         FROM usuarios
         WHERE username = ?
-          AND password = ?
           AND activo = 1
-    """, (
-        username,
-        password_hash
-    ))
+    """, (username,))
 
     fila = cur.fetchone()
 
-    con.close()
-
-    # Usuario incorrecto
     if fila is None:
+        con.close()
         return None
+
+    valido, actualizar_hash = verificar_hash(password, fila[5])
+    if not valido:
+        con.close()
+        return None
+
+    if actualizar_hash:
+        nuevo_hash = generar_hash(password)
+        try:
+            cur.execute(
+                "UPDATE usuarios SET password = ? WHERE id = ? AND password = ?",
+                (nuevo_hash, fila[0], fila[5]),
+            )
+            con.commit()
+        except Exception:
+            con.rollback()
+
+    con.close()
 
     # IMPORTANTE:
     # app.py utiliza:
@@ -256,7 +311,7 @@ def eliminar_usuario(usuario_id, usuario_actual_id=None):
 
     try:
         cur.execute("""
-            SELECT rol
+            SELECT rol, activo
             FROM usuarios
             WHERE id = ?
         """, (usuario_id,))
@@ -265,11 +320,11 @@ def eliminar_usuario(usuario_id, usuario_actual_id=None):
         if usuario is None:
             raise ValueError("La cuenta seleccionada ya no existe.")
 
-        if usuario[0] == "admin":
+        if usuario[0] == "admin" and usuario[1]:
             cur.execute("""
                 SELECT COUNT(*)
                 FROM usuarios
-                WHERE rol = 'admin'
+                WHERE rol = 'admin' AND activo = 1
             """)
             if cur.fetchone()[0] <= 1:
                 raise ValueError(
@@ -322,12 +377,17 @@ def transferir_administracion_y_eliminar_usuario(
             )
 
         cur.execute("""
-            SELECT id
+            SELECT id, activo
             FROM usuarios
             WHERE id = ?
         """, (nuevo_admin_id,))
-        if cur.fetchone() is None:
+        nuevo_admin = cur.fetchone()
+        if nuevo_admin is None:
             raise ValueError("La cuenta elegida como reemplazo ya no existe.")
+        if not nuevo_admin[1]:
+            raise ValueError(
+                "Activa la cuenta elegida antes de transferirle la administración."
+            )
 
         cur.execute("""
             UPDATE usuarios
