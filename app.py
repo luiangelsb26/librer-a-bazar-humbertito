@@ -9944,6 +9944,19 @@ body:not(:has(.hb-light-mode)) [data-testid="stCheckbox"] [role="checkbox"][aria
     line-height: 1.45 !important;
 }
 
+/* La tabla de usuarios tenía una paleta propia con separadores más claros. */
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"]::after {
+    border-color: #303b44 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] table {
+    border-color: #303b44 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] th,
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] td {
+    border-right-color: #2b3740 !important;
+    border-bottom-color: #2b3740 !important;
+}
+
 /* En pantallas táctiles, cada tabla conserva sus columnas y se desplaza dentro de su marco. */
 [data-testid="stTable"] {
     box-sizing: border-box !important;
