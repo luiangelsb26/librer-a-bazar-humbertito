@@ -8466,7 +8466,7 @@ elif menu == "Análisis inteligente":
     st.subheader("Tendencia de ventas")
 
     st.info(
-        f"Tendencia identificada: {tendencia['tipo']}"
+        f"Tendencia {tendencia['tipo']}: {tendencia['explicacion']} Comparación: últimos 90 días, dos periodos de 45 días; días sin ventas = S/ 0."
     )
 
     st.subheader("Productos más vendidos")
