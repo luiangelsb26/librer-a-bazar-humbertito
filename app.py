@@ -8470,53 +8470,60 @@ elif menu == "Análisis inteligente":
         "últimos 45. Los días sin ventas se cuentan como S/ 0."
     )
 
+    tipo_tendencia = tendencia.get("tipo", "Sin datos")
     explicacion_tendencia = tendencia.get(
         "explicacion",
         "La explicación detallada no está disponible para este resultado.",
     )
-    st.info(f"Tendencia {tendencia.get('tipo', 'Sin datos')}: {explicacion_tendencia}")
+    st.info(f"Tendencia {tipo_tendencia}: {explicacion_tendencia}")
 
+    fecha_inicio = tendencia.get("fecha_inicio")
+    fecha_fin = tendencia.get("fecha_fin")
+    dias_por_periodo = tendencia.get("dias_por_periodo")
+    datos_periodo_disponibles = (
+        fecha_inicio is not None
+        and fecha_fin is not None
+        and dias_por_periodo is not None
+        and "ventas_periodo_base" in tendencia
+        and "ventas_periodo_reciente" in tendencia
+        and "valor" in tendencia
+    )
 
-    if tendencia["fecha_inicio"] is not None:
-        inicio_base = tendencia["fecha_inicio"].strftime("%d/%m/%Y")
+    if datos_periodo_disponibles:
+        inicio_base = fecha_inicio.strftime("%d/%m/%Y")
         fin_base = (
-            tendencia["fecha_inicio"]
-            + pd.Timedelta(days=tendencia["dias_por_periodo"] - 1)
+            fecha_inicio
+            + pd.Timedelta(days=dias_por_periodo - 1)
         ).strftime("%d/%m/%Y")
         inicio_reciente = (
-            tendencia["fecha_inicio"]
-            + pd.Timedelta(days=tendencia["dias_por_periodo"])
+            fecha_inicio
+            + pd.Timedelta(days=dias_por_periodo)
         ).strftime("%d/%m/%Y")
-        fin_reciente = tendencia["fecha_fin"].strftime("%d/%m/%Y")
+        fin_reciente = fecha_fin.strftime("%d/%m/%Y")
 
         periodo_base, periodo_reciente, variacion_col = st.columns(3)
         with periodo_base:
             st.metric(
                 f"Periodo base · {inicio_base}–{fin_base}",
-                formatear_soles(tendencia["ventas_periodo_base"])
+                formatear_soles(tendencia.get("ventas_periodo_base"))
             )
         with periodo_reciente:
             st.metric(
                 f"Periodo reciente · {inicio_reciente}–{fin_reciente}",
-                formatear_soles(tendencia["ventas_periodo_reciente"])
+                formatear_soles(tendencia.get("ventas_periodo_reciente"))
             )
         with variacion_col:
-            valor_variacion = tendencia["valor"]
+            valor_variacion = tendencia.get("valor")
             st.metric(
                 "Variación entre periodos",
                 f"{valor_variacion:+.1f}%" if valor_variacion is not None else "—"
             )
 
-    explicacion_tendencia = tendencia.get(
-        "explicacion",
-        "La explicación detallada no está disponible para este resultado.",
-    )
-
-    if tendencia["tipo"] == "Decreciente":
+    if tipo_tendencia == "Decreciente":
         st.warning(f"**Tendencia decreciente.** {explicacion_tendencia}")
-    elif tendencia["tipo"] == "Creciente":
+    elif tipo_tendencia == "Creciente":
         st.success(f"**Tendencia creciente.** {explicacion_tendencia}")
-    elif tendencia["tipo"] == "Estable":
+    elif tipo_tendencia == "Estable":
         st.info(f"**Tendencia estable.** {explicacion_tendencia}")
     else:
         st.info(explicacion_tendencia)
