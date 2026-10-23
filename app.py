@@ -1005,6 +1005,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+
+
 st.markdown("""
 <style>
 /* ==========================================================
@@ -9215,6 +9217,127 @@ body:has(.hb-light-mode) .st-key-user_delete_panel {
 body:has(.hb-light-mode) .st-key-user_transfer_panel h3,
 body:has(.hb-light-mode) .st-key-user_delete_panel h3 {
     margin-top: 0.2rem !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+@media (max-width: 640px) {
+    html,
+    body,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"] {
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Deja una franja superior para los controles y evita encabezados tapados. */
+    [data-testid="stMainBlockContainer"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 3.75rem 0.85rem 2.25rem !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Apila las columnas de gráficos, métricas y formularios en una sola columna. */
+    [data-testid="stHorizontalBlock"] {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        gap: 0.75rem !important;
+    }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
+    [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: none !important;
+        grid-column: 1 / -1 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Mantiene las gráficas dentro de la pantalla y reduce su altura en móvil. */
+    [data-testid="stPlotlyChart"],
+    [data-testid="stPlotlyChart"] iframe {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 340px !important;
+        min-height: 340px !important;
+        box-sizing: border-box !important;
+    }
+
+    [data-testid="stMain"] h1 {
+        max-width: 100% !important;
+        overflow-wrap: anywhere !important;
+        font-size: clamp(1.45rem, 6.8vw, 1.9rem) !important;
+        line-height: 1.18 !important;
+    }
+    [data-testid="stMain"] h2 { font-size: 1.3rem !important; }
+    [data-testid="stMain"] h3 { font-size: 1.12rem !important; }
+
+    /* Botones de navegación accesibles sin que queden fuera del borde del móvil. */
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebarCollapsedControl"],
+    button[aria-label*="open sidebar" i],
+    button[aria-label*="close sidebar" i],
+    button[aria-label*="expand sidebar" i],
+    button[aria-label*="collapse sidebar" i],
+    button[aria-label*="abrir barra lateral" i],
+    button[aria-label*="cerrar barra lateral" i] {
+        left: 0.65rem !important;
+        top: 0.65rem !important;
+        z-index: 1000001 !important;
+    }
+
+    /* El selector de tema queda en la franja libre, compacto y sin cubrir las tarjetas. */
+    [class*="st-key-theme_toggle"] {
+        position: fixed !important;
+        top: 0.55rem !important;
+        right: 0.65rem !important;
+        z-index: 1000002 !important;
+        width: auto !important;
+        max-width: calc(100vw - 4rem) !important;
+    }
+    [class*="st-key-theme_toggle"] button {
+        min-width: 2.55rem !important;
+        width: 2.55rem !important;
+        height: 2.55rem !important;
+        min-height: 2.55rem !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        font-size: 0 !important;
+    }
+    [class*="st-key-theme_toggle"] button svg {
+        width: 1.2rem !important;
+        height: 1.2rem !important;
+    }
+
+    /* Oculta acciones de alojamiento que no forman parte de la interfaz del negocio. */
+    [data-testid="stToolbar"] { display: none !important; }
+
+    [data-testid="stDataFrame"],
+    [data-testid="stTable"],
+    [data-testid="stForm"],
+    [data-testid="stAlertContainer"] {
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+    [data-testid="stDataFrame"] { overflow-x: auto !important; }
+
+    [data-testid="stMain"] button {
+        min-height: 2.75rem;
+        max-width: 100%;
+        white-space: normal !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
