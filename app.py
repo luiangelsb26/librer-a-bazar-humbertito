@@ -8591,8 +8591,9 @@ elif menu == "Predicción de demanda":
     st.header("Predicción de demanda", icon=":material/trending_up:")
 
     st.write(
-        "Modelo de aprendizaje automático que aprende patrones de demanda "
-        "del historial de ventas registrado en el sistema."
+        "Modelos de aprendizaje automático que aprenden patrones de demanda "
+        "del historial de ventas. El sistema compara Random Forest y Extra Trees "
+        "con las mismas fechas de evaluación y selecciona el de menor error."
     )
 
     st.info(
@@ -8636,7 +8637,7 @@ elif menu == "Predicción de demanda":
         st.info(estado_actual.get("mensaje", "Entrene el modelo para habilitar predicciones."))
 
     if st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
-        with st.spinner("Preparando historial y evaluando Random Forest..."):
+        with st.spinner("Preparando el historial y comparando modelos..."):
             resultado_entrenamiento = prediction.entrenar_modelo()
         evaluacion = resultado_entrenamiento.get("evaluacion", {})
         if resultado_entrenamiento["estado"] == "ok":
@@ -8656,6 +8657,16 @@ elif menu == "Predicción de demanda":
                 f"{evaluacion['observaciones_prueba']} observaciones en "
                 f"{evaluacion['ventanas_prueba_7_dias']} ventanas de 7 días."
             )
+            modelos_comparados = evaluacion.get("modelos_comparados", {})
+            if modelos_comparados:
+                resumen_modelos = "; ".join(
+                    f"{nombre}: MAE {mae:.2f}"
+                    for nombre, mae in modelos_comparados.items()
+                )
+                st.caption(
+                    f"Comparación en las mismas fechas: {resumen_modelos}. "
+                    "Se selecciona el candidato con menor MAE."
+                )
 
     productos = prediction.obtener_productos()
 

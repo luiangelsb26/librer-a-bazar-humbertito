@@ -1,4 +1,4 @@
-"""Entrenamiento y prediccion de demanda con Random Forest."""
+"""Entrenamiento y prediccion de demanda con seleccion temporal de modelos."""
 
 from datetime import date, datetime, timedelta
 import hashlib
@@ -293,7 +293,7 @@ def _firma_historial(df_ventas, fecha_fin_exclusiva):
 def entrenar_modelo():
     """Entrena y valida cronologicamente; activa el modelo si supera el baseline."""
     try:
-        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
         import joblib
     except ImportError:
         return {
@@ -332,24 +332,58 @@ def entrenar_modelo():
             "mensaje": "No hay suficientes observaciones para separar entrenamiento y evaluacion temporal.",
         }
 
-    modelo = RandomForestRegressor(
-        n_estimators=300,
-        max_depth=12,
-        min_samples_leaf=2,
-        max_features=0.8,
-        random_state=RANDOM_STATE,
-        n_jobs=-1,
-    )
-    modelo.fit(X[mascara_entrenamiento], y[mascara_entrenamiento])
+    modelos = {
+        "RandomForestRegressor": RandomForestRegressor(
+            n_estimators=300,
+            max_depth=12,
+            min_samples_leaf=2,
+            max_features=0.8,
+            random_state=RANDOM_STATE,
+            n_jobs=-1,
+        ),
+        "ExtraTreesRegressor": ExtraTreesRegressor(
+            n_estimators=300,
+            max_depth=12,
+            min_samples_leaf=2,
+            max_features=0.8,
+            random_state=RANDOM_STATE,
+            n_jobs=-1,
+        ),
+    }
+    resultados_modelos = {}
+    for nombre, candidato in modelos.items():
+        candidato.fit(X[mascara_entrenamiento], y[mascara_entrenamiento])
+        reales, predicciones, baseline, fechas_prueba, ventanas = _evaluar_horizonte(
+            candidato, series, product_codes, corte, horizonte=7
+        )
+        if len(reales) >= 7:
+            resultados_modelos[nombre] = {
+                "modelo": candidato,
+                "reales": reales,
+                "predicciones": predicciones,
+                "baseline": baseline,
+                "fechas_prueba": fechas_prueba,
+                "ventanas": ventanas,
+                "mae": _mae(reales, predicciones),
+            }
 
-    reales, predicciones, baseline, fechas_prueba, ventanas = _evaluar_horizonte(
-        modelo, series, product_codes, corte, horizonte=7
-    )
-    if len(reales) < 7:
+    if not resultados_modelos:
         return {
             "estado": "datos_insuficientes",
             "mensaje": "No hay un periodo futuro suficiente para evaluar una prediccion de 7 dias.",
         }
+
+    # Ambos algoritmos comparten el mismo corte cronologico y la misma referencia.
+    # Se selecciona por MAE fuera de muestra, antes de reajustar con todo el historial.
+    algoritmo, mejor = min(
+        resultados_modelos.items(), key=lambda elemento: elemento[1]["mae"]
+    )
+    modelo = mejor["modelo"]
+    reales = mejor["reales"]
+    predicciones = mejor["predicciones"]
+    baseline = mejor["baseline"]
+    fechas_prueba = mejor["fechas_prueba"]
+    ventanas = mejor["ventanas"]
 
     y_prueba = np.asarray(reales, dtype=float)
     predicciones = np.asarray(predicciones, dtype=float)
@@ -375,14 +409,19 @@ def entrenar_modelo():
         "ventanas_prueba_7_dias": ventanas,
         "observaciones_entrenamiento": int(mascara_entrenamiento.sum()),
         "observaciones_prueba": int(len(y_prueba)),
+        "modelos_comparados": {
+            nombre: round(resultado["mae"], 4)
+            for nombre, resultado in resultados_modelos.items()
+        },
     }
 
     if not evaluacion["supera_baseline"]:
         return {
             "estado": "no_supera_baseline",
             "mensaje": (
-                "El Random Forest no mejoro el error del baseline de ventas de hace 7 dias. "
-                "No se activo el modelo; acumule mas historial y vuelva a evaluar."
+                f"El mejor candidato ({algoritmo}) no mejoro el error de la referencia "
+                "de ventas de hace 7 dias. No se activo el modelo; acumule mas historial "
+                "y vuelva a evaluar."
             ),
             "evaluacion": evaluacion,
         }
@@ -404,7 +443,7 @@ def entrenar_modelo():
         "dias_minimos_rezago": MIN_LAG_DAYS,
         "nombres_caracteristicas": _nombres_caracteristicas(product_codes),
         "evaluacion": evaluacion,
-        "algoritmo": "RandomForestRegressor",
+        "algoritmo": algoritmo,
     }
     almacenamiento, error_guardado = _guardar_artefacto(artefacto, joblib)
     if almacenamiento is None:
