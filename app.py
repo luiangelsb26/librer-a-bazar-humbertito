@@ -8465,9 +8465,56 @@ elif menu == "Análisis inteligente":
 
     st.subheader("Tendencia de ventas")
 
-    st.info(
-        f"Tendencia {tendencia['tipo']}: {tendencia['explicacion']} Comparación: últimos 90 días, dos periodos de 45 días; días sin ventas = S/ 0."
+    st.caption(
+        "Comparación de los últimos 90 días: primeros 45 frente a los "
+        "últimos 45. Los días sin ventas se cuentan como S/ 0."
     )
+
+    explicacion_tendencia = tendencia.get(
+        "explicacion",
+        "La explicación detallada no está disponible para este resultado.",
+    )
+    st.info(f"Tendencia {tendencia.get('tipo', 'Sin datos')}: {explicacion_tendencia}")
+
+
+    if tendencia["fecha_inicio"] is not None:
+        inicio_base = tendencia["fecha_inicio"].strftime("%d/%m/%Y")
+        fin_base = (
+            tendencia["fecha_inicio"]
+            + pd.Timedelta(days=tendencia["dias_por_periodo"] - 1)
+        ).strftime("%d/%m/%Y")
+        inicio_reciente = (
+            tendencia["fecha_inicio"]
+            + pd.Timedelta(days=tendencia["dias_por_periodo"])
+        ).strftime("%d/%m/%Y")
+        fin_reciente = tendencia["fecha_fin"].strftime("%d/%m/%Y")
+
+        periodo_base, periodo_reciente, variacion_col = st.columns(3)
+        with periodo_base:
+            st.metric(
+                f"Periodo base · {inicio_base}–{fin_base}",
+                formatear_soles(tendencia["ventas_periodo_base"])
+            )
+        with periodo_reciente:
+            st.metric(
+                f"Periodo reciente · {inicio_reciente}–{fin_reciente}",
+                formatear_soles(tendencia["ventas_periodo_reciente"])
+            )
+        with variacion_col:
+            valor_variacion = tendencia["valor"]
+            st.metric(
+                "Variación entre periodos",
+                f"{valor_variacion:+.1f}%" if valor_variacion is not None else "—"
+            )
+
+    if tendencia["tipo"] == "Decreciente":
+        st.warning(f"**Tendencia decreciente.** {tendencia['explicacion']}")
+    elif tendencia["tipo"] == "Creciente":
+        st.success(f"**Tendencia creciente.** {tendencia['explicacion']}")
+    elif tendencia["tipo"] == "Estable":
+        st.info(f"**Tendencia estable.** {tendencia['explicacion']}")
+    else:
+        st.info(tendencia["explicacion"])
 
     st.subheader("Productos más vendidos")
 
