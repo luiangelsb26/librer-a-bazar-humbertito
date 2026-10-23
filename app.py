@@ -71,11 +71,12 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
     configuracion = dict(kwargs.pop("column_config", {}) or {})
 
-    tema_claro = bool(st.session_state.get("tema_blanco", False))
-    color_fondo = "#ffffff" if tema_claro else "#111a23"
-    color_texto = "#26383e" if tema_claro else "#dbe5e8"
-    color_cabecera = "#eaf3f3" if tema_claro else "#17222c"
-    color_borde = "#d8e4e6" if tema_claro else "#34434e"
+    # Las tablas conservan una superficie clara legible en ambos temas;
+    # Streamlit dibuja sus encabezados con el tema nativo del servidor.
+    color_fondo = "#ffffff"
+    color_texto = "#26383e"
+    color_cabecera = "#eaf3f3"
+    color_borde = "#d8e4e6"
     marco_renderizado = (
         marco.style
         .set_properties(
@@ -9443,6 +9444,27 @@ body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:nth-child(even) td {
 body:has(.hb-light-mode) [data-testid="stDataFrame"] {
     border-color: #d9e5e7 !important;
     background: #ffffff !important;
+}
+
+/* El área de carga nativa también debe cambiar al tema claro de la aplicación. */
+body:has(.hb-light-mode) [data-testid="stFileUploader"],
+body:has(.hb-light-mode) [data-testid="stFileUploader"] section,
+body:has(.hb-light-mode) [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {
+    border-color: #cbdde0 !important;
+    background: #f7fbfb !important;
+    color: #425a61 !important;
+}
+body:has(.hb-light-mode) [data-testid="stFileUploader"] p,
+body:has(.hb-light-mode) [data-testid="stFileUploader"] span,
+body:has(.hb-light-mode) [data-testid="stFileUploader"] small,
+body:has(.hb-light-mode) [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"] {
+    color: #526970 !important;
+    opacity: 1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stFileUploader"] button {
+    border-color: #c8dcdf !important;
+    background: #ffffff !important;
+    color: #29474e !important;
 }
 </style>
 """, unsafe_allow_html=True)

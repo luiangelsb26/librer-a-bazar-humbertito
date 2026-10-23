@@ -10,8 +10,9 @@ baseRadius = "12px"
 buttonRadius = "10px"
 showWidgetBorder = true
 showSidebarBorder = true
-dataframeHeaderBackgroundColor = "#1D2A34"
-dataframeBorderColor = "#2C3A44"
+dataframeHeaderBackgroundColor = "#EAF3F3"
+dataframeHeaderTextColor = "#29434A"
+dataframeBorderColor = "#D8E4E6"
 chartCategoricalColors = [
   "#2F8F83",
   "#D45B45",
