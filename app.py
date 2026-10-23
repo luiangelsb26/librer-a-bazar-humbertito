@@ -8507,14 +8507,19 @@ elif menu == "Análisis inteligente":
                 f"{valor_variacion:+.1f}%" if valor_variacion is not None else "—"
             )
 
+    explicacion_tendencia = tendencia.get(
+        "explicacion",
+        "La explicación detallada no está disponible para este resultado.",
+    )
+
     if tendencia["tipo"] == "Decreciente":
-        st.warning(f"**Tendencia decreciente.** {tendencia['explicacion']}")
+        st.warning(f"**Tendencia decreciente.** {explicacion_tendencia}")
     elif tendencia["tipo"] == "Creciente":
-        st.success(f"**Tendencia creciente.** {tendencia['explicacion']}")
+        st.success(f"**Tendencia creciente.** {explicacion_tendencia}")
     elif tendencia["tipo"] == "Estable":
-        st.info(f"**Tendencia estable.** {tendencia['explicacion']}")
+        st.info(f"**Tendencia estable.** {explicacion_tendencia}")
     else:
-        st.info(tendencia["explicacion"])
+        st.info(explicacion_tendencia)
 
     st.subheader("Productos más vendidos")
 
