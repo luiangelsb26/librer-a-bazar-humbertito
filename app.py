@@ -9648,5 +9648,99 @@ body:has(.hb-light-mode) .st-key-stock_historico_panel [data-testid="stCaptionCo
     font-size: 0.9rem !important;
     line-height: 1.45 !important;
 }
+
+/* Unifica el acabado del modo claro con una paleta serena y superficies limpias. */
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse at 95% 0%, rgba(48, 143, 131, .075), transparent 34rem),
+        linear-gradient(180deg, #f8fafb 0%, #f1f5f6 100%) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] {
+    color: #293d44 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] h1,
+body:has(.hb-light-mode) [data-testid="stMain"] h2,
+body:has(.hb-light-mode) [data-testid="stMain"] h3,
+body:has(.hb-light-mode) [data-testid="stMain"] h4 {
+    color: #1c3239 !important;
+    letter-spacing: -.018em !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stCaptionContainer"],
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stCaptionContainer"] p {
+    color: #526970 !important;
+    opacity: 1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: #d7e3e6 !important;
+    background: linear-gradient(155deg, #ffffff 0%, #fbfdfd 100%) !important;
+    box-shadow: 0 8px 22px rgba(31, 66, 75, .065) !important;
+}
+body:has(.hb-light-mode) [data-testid="stForm"] {
+    border-color: #d6e2e5 !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    box-shadow: 0 8px 22px rgba(31, 66, 75, .06) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] input,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea,
+body:has(.hb-light-mode) [data-baseweb="select"] > div {
+    border: 1px solid #cbdadd !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+    box-shadow: inset 0 1px 2px rgba(31, 66, 75, .035) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] input:focus,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input:focus,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea:focus,
+body:has(.hb-light-mode) [data-baseweb="select"] > div:focus-within {
+    border-color: #3b9b8f !important;
+    box-shadow: 0 0 0 3px rgba(47, 143, 131, .15) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetric"] {
+    border-color: #d7e3e6 !important;
+    border-left: 3px solid #2f8f83 !important;
+    border-radius: 15px !important;
+    background: linear-gradient(145deg, #ffffff 0%, #f5f9f9 100%) !important;
+    box-shadow: 0 8px 22px rgba(31, 66, 75, .065) !important;
+}
+body:has(.hb-light-mode) [data-testid="stExpander"] {
+    border: 1px solid #d5e1e4 !important;
+    border-radius: 13px !important;
+    background: #ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stExpander"] summary {
+    color: #29434a !important;
+    font-weight: 650 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] hr {
+    border-color: #dbe5e7 !important;
+    opacity: 1 !important;
+}
+
+/* En oscuro se conservan los fondos existentes y se realza solo el contorno. */
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlertContainer"] {
+    border: 1px solid rgba(187, 204, 214, .34) !important;
+    border-left-width: 5px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 5px 16px rgba(0, 0, 0, .16) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
+    border-color: rgba(96, 165, 250, .58) !important;
+    border-left-color: #60a5fa !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
+    border-color: rgba(251, 191, 36, .58) !important;
+    border-left-color: #fbbf24 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+    border-color: rgba(52, 211, 153, .55) !important;
+    border-left-color: #34d399 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
+    border-color: rgba(248, 113, 113, .58) !important;
+    border-left-color: #f87171 !important;
+}
 </style>
 """, unsafe_allow_html=True)
