@@ -4517,39 +4517,84 @@ def pantalla_acceso():
         }
         @media (max-width: 760px) {
             [data-testid="stMainBlockContainer"] {
-                max-width: 620px !important;
-                padding: 1.4rem 1rem 2rem !important;
+                width: 100% !important;
+                max-width: 500px !important;
+                min-height: 100dvh !important;
+                padding: 1rem 1rem 1.5rem !important;
+                justify-content: center !important;
+            }
+            [data-testid="stHorizontalBlock"] {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+            }
+            [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+                width: 100% !important;
+                min-width: 0 !important;
+                flex: 1 1 auto !important;
             }
             .login-brand {
                 min-height: auto;
-                padding: 1.5rem;
-                border-radius: 17px;
+                padding: 1rem 1.1rem;
+                border-radius: 16px;
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+            }
+            .login-brand-head {
+                gap: 0.8rem;
+                padding-bottom: 0;
+                border-bottom: 0;
             }
             .login-brand-mark {
-                width: 3.35rem;
-                height: 3.35rem;
-                flex-basis: 3.35rem;
-                border-radius: 14px;
+                width: 2.8rem;
+                height: 2.8rem;
+                flex-basis: 2.8rem;
+                border-radius: 12px;
             }
-            .login-brand-mark svg { width: 1.9rem; height: 1.9rem; }
-            .login-brand-name-strong { font-size: 1.28rem; }
-            .login-brand-title { max-width: 16ch; font-size: 2rem; }
-            .login-brand-features { margin-top: 1.5rem; }
-            [data-testid="stForm"] { padding: 1.1rem !important; }
+            .login-brand-mark svg { width: 1.65rem; height: 1.65rem; }
+            .login-brand-kicker { margin-bottom: 0.12rem; font-size: 0.58rem; }
+            .login-brand-name { font-size: 0.68rem; }
+            .login-brand-name-strong { font-size: 1.12rem; }
+            .login-brand-title,
+            .login-brand-subtitle,
+            .login-brand-features {
+                display: none !important;
+            }
+            .login-form-intro {
+                margin: 0 auto 0.85rem;
+                text-align: left;
+            }
+            .login-form-intro h2 { font-size: 1.35rem; }
+            .login-form-intro p { margin-top: 0.25rem; font-size: 0.82rem; }
+            [data-testid="stForm"] {
+                padding: 1rem !important;
+                border-radius: 16px !important;
+            }
+            [data-testid="stForm"] input {
+                min-height: 2.9rem !important;
+                font-size: 16px !important;
+            }
+            [data-testid="stForm"] button[kind="primaryFormSubmit"] {
+                min-height: 3rem !important;
+                width: 100% !important;
+            }
         }
         @media (max-width: 440px) {
-            .login-brand-head { gap: 0.75rem; padding-bottom: 1.1rem; }
-            .login-brand-features { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.3rem; }
-            .login-brand-feature {
-                gap: 0.25rem;
-                padding-top: 0.5rem;
-                font-size: 0.55rem;
-                letter-spacing: -0.02em;
+            [data-testid="stMainBlockContainer"] {
+                max-width: 440px !important;
+                padding: 0.75rem 0.75rem 1.1rem !important;
             }
-            .login-brand-feature::before {
-                width: 0.28rem;
-                height: 0.28rem;
-                flex-basis: 0.28rem;
+            .login-brand {
+                padding: 0.85rem 0.95rem;
+                border-radius: 14px;
+            }
+            [data-testid="stForm"] {
+                padding: 0.9rem !important;
+            }
+        }
+        @media (max-width: 760px) and (max-height: 760px) {
+            [data-testid="stMainBlockContainer"] {
+                min-height: auto !important;
+                justify-content: flex-start !important;
+                padding-top: 0.75rem !important;
             }
         }
         </style>
