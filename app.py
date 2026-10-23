@@ -1498,7 +1498,6 @@ body:has(.hb-light-mode) [data-testid="stSidebar"] [data-testid="stElementContai
 </style>
 """, unsafe_allow_html=True)
 
-
 if st.session_state.tema_blanco:
     st.markdown('<div class="hb-light-mode" style="display:none"></div>', unsafe_allow_html=True)
     st.markdown("""
@@ -10481,6 +10480,59 @@ body:not(:has(.hb-light-mode)) [data-testid="stWidgetLabel"] button[aria-label*=
         min-width: 1.9rem !important;
         min-height: 1.9rem !important;
     }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Reglas finales del control de tema: el icono queda centrado y el texto no se comprime.
+st.markdown("""
+<style>
+[class*="st-key-theme_toggle"] button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
+    max-width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+    max-height: 2.75rem !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-radius: 50% !important;
+    white-space: nowrap !important;
+}
+[class*="st-key-theme_toggle"] button > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+}
+[class*="st-key-theme_toggle"] button p {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+[class*="st-key-theme_toggle"] button svg {
+    display: block !important;
+    flex: 0 0 1.2rem !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    margin: 0 !important;
+}
+[class*="st-key-theme_toggle"] button:focus-visible {
+    outline: 3px solid rgba(47, 143, 131, .38) !important;
+    outline-offset: 3px !important;
 }
 </style>
 """, unsafe_allow_html=True)
