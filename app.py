@@ -7461,10 +7461,11 @@ elif menu == "Dashboard gerencial":
                     separators=",.",
                     uirevision="dashboard-ventas",
                 )
-                mostrar_grafico_fijo(
-                    grafico_ventas_diarias,
-                    "grafico_ventas_diarias",
-                )
+                with st.container(key="dashboard_ventas_chart"):
+                    mostrar_grafico_fijo(
+                        grafico_ventas_diarias,
+                        "grafico_ventas_diarias",
+                    )
             else:
                 st.info("Aún no hay ventas para mostrar en este periodo.")
 
@@ -7515,10 +7516,11 @@ elif menu == "Dashboard gerencial":
                     separators=",.",
                     uirevision="dashboard-productos",
                 )
-                mostrar_grafico_fijo(
-                    grafico_productos_mas_vendidos,
-                    "grafico_productos_mas_vendidos",
-                )
+                with st.container(key="dashboard_productos_chart"):
+                    mostrar_grafico_fijo(
+                        grafico_productos_mas_vendidos,
+                        "grafico_productos_mas_vendidos",
+                    )
             else:
                 st.info("Aún no hay productos vendidos para comparar.")
 
@@ -9343,6 +9345,22 @@ st.markdown("""
         height: 380px !important;
         min-height: 380px !important;
         box-sizing: border-box !important;
+    }
+
+    /* Gráficos del dashboard: relación más equilibrada para la pantalla estrecha. */
+    [class*="st-key-dashboard_ventas_chart"] [data-testid="stPlotlyChart"],
+    [class*="st-key-dashboard_ventas_chart"] [data-testid="stPlotlyChart"] iframe {
+        height: 300px !important;
+        min-height: 300px !important;
+    }
+    [class*="st-key-dashboard_productos_chart"] [data-testid="stPlotlyChart"],
+    [class*="st-key-dashboard_productos_chart"] [data-testid="stPlotlyChart"] iframe {
+        height: 360px !important;
+        min-height: 360px !important;
+    }
+    [class*="st-key-dashboard_ventas_chart"],
+    [class*="st-key-dashboard_productos_chart"] {
+        margin-bottom: 0.25rem !important;
     }
 
     [data-testid="stMain"] h1 {
