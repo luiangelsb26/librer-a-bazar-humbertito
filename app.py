@@ -71,6 +71,40 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
     configuracion = dict(kwargs.pop("column_config", {}) or {})
 
+    tema_claro = bool(st.session_state.get("tema_blanco", False))
+    color_fondo = "#ffffff" if tema_claro else "#111a23"
+    color_texto = "#26383e" if tema_claro else "#dbe5e8"
+    color_cabecera = "#eaf3f3" if tema_claro else "#17222c"
+    color_borde = "#d8e4e6" if tema_claro else "#34434e"
+    marco_renderizado = (
+        marco.style
+        .set_properties(
+            **{
+                "background-color": color_fondo,
+                "color": color_texto,
+                "border-color": color_borde,
+            }
+        )
+        .set_table_styles(
+            [
+                {
+                    "selector": "th",
+                    "props": [
+                        ("background-color", color_cabecera),
+                        ("color", color_texto),
+                        ("border-color", color_borde),
+                        ("font-weight", "700"),
+                    ],
+                },
+                {
+                    "selector": "td",
+                    "props": [("border-color", color_borde)],
+                },
+            ],
+            overwrite=False,
+        )
+    )
+
     for columna in marco.columns:
         if columna in configuracion:
             continue
@@ -86,7 +120,7 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
             )
 
     return st.dataframe(
-        datos,
+        marco_renderizado,
         *args,
         column_config=configuracion,
         **kwargs,
@@ -9355,6 +9389,60 @@ st.markdown("""
         max-width: 100%;
         white-space: normal !important;
     }
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+/* Superficies claras para tarjetas y tablas cuando se activa el tema blanco. */
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"],
+body:has(.hb-light-mode) [data-testid="stMetric"],
+body:has(.hb-light-mode) [data-testid="stForm"],
+body:has(.hb-light-mode) [data-testid="stExpander"],
+body:has(.hb-light-mode) [data-testid="stDataFrame"],
+body:has(.hb-light-mode) [data-testid="stTable"],
+body:has(.hb-light-mode) .quick-card {
+    border-color: #d9e5e7 !important;
+    background: #ffffff !important;
+    color: #26383e !important;
+    box-shadow: 0 7px 20px rgba(35, 72, 79, 0.07) !important;
+}
+
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] h2,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] h3,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] h4,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] p,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] label,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] strong,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stCaptionContainer"],
+body:has(.hb-light-mode) [data-testid="stMetricLabel"] {
+    color: #52666d !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetricValue"],
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] h2,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] h3,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] h4,
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"] strong {
+    color: #1d343b !important;
+}
+
+body:has(.hb-light-mode) [data-testid="stTable"] th {
+    background: #eaf2f3 !important;
+    color: #29434a !important;
+    border-color: #d5e1e3 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] td {
+    background: #ffffff !important;
+    color: #33474f !important;
+    border-color: #e1e9eb !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: #f7fafb !important;
+}
+body:has(.hb-light-mode) [data-testid="stDataFrame"] {
+    border-color: #d9e5e7 !important;
+    background: #ffffff !important;
 }
 </style>
 """, unsafe_allow_html=True)
