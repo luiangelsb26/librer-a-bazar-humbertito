@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import database
 
 
@@ -163,46 +162,103 @@ def tendencia_ventas():
 
     if df.empty:
         return {
-            "tipo": "Sin datos",
-            "valor": 0
+            "tipo": "Sin ventas recientes",
+            "valor": None,
+            "ventas_periodo_base": 0,
+            "ventas_periodo_reciente": 0,
+            "fecha_inicio": None,
+            "fecha_fin": None,
+            "dias_por_periodo": 45,
+            "explicacion": "No hay ventas registradas para analizar."
         }
 
+    # Se comparan dos tramos iguales dentro de los últimos 90 días.
+    # Los días sin ventas se incluyen con valor cero para que no se omitan.
+    fecha_fin = pd.Timestamp.now().normalize()
+    fecha_inicio = fecha_fin - pd.Timedelta(days=89)
+    fechas = pd.date_range(fecha_inicio, fecha_fin, freq="D")
     diario = (
-        df.groupby(
-            df["fecha"].dt.date
-        )["subtotal"]
+        df.assign(fecha=df["fecha"].dt.normalize())
+        .groupby("fecha")["subtotal"]
         .sum()
-        .reset_index()
+        .reindex(fechas, fill_value=0)
     )
 
-    if len(diario) < 2:
+    dias_por_periodo = 45
+    ventas_periodo_base = float(diario.iloc[:dias_por_periodo].sum())
+    ventas_periodo_reciente = float(diario.iloc[dias_por_periodo:].sum())
+
+    if ventas_periodo_base == 0 and ventas_periodo_reciente == 0:
         return {
-            "tipo": "Sin datos suficientes",
-            "valor": 0
+            "tipo": "Sin ventas recientes",
+            "valor": None,
+            "ventas_periodo_base": ventas_periodo_base,
+            "ventas_periodo_reciente": ventas_periodo_reciente,
+            "fecha_inicio": fecha_inicio,
+            "fecha_fin": fecha_fin,
+            "dias_por_periodo": dias_por_periodo,
+            "explicacion": "No se registraron ventas en los últimos 90 días."
         }
 
-    x = np.arange(len(diario))
-
-    y = diario["subtotal"].values
-
-    pendiente = np.polyfit(
-        x,
-        y,
-        1
-    )[0]
-
-    if pendiente > 0.01:
+    if ventas_periodo_base == 0:
         tipo = "Creciente"
-
-    elif pendiente < -0.01:
+        variacion = None
+        explicacion = (
+            "No hubo ventas en los primeros 45 días y se registraron "
+            "ventas en los últimos 45 días. "
+            "No se calcula un porcentaje porque el periodo inicial no tiene "
+            "una base de ventas."
+        )
+    elif ventas_periodo_reciente == 0:
         tipo = "Decreciente"
-
     else:
-        tipo = "Estable"
+        variacion = (
+            (ventas_periodo_reciente - ventas_periodo_base)
+            / ventas_periodo_base
+            * 100
+        )
+        if variacion > 5:
+            tipo = "Creciente"
+        elif variacion < -5:
+            tipo = "Decreciente"
+        else:
+            tipo = "Estable"
+
+        if tipo == "Creciente":
+            explicacion = (
+                f"El total del periodo reciente aumentó {variacion:.1f}% "
+                "respecto al periodo base. Se clasifica como creciente cuando "
+                "el aumento supera el umbral del 5%."
+            )
+        elif tipo == "Decreciente":
+            explicacion = (
+                f"El total del periodo reciente disminuyó {abs(variacion):.1f}% "
+                "respecto al periodo base. Se clasifica como decreciente cuando "
+                "la caída supera el umbral del 5%."
+            )
+        else:
+            explicacion = (
+                f"La variación entre periodos fue de {variacion:+.1f}%, "
+                "dentro del margen de ±5%; por eso se clasifica como estable."
+            )
+
+    if ventas_periodo_base > 0 and ventas_periodo_reciente == 0:
+        variacion = -100.0
+        explicacion = (
+            f"Las ventas pasaron de S/ {ventas_periodo_base:,.2f} en los "
+            "primeros 45 días a S/ 0.00 en los últimos 45 días, una "
+            "disminución del 100%."
+        )
 
     return {
         "tipo": tipo,
-        "valor": pendiente
+        "valor": variacion,
+        "ventas_periodo_base": ventas_periodo_base,
+        "ventas_periodo_reciente": ventas_periodo_reciente,
+        "fecha_inicio": fecha_inicio,
+        "fecha_fin": fecha_fin,
+        "dias_por_periodo": dias_por_periodo,
+        "explicacion": explicacion
     }
 
 
