@@ -9626,10 +9626,18 @@ body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([dat
 
 /* La casilla de ventas históricas y su explicación forman un único bloque. */
 body:has(.hb-light-mode) .st-key-stock_historico_panel {
-    padding: 0.85rem 1rem 0.55rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 6rem !important;
+    margin: 0.35rem 0 0.75rem !important;
+    padding: 0.9rem 1rem 1rem !important;
     border: 1px solid #cbdde0 !important;
     border-radius: 12px !important;
     background: #f3f8f8 !important;
+    overflow: visible !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_panel [data-testid="stVerticalBlock"] {
+    gap: 0.65rem !important;
 }
 body:has(.hb-light-mode) .st-key-stock_historico_checkbox label,
 body:has(.hb-light-mode) .st-key-stock_historico_checkbox label p {
@@ -9638,15 +9646,76 @@ body:has(.hb-light-mode) .st-key-stock_historico_checkbox label p {
     line-height: 1.45 !important;
 }
 body:has(.hb-light-mode) .st-key-stock_historico_checkbox input[type="checkbox"] {
-    width: 1.1rem !important;
-    height: 1.1rem !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    border: 1.5px solid #82999f !important;
+    border-radius: 5px !important;
+    background: #ffffff !important;
     accent-color: #238b7d !important;
+    cursor: pointer !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox input[type="checkbox"]:checked {
+    border-color: #1f7f74 !important;
+    background: #238b7d !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [role="checkbox"] {
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    min-width: 1.15rem !important;
+    min-height: 1.15rem !important;
+    border: 1.5px solid #82999f !important;
+    border-radius: 5px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 1px 2px rgba(26, 54, 61, .08) !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [data-testid="stCheckbox"] label > div:first-child,
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [data-testid="stCheckbox"] label > div > div:first-child {
+    box-sizing: border-box !important;
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    min-width: 1.15rem !important;
+    min-height: 1.15rem !important;
+    border: 1.5px solid #82999f !important;
+    border-radius: 5px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 1px 2px rgba(26, 54, 61, .08) !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [data-testid="stCheckbox"] div:has(> svg) {
+    box-sizing: border-box !important;
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    min-width: 1.15rem !important;
+    min-height: 1.15rem !important;
+    border: 1.5px solid #82999f !important;
+    border-radius: 5px !important;
+    background: #ffffff !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [data-testid="stCheckbox"]:has(input[type="checkbox"]:checked) div:has(> svg) {
+    border-color: #1f7f74 !important;
+    background: #238b7d !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [data-testid="stCheckbox"]:has(input[type="checkbox"]:checked) div:has(> svg) svg,
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [data-testid="stCheckbox"]:has(input[type="checkbox"]:checked) div:has(> svg) svg path {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [role="checkbox"][aria-checked="true"] {
+    border-color: #1f7f74 !important;
+    background: #238b7d !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox [role="checkbox"][aria-checked="true"] svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
 }
 body:has(.hb-light-mode) .st-key-stock_historico_panel [data-testid="stCaptionContainer"] p {
-    margin: 0.25rem 0 0 !important;
-    color: #4b6269 !important;
+    box-sizing: border-box !important;
+    margin: 0.15rem 0 0 !important;
+    padding: 0 0 0.25rem 1.7rem !important;
+    color: #354f57 !important;
     font-size: 0.9rem !important;
-    line-height: 1.45 !important;
+    line-height: 1.5 !important;
 }
 
 /* Unifica el acabado del modo claro con una paleta serena y superficies limpias. */
