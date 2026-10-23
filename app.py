@@ -117,10 +117,19 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     # st.dataframe conserva el color de texto del tema oscuro en el lienzo,
     # incluso cuando su encabezado o fondo se fuerzan con CSS. st.table genera
     # HTML nativo, por lo que los encabezados y celdas respetan estos colores.
-    color_fondo = "#ffffff"
-    color_texto = "#26383e"
-    color_cabecera = "#eaf3f3"
-    color_borde = "#d8e4e6"
+    tema_claro = bool(st.session_state.get("tema_blanco", False))
+    if tema_claro:
+        color_fondo = "#ffffff"
+        color_texto = "#26383e"
+        color_cabecera = "#eaf3f3"
+        color_fila_alterna = "#f4f8f9"
+        color_borde = "#d8e4e6"
+    else:
+        color_fondo = "#18232c"
+        color_texto = "#e1e9ed"
+        color_cabecera = "#25343d"
+        color_fila_alterna = "#1e2a33"
+        color_borde = "#3a4b55"
     marco_renderizado = (
         marco.style
         .set_properties(
@@ -146,6 +155,13 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
                 {
                     "selector": "td",
                     "props": [("border-color", color_borde)],
+                },
+                {
+                    "selector": "tbody tr:nth-child(even) td",
+                    "props": [
+                        ("background-color", color_fila_alterna),
+                        ("color", color_texto),
+                    ],
                 },
             ],
             overwrite=False,
@@ -9746,6 +9762,185 @@ body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlert"]:ha
 body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
     border-color: rgba(248, 113, 113, .58) !important;
     border-left-color: #f87171 !important;
+}
+
+/* Acabado final uniforme para superficies de datos en tema oscuro. */
+body:not(:has(.hb-light-mode)) [data-testid="stTable"] {
+    border: 1px solid #303b44 !important;
+    border-radius: 12px !important;
+    background: #141c24 !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .16) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTable"] table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    background: #141c24 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTable"] th {
+    background: #202b34 !important;
+    color: #edf3f5 !important;
+    border-color: #303b44 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTable"] td {
+    background: #151e26 !important;
+    color: #dce5e9 !important;
+    border-color: #2b3740 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: #1a252e !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTable"] tbody tr:hover td {
+    background: #202d36 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stDataFrame"] {
+    border: 1px solid #303b44 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .16) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stVerticalBlockBorderWrapper"],
+body:not(:has(.hb-light-mode)) [data-testid="stForm"],
+body:not(:has(.hb-light-mode)) [data-testid="stExpander"] {
+    border-color: #2c3942 !important;
+    border-radius: 14px !important;
+    background: #121b23 !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .13) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] input,
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInput"] input,
+body:not(:has(.hb-light-mode)) [data-testid="stTextArea"] textarea,
+body:not(:has(.hb-light-mode)) [data-baseweb="select"] > div {
+    border-color: #34424c !important;
+    background: #111a22 !important;
+    color: #e1e9ed !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] label,
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stCaptionContainer"] p {
+    color: #b4c1c7 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] hr {
+    border-color: #2a3740 !important;
+    opacity: 1 !important;
+}
+
+/* Contornos visibles, sin líneas blancas en tablas del tema claro. */
+body:has(.hb-light-mode) [data-testid="stTable"] {
+    border: 1px solid #bccbd0 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    box-shadow: 0 7px 20px rgba(35, 72, 79, .07) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] th {
+    background: #eaf2f3 !important;
+    color: #263f46 !important;
+    border-color: #c4d2d6 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] td {
+    background: #ffffff !important;
+    color: #2d4148 !important;
+    border-color: #d2dde0 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: #f4f8f9 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:hover td {
+    background: #eaf4f3 !important;
+}
+body:has(.hb-light-mode) [data-testid="stDataFrame"] {
+    border: 1px solid #bccbd0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 7px 20px rgba(35, 72, 79, .07) !important;
+}
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"],
+body:has(.hb-light-mode) [data-testid="stForm"],
+body:has(.hb-light-mode) [data-testid="stExpander"] {
+    border-color: #c8d6da !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    box-shadow: 0 7px 20px rgba(35, 72, 79, .06) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] input,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea,
+body:has(.hb-light-mode) [data-baseweb="select"] > div {
+    border-color: #bdcdd1 !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] label,
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stCaptionContainer"] p {
+    color: #52666d !important;
+    opacity: 1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] hr {
+    border-color: #d1dde0 !important;
+    opacity: 1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button:focus-visible,
+body:has(.hb-light-mode) [data-testid="stSidebar"] button:focus-visible {
+    outline: 3px solid rgba(47, 143, 131, .38) !important;
+    outline-offset: 2px !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] button:focus-visible,
+body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] button:focus-visible {
+    outline: 3px solid rgba(85, 184, 169, .48) !important;
+    outline-offset: 2px !important;
+}
+
+/* En pantallas táctiles, cada tabla conserva sus columnas y se desplaza dentro de su marco. */
+[data-testid="stTable"] {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+}
+[data-testid="stTable"] table {
+    width: max-content !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+}
+[data-testid="stTable"] th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    white-space: nowrap !important;
+}
+[data-testid="stTable"] th,
+[data-testid="stTable"] td {
+    padding: .68rem .8rem !important;
+    border-width: 0 1px 1px 0 !important;
+    border-style: solid !important;
+    line-height: 1.4 !important;
+}
+[data-testid="stTable"] th:last-child,
+[data-testid="stTable"] td:last-child {
+    border-right: 0 !important;
+}
+@media (max-width: 640px) {
+    [data-testid="stMainBlockContainer"] {
+        padding-left: .8rem !important;
+        padding-right: .8rem !important;
+    }
+    [data-testid="stTable"] {
+        max-height: 68vh !important;
+        border-radius: 10px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    [data-testid="stTable"] th,
+    [data-testid="stTable"] td {
+        padding: .62rem .68rem !important;
+        font-size: .84rem !important;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"],
+    [data-testid="stForm"],
+    [data-testid="stExpander"] {
+        border-radius: 12px !important;
+    }
+    [data-testid="stMain"] button,
+    [data-testid="stSidebar"] button {
+        min-height: 2.75rem !important;
+        touch-action: manipulation;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
