@@ -1,14 +1,15 @@
-"""Generación de informes PDF de diagnóstico de demanda e inventario."""
+"""Genera el informe operativo de pronóstico y diagnóstico de inventario."""
 
 from datetime import datetime
 from io import BytesIO
+from math import ceil
 from xml.sax.saxutils import escape
 
 
 def construir_informe_prediccion(datos):
-    """Devuelve un PDF con el pronóstico, su validación y recomendaciones."""
+    """Devuelve un PDF de diagnóstico para una predicción completada."""
     from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import mm
@@ -23,18 +24,20 @@ def construir_informe_prediccion(datos):
     buffer = BytesIO()
     azul = colors.HexColor("#15344A")
     turquesa = colors.HexColor("#278C83")
-    gris = colors.HexColor("#52616B")
-    gris_claro = colors.HexColor("#EEF3F5")
+    verde_claro = colors.HexColor("#E6F4F0")
+    gris = colors.HexColor("#53636E")
+    gris_claro = colors.HexColor("#F1F5F7")
     borde = colors.HexColor("#D5E0E4")
+    texto_oscuro = colors.HexColor("#243640")
 
     documento = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        rightMargin=18 * mm,
-        leftMargin=18 * mm,
-        topMargin=20 * mm,
-        bottomMargin=18 * mm,
-        title="Diagnóstico de demanda y recomendación de inventario",
+        rightMargin=17 * mm,
+        leftMargin=17 * mm,
+        topMargin=24 * mm,
+        bottomMargin=17 * mm,
+        title="Informe de pronóstico y diagnóstico de inventario",
         author="Sistema Librería Bazar Humbertito",
     )
     estilos = getSampleStyleSheet()
@@ -42,77 +45,109 @@ def construir_informe_prediccion(datos):
         name="TituloInforme",
         parent=estilos["Title"],
         fontName="Helvetica-Bold",
-        fontSize=18,
-        leading=22,
+        fontSize=17,
+        leading=20,
         textColor=azul,
-        alignment=TA_CENTER,
-        spaceAfter=5,
+        alignment=TA_LEFT,
+        spaceAfter=4,
     ))
     estilos.add(ParagraphStyle(
-        name="SubtituloInforme",
+        name="MarcaInforme",
         parent=estilos["Normal"],
+        fontName="Helvetica-Bold",
         fontSize=9,
-        leading=13,
+        leading=12,
+        textColor=turquesa,
+        spaceAfter=3,
+    ))
+    estilos.add(ParagraphStyle(
+        name="MetaInforme",
+        parent=estilos["Normal"],
+        fontSize=8,
+        leading=11,
         textColor=gris,
-        alignment=TA_CENTER,
-        spaceAfter=12,
     ))
     estilos.add(ParagraphStyle(
         name="SeccionInforme",
         parent=estilos["Heading2"],
         fontName="Helvetica-Bold",
-        fontSize=11,
-        leading=14,
+        fontSize=10.5,
+        leading=13,
         textColor=azul,
         spaceBefore=9,
         spaceAfter=5,
+        keepWithNext=True,
     ))
     estilos.add(ParagraphStyle(
         name="TextoInforme",
         parent=estilos["BodyText"],
-        fontSize=9,
-        leading=13,
-        textColor=colors.HexColor("#26343D"),
-        spaceAfter=5,
+        fontSize=8.5,
+        leading=12,
+        textColor=texto_oscuro,
+        spaceAfter=3,
     ))
     estilos.add(ParagraphStyle(
-        name="NotaInforme",
+        name="TextoBlancoInforme",
         parent=estilos["BodyText"],
-        fontSize=8,
+        fontName="Helvetica-Bold",
+        fontSize=8.5,
         leading=11,
+        textColor=colors.white,
+    ))
+    estilos.add(ParagraphStyle(
+        name="EtiquetaInforme",
+        parent=estilos["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=7.5,
+        leading=9,
         textColor=gris,
     ))
+    estilos.add(ParagraphStyle(
+        name="ValorInforme",
+        parent=estilos["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        leading=13,
+        textColor=azul,
+    ))
+    estilos.add(ParagraphStyle(
+        name="EstadoInforme",
+        parent=estilos["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#176B5D"),
+        alignment=TA_CENTER,
+    ))
 
-    def texto(valor):
-        return Paragraph(escape(str(valor)), estilos["TextoInforme"])
+    def p(valor, estilo="TextoInforme"):
+        return Paragraph(escape(str(valor)), estilos[estilo])
 
-    def tabla(datos_tabla, anchos, encabezado=True):
-        estilo_encabezado = ParagraphStyle(
-            "EncabezadoTabla",
-            parent=estilos["TextoInforme"],
-            fontName="Helvetica-Bold",
-            textColor=colors.white,
-        )
+    def tabla(filas, anchos, encabezado=True, encabezado_color=azul):
         celdas = []
-        for indice_fila, fila in enumerate(datos_tabla):
-            estilo_celda = estilo_encabezado if encabezado and indice_fila == 0 else estilos["TextoInforme"]
+        for indice, fila in enumerate(filas):
+            estilo_celda = "TextoBlancoInforme" if encabezado and indice == 0 else "TextoInforme"
             celdas.append([
-                Paragraph(escape(str(celda)), estilo_celda)
+                celda if isinstance(celda, Paragraph) else p(celda, estilo_celda)
                 for celda in fila
             ])
-        tabla_pdf = Table(celdas, colWidths=anchos, repeatRows=1 if encabezado else 0)
+        tabla_pdf = Table(
+            celdas,
+            colWidths=anchos,
+            repeatRows=1 if encabezado else 0,
+            hAlign="LEFT",
+        )
         reglas = [
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("GRID", (0, 0), (-1, -1), 0.45, borde),
             ("LEFTPADDING", (0, 0), (-1, -1), 7),
             ("RIGHTPADDING", (0, 0), (-1, -1), 7),
-            ("TOPPADDING", (0, 0), (-1, -1), 5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
         ]
         if encabezado:
             reglas.extend([
-                ("BACKGROUND", (0, 0), (-1, 0), azul),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 0), (-1, 0), encabezado_color),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, gris_claro]),
             ])
         else:
@@ -127,151 +162,188 @@ def construir_informe_prediccion(datos):
     promedio = float(datos.get("promedio_diario") or 0)
     stock = float(datos.get("stock_actual") or 0)
     minimo = float(datos.get("stock_minimo") or 0)
-    sugerida = int(datos.get("cantidad_sugerida") or 0)
+    sugerida = max(0, int(datos.get("cantidad_sugerida") or 0))
     periodo = datos.get("periodo", "No disponible")
+    necesidad_neta = demanda + minimo - stock
 
     if sugerida > 0 and stock <= minimo:
         diagnostico = (
-            "El stock actual está en el mínimo configurado o por debajo de este. "
-            "La proyección también indica una necesidad de reposición; priorice la revisión."
+            "El stock actual está en el mínimo configurado o por debajo. "
+            "La proyección también identifica una necesidad de reposición, por lo que "
+            "conviene priorizar su revisión."
         )
+        nivel = "Revisión prioritaria"
     elif sugerida > 0:
         diagnostico = (
-            "Con la demanda proyectada y el stock mínimo configurado, se estima "
-            "una necesidad de reposición. Valide la cantidad sugerida antes de comprar."
+            "El stock actual no cubriría simultáneamente la demanda proyectada y el "
+            "stock mínimo configurado. Se estima una cantidad de reposición para "
+            "revisar antes de emitir una compra."
         )
+        nivel = "Revisar reposición"
     elif demanda > 0:
         diagnostico = (
-            "Según la proyección, el stock actual cubre la demanda estimada del periodo "
-            "y conserva el mínimo configurado. Mantenga el seguimiento del inventario."
+            "El stock actual cubre la demanda proyectada del periodo y conserva el "
+            "mínimo configurado. Se recomienda continuar el seguimiento."
         )
+        nivel = "Cobertura suficiente"
     else:
         diagnostico = (
-            "No se proyectan unidades vendidas para el periodo seleccionado. "
-            "Revise el historial y la disponibilidad del producto antes de tomar decisiones."
+            "No se proyectan unidades vendidas para el periodo. Revise el historial "
+            "y la disponibilidad del producto para descartar falta de registros o "
+            "quiebres de stock."
         )
+        nivel = "Revisar historial"
+
+    mae = evaluacion.get("mae")
+    mae_referencia = evaluacion.get("mae_baseline_7_dias")
+    wape = evaluacion.get("wape_porcentaje")
+    evaluacion_superada = (
+        mae is not None
+        and mae_referencia is not None
+        and float(mae) < float(mae_referencia)
+    )
+    estado_evaluacion = (
+        "Superó la referencia" if evaluacion_superada
+        else "No disponible" if mae is None or mae_referencia is None
+        else "No superó la referencia"
+    )
 
     recomendaciones = []
     if sugerida > 0:
         recomendaciones.append(
-            f"Evaluar la reposición de aproximadamente {sugerida} unidad(es), "
-            "considerando la demanda proyectada y el stock mínimo."
+            f"Evaluar la reposición de {sugerida} unidad(es), de acuerdo con la "
+            "demanda proyectada y el stock mínimo configurado."
         )
     else:
         recomendaciones.append(
-            "No se sugiere una reposición inmediata según esta proyección; "
-            "seguir revisando las ventas y el stock."
+            "No se estima reposición inmediata con los datos actuales; mantener el "
+            "seguimiento del stock y de las ventas."
         )
     recomendaciones.append(
-        "Confirmar que no hubo quiebres de stock, cierres o días sin registro "
-        "que puedan distorsionar la demanda observada."
+        "Verificar que el producto estuvo disponible durante el periodo: las ventas "
+        "registradas pueden subestimar la demanda si hubo quiebre de stock."
     )
     recomendaciones.append(
-        "Usar este informe como apoyo para la revisión gerencial; validar la compra "
-        "con disponibilidad, presupuesto y criterio del responsable."
+        "Contrastar la sugerencia con el plazo del proveedor, presupuesto y ritmo "
+        "de reposición antes de emitir una compra."
     )
 
+    ancho_util = A4[0] - 34 * mm
     historia = [
-        Paragraph("Librería Bazar Humbertito", estilos["SubtituloInforme"]),
-        Paragraph("Diagnóstico de demanda y recomendación de inventario", estilos["TituloInforme"]),
-        Paragraph(f"Informe generado por el sistema · {escape(fecha_emision)}", estilos["SubtituloInforme"]),
-        Paragraph("1. Identificación del análisis", estilos["SeccionInforme"]),
+        p("Librería Bazar Humbertito", "MarcaInforme"),
+        p("Informe de pronóstico y diagnóstico de inventario", "TituloInforme"),
+        p(f"Generado el {fecha_emision} · Estado de esta ejecución: COMPLETADA", "MetaInforme"),
+        Spacer(1, 7),
         tabla([
-            ["Producto", "Código", "Periodo proyectado"],
-            [datos.get("nombre_producto", "No disponible"), datos.get("codigo_producto", "No disponible"), periodo],
-        ], [65 * mm, 38 * mm, 71 * mm]),
-        Spacer(1, 5),
+            ["DIAGNÓSTICO PRINCIPAL", "NIVEL DE ATENCIÓN"],
+            [p(diagnostico), p(nivel, "EstadoInforme")],
+        ], [124 * mm, ancho_util - 124 * mm], encabezado=True, encabezado_color=turquesa),
+        Paragraph("1. Comprobaciones realizadas por el sistema", estilos["SeccionInforme"]),
         tabla([
-            ["Historial disponible", "Última venta registrada", "Fecha de corte"],
+            ["Comprobación", "Resultado", "Estado"],
+            ["Historial del producto", f"{int(datos.get('dias_historicos') or 0)} días calendario procesados", "Completado"],
+            ["Evaluación temporal", "Pronóstico comparado con una referencia de siete días", estado_evaluacion],
+            ["Periodo futuro", periodo, "Calculado"],
+            ["Inventario", "Stock actual contrastado con stock mínimo y demanda estimada", "Evaluado"],
+            ["Recomendación", "Necesidad de reposición calculada para este producto", "Generada"],
+        ], [42 * mm, 93 * mm, 39 * mm]),
+        Paragraph("2. Identificación y datos del producto", estilos["SeccionInforme"]),
+        tabla([
+            ["Producto", "Código", "Última venta registrada"],
             [
-                f"{int(datos.get('dias_historicos') or 0)} días",
+                datos.get("nombre_producto", "No disponible"),
+                datos.get("codigo_producto", "No disponible"),
                 datos.get("fecha_ultima_venta", "No disponible"),
-                datos.get("fecha_base", "No disponible"),
             ],
-        ], [58 * mm, 58 * mm, 58 * mm]),
-        Paragraph("2. Resultado del pronóstico", estilos["SeccionInforme"]),
+            ["Periodo pronosticado", "Fecha de corte del historial", "Días de historial"],
+            [
+                periodo,
+                datos.get("fecha_base", "No disponible"),
+                str(int(datos.get("dias_historicos") or 0)),
+            ],
+        ], [65 * mm, 55 * mm, ancho_util - 120 * mm]),
+        Paragraph("3. Resultado del pronóstico e inventario", estilos["SeccionInforme"]),
         tabla([
-            ["Demanda estimada", "Promedio diario", "Stock actual", "Stock mínimo"],
+            ["Demanda total estimada", "Promedio diario", "Stock actual", "Stock mínimo"],
             [
                 f"{demanda:.2f} unidades",
-                f"{promedio:.2f} unidades",
-                f"{stock:.0f}",
-                f"{minimo:.0f}",
+                f"{promedio:.2f} unidades/día",
+                f"{stock:.0f} unidades",
+                f"{minimo:.0f} unidades",
             ],
-        ], [43 * mm, 43 * mm, 43 * mm, 43 * mm]),
-        Paragraph("3. Diagnóstico", estilos["SeccionInforme"]),
-        texto(diagnostico),
+        ], [43.5 * mm] * 4),
+        Spacer(1, 4),
+        p(
+            "Cálculo de reposición: máximo entre cero y el techo de "
+            "(demanda estimada + stock mínimo - stock actual). "
+            f"Aplicado a este caso: máximo(0, techo({demanda:.10f} + "
+            f"{minimo:.0f} - {stock:.0f})) = {sugerida} unidad(es)."
+        ),
     ]
 
     if filas_periodo:
         historia.extend([
-            Paragraph("Detalle diario estimado", estilos["SeccionInforme"]),
-            tabla([["Fecha", "Unidades estimadas"], *filas_periodo], [90 * mm, 82 * mm]),
+            Paragraph("4. Detalle diario de la demanda estimada", estilos["SeccionInforme"]),
+            tabla([["Fecha", "Unidades estimadas"], *filas_periodo], [90 * mm, ancho_util - 90 * mm]),
         ])
 
     historia.extend([
-        Paragraph("4. Proceso aplicado", estilos["SeccionInforme"]),
+        Paragraph("5. Cómo se obtuvo el resultado", estilos["SeccionInforme"]),
         tabla([
-            ["Etapa", "Descripción"],
-            ["Preparación", "Se organizó el historial de ventas por producto y fecha."],
-            ["Evaluación", "Se reservaron fechas recientes para comparar el pronóstico con las ventas observadas."],
-            ["Referencia", "Se contrastó el error con una referencia basada en las ventas de siete días antes."],
-            ["Resultado", "El pronóstico se habilita cuando su error de evaluación es menor que el de la referencia."],
-        ], [35 * mm, 137 * mm]),
+            ["Etapa", "Descripción del proceso"],
+            ["Preparación de datos", "Se agruparon las ventas por producto y fecha; los días sin registros se procesaron como cero ventas."],
+            ["Evaluación", "Se separaron fechas recientes para medir el error del pronóstico sobre datos no usados en ese tramo de entrenamiento."],
+            ["Comparación", "El error se contrastó con una referencia que repite las ventas observadas siete días antes."],
+            ["Activación", "El pronóstico se habilita cuando la evaluación registra menor error que la referencia."],
+        ], [39 * mm, ancho_util - 39 * mm]),
+        Paragraph("6. Resultado de la evaluación temporal", estilos["SeccionInforme"]),
     ])
 
     if evaluacion:
-        mae_modelo = evaluacion.get("mae")
-        mae_referencia = evaluacion.get("mae_baseline_7_dias")
-        estado_comparacion = "No disponible"
-        if mae_modelo is not None and mae_referencia is not None:
-            estado_comparacion = (
-                "Menor error que la referencia"
-                if mae_modelo < mae_referencia
-                else "No superó la referencia"
-            )
-        historia.extend([
-            Paragraph("5. Verificación de la evaluación", estilos["SeccionInforme"]),
-            tabla([
-                ["Indicador", "Resultado"],
-                ["Error medio absoluto de evaluación (todos los productos)", f"{mae_modelo:.2f} unidades por producto y día" if mae_modelo is not None else "No disponible"],
-                ["Error de la referencia de siete días", f"{mae_referencia:.2f} unidades" if mae_referencia is not None else "No disponible"],
-                ["Resultado comparativo", estado_comparacion],
-                ["Fechas evaluadas", f"{evaluacion.get('fecha_inicio_prueba', 'No disponible')} a {evaluacion.get('fecha_fin_prueba', 'No disponible')}"],
-                ["Observaciones de prueba", str(evaluacion.get("observaciones_prueba", "No disponible"))],
-            ], [76 * mm, 96 * mm]),
-        ])
+        filas_evaluacion = [
+            ["Indicador", "Resultado"],
+            ["Error medio absoluto del sistema (MAE)", f"{float(mae):.2f} unidades por producto y día" if mae is not None else "No disponible"],
+            ["Error de referencia (ventas de hace siete días)", f"{float(mae_referencia):.2f} unidades por producto y día" if mae_referencia is not None else "No disponible"],
+            ["Comparación", estado_evaluacion],
+            ["Fechas de prueba", f"{evaluacion.get('fecha_inicio_prueba', 'No disponible')} al {evaluacion.get('fecha_fin_prueba', 'No disponible')}"],
+            ["Observaciones evaluadas", str(evaluacion.get("observaciones_prueba", "No disponible"))],
+        ]
+        if wape is not None:
+            filas_evaluacion.append(["WAPE del sistema", f"{float(wape):.1f}%"])
+        historia.append(tabla(filas_evaluacion, [83 * mm, ancho_util - 83 * mm]))
     else:
-        historia.extend([
-            Paragraph("5. Verificación de la evaluación", estilos["SeccionInforme"]),
-            texto("No hay métricas de evaluación disponibles en el registro del pronóstico."),
-        ])
+        historia.append(p("No se encontraron métricas de evaluación en el registro del pronóstico."))
 
     historia.extend([
-        Paragraph("6. Recomendaciones", estilos["SeccionInforme"]),
-        tabla([["N.º", "Recomendación"]] + [
+        Paragraph("7. Recomendaciones de gestión", estilos["SeccionInforme"]),
+        tabla([["N.º", "Acción recomendada"]] + [
             [str(indice), recomendacion]
             for indice, recomendacion in enumerate(recomendaciones, start=1)
-        ], [15 * mm, 157 * mm]),
-        Spacer(1, 8),
-        Paragraph(
-            "Alcance: el pronóstico y la recomendación describen una evaluación operativa "
-            "del sistema. No demuestran por sí solos una mejora en la toma de decisiones "
-            "gerenciales ni sustituyen la revisión del responsable. Los días sin ventas "
-            "registradas se interpretan como cero; un quiebre de stock puede hacer que la "
-            "demanda real sea mayor que la observada.",
-            estilos["NotaInforme"],
-        ),
+        ], [14 * mm, ancho_util - 14 * mm]),
     ])
 
     def pie_pagina(canvas, doc):
         canvas.saveState()
+        if doc.page > 1:
+            canvas.setFont("Helvetica-Bold", 8)
+            canvas.setFillColor(azul)
+            canvas.drawString(17 * mm, A4[1] - 13 * mm, "Librería Bazar Humbertito")
+            canvas.setFont("Helvetica", 8)
+            canvas.setFillColor(gris)
+            canvas.drawRightString(
+                A4[0] - 17 * mm,
+                A4[1] - 13 * mm,
+                "Informe de pronóstico y diagnóstico de inventario",
+            )
+            canvas.setStrokeColor(borde)
+            canvas.line(17 * mm, A4[1] - 17 * mm, A4[0] - 17 * mm, A4[1] - 17 * mm)
         canvas.setStrokeColor(borde)
-        canvas.line(18 * mm, 14 * mm, A4[0] - 18 * mm, 14 * mm)
-        canvas.setFont("Helvetica", 8)
+        canvas.setLineWidth(0.6)
+        canvas.line(17 * mm, 13 * mm, A4[0] - 17 * mm, 13 * mm)
+        canvas.setFont("Helvetica", 7.5)
         canvas.setFillColor(gris)
-        canvas.drawString(18 * mm, 9 * mm, "Sistema Librería Bazar Humbertito")
-        canvas.drawRightString(A4[0] - 18 * mm, 9 * mm, f"Página {doc.page}")
+        canvas.drawString(17 * mm, 8 * mm, "Librería Bazar Humbertito · Informe de uso interno")
+        canvas.drawRightString(A4[0] - 17 * mm, 8 * mm, f"Página {doc.page}")
         canvas.restoreState()
 
     documento.build(historia, onFirstPage=pie_pagina, onLaterPages=pie_pagina)
