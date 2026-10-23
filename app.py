@@ -9886,6 +9886,64 @@ body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] button:focus-visible {
     outline-offset: 2px !important;
 }
 
+/* Streamlit pinta la casilla con un div interno; se estiliza ese control visible. */
+body:has(.hb-light-mode) [data-testid="stCheckbox"] label > span + div,
+body:has(.hb-light-mode) [data-testid="stCheckbox"] [role="checkbox"] {
+    box-sizing: border-box !important;
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    min-width: 1.15rem !important;
+    min-height: 1.15rem !important;
+    border: 1.5px solid #70848a !important;
+    border-radius: 5px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 1px 2px rgba(26, 54, 61, .08) !important;
+}
+body:has(.hb-light-mode) [data-testid="stCheckbox"] label > span + div:has(> svg),
+body:has(.hb-light-mode) [data-testid="stCheckbox"] [role="checkbox"][aria-checked="true"] {
+    border-color: #176f65 !important;
+    background: #238b7d !important;
+    box-shadow: 0 0 0 2px rgba(35, 139, 125, .14) !important;
+}
+body:has(.hb-light-mode) [data-testid="stCheckbox"] label > span + div:has(> svg) svg,
+body:has(.hb-light-mode) [data-testid="stCheckbox"] [role="checkbox"][aria-checked="true"] svg {
+    color: #ffffff !important;
+    fill: none !important;
+    stroke: #ffffff !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stCheckbox"] label > span + div,
+body:not(:has(.hb-light-mode)) [data-testid="stCheckbox"] [role="checkbox"] {
+    box-sizing: border-box !important;
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    min-width: 1.15rem !important;
+    min-height: 1.15rem !important;
+    border: 1.5px solid #71838c !important;
+    border-radius: 5px !important;
+    background: #17212a !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .22) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stCheckbox"] label > span + div:has(> svg),
+body:not(:has(.hb-light-mode)) [data-testid="stCheckbox"] [role="checkbox"][aria-checked="true"] {
+    border-color: #55b8a9 !important;
+    background: #2f8f83 !important;
+    box-shadow: 0 0 0 2px rgba(85, 184, 169, .15) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stCheckbox"] label > span + div:has(> svg) svg,
+body:not(:has(.hb-light-mode)) [data-testid="stCheckbox"] [role="checkbox"][aria-checked="true"] svg {
+    color: #ffffff !important;
+    fill: none !important;
+    stroke: #ffffff !important;
+}
+[data-testid="stCheckbox"] {
+    min-height: 2rem !important;
+}
+[data-testid="stCheckbox"] label,
+[data-testid="stCheckbox"] [data-testid="stWidgetLabel"] {
+    align-items: center !important;
+    line-height: 1.45 !important;
+}
+
 /* En pantallas táctiles, cada tabla conserva sus columnas y se desplaza dentro de su marco. */
 [data-testid="stTable"] {
     box-sizing: border-box !important;
