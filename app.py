@@ -4292,7 +4292,10 @@ def pantalla_acceso():
 
         /* Ocultar la barra superior */
         header[data-testid="stHeader"] {
-            background: transparent;
+            display: none !important;
+        }
+        body:has(.login-brand) [data-testid="stToolbar"] {
+            display: none !important;
         }
 
         /* Fondo y espacio de la pantalla */
@@ -4516,21 +4519,44 @@ def pantalla_acceso():
             color: #1b3438;
         }
         @media (max-width: 760px) {
+            body:has(.login-brand),
+            body:has(.login-brand) [data-testid="stAppViewContainer"],
+            body:has(.login-brand) [data-testid="stMain"] {
+                width: 100% !important;
+                max-width: 100vw !important;
+                min-width: 0 !important;
+                overflow-x: hidden !important;
+            }
             [data-testid="stMainBlockContainer"] {
                 width: 100% !important;
                 max-width: 500px !important;
+                min-width: 0 !important;
                 min-height: 100dvh !important;
                 padding: 1rem 1rem 1.5rem !important;
                 justify-content: center !important;
             }
             [data-testid="stHorizontalBlock"] {
-                flex-direction: column !important;
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
                 gap: 0.5rem !important;
             }
+            [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
             [data-testid="stHorizontalBlock"] > [data-testid="column"] {
                 width: 100% !important;
+                max-width: 100% !important;
                 min-width: 0 !important;
-                flex: 1 1 auto !important;
+                flex: none !important;
+                grid-column: 1 / -1 !important;
+            }
+            .login-brand,
+            [data-testid="stForm"] {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box !important;
             }
             .login-brand {
                 min-height: auto;
