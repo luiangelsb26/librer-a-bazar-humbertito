@@ -10323,3 +10323,34 @@ body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"] svg {
 }
 </style>
 """, unsafe_allow_html=True)
+
+# Centrado de la casilla con su etiqueta, también si el texto ocupa varias líneas.
+st.markdown("""
+<style>
+.st-key-stock_historico_checkbox [data-testid="stCheckbox"] label {
+    display: flex !important;
+    align-items: center !important;
+    gap: .65rem !important;
+    min-height: 2.35rem !important;
+    width: 100% !important;
+}
+.st-key-stock_historico_checkbox [data-testid="stCheckbox"] label p {
+    margin: 0 !important;
+    line-height: 1.45 !important;
+    text-align: left !important;
+}
+.st-key-stock_historico_checkbox [data-testid="stCheckbox"] label > span + div,
+.st-key-stock_historico_checkbox [data-testid="stCheckbox"] label > div:first-child,
+.st-key-stock_historico_checkbox [data-testid="stCheckbox"] [role="checkbox"] {
+    align-self: center !important;
+    flex: 0 0 1.15rem !important;
+    margin: 0 !important;
+}
+@media (max-width: 640px) {
+    .st-key-stock_historico_checkbox [data-testid="stCheckbox"] label {
+        min-height: 2.8rem !important;
+        gap: .7rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
