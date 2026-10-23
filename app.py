@@ -8045,10 +8045,10 @@ elif menu == "Ventas":
             "Seleccionar archivo Excel de ventas (.xlsx)",
             type=["xlsx"],
             key="carga_masiva_ventas_excel",
-            help=(
-                "Cada fila representa un producto vendido. Comparte el mismo "
-                "N° Boleta entre filas para agruparlas en una venta."
-            ),
+        )
+        st.caption(
+            "Cada fila representa un producto vendido. Comparte el mismo N° "
+            "Boleta entre filas para agruparlas en una venta."
         )
 
         if archivo_ventas_excel is not None:
@@ -8130,11 +8130,10 @@ elif menu == "Ventas":
                 "Descontar estas unidades del stock actual al importar",
                 value=False,
                 key="importar_ventas_descontar_stock",
-                help=(
-                    "Marca esta opción solo si estas ventas todavía deben restarse "
-                    "del inventario actual. Si el stock no alcanza, las ventas se "
-                    "registrarán igualmente y no se modificará ningún stock."
-                ),
+            )
+            st.caption(
+                "Márcala solo si estas ventas todavía deben restarse del inventario. "
+                "Si el stock no alcanza, las ventas se registran sin modificarlo."
             )
 
             if not errores_excel and filas_excel and not importacion_existente:
@@ -8243,10 +8242,10 @@ elif menu == "Ventas":
                         "Restaurar al stock las unidades de esta venta",
                         value=False,
                         key=f"restaurar_stock_venta_antigua_{venta_id_seleccionada}",
-                        help=(
-                            "Márcalo solo si el stock actual ya incluye el descuento "
-                            "de esta venta."
-                        ),
+                    )
+                    st.caption(
+                        "Márcala solo si el stock actual ya incluye el descuento "
+                        "de esta venta."
                     )
                 elif venta_seleccionada[7] == 1:
                     st.caption("Al eliminarla, se devolverán sus unidades al stock.")
@@ -8406,10 +8405,10 @@ elif menu == "Compras":
             "Seleccionar archivo Excel de compras (.xlsx)",
             type=["xlsx"],
             key="carga_masiva_compras_excel",
-            help=(
-                "Cada fila representa una línea de compra. El sistema guarda "
-                "la fecha, producto, cantidad y costo unitario del archivo."
-            ),
+        )
+        st.caption(
+            "Cada fila representa una línea de compra con fecha, producto, "
+            "cantidad y costo unitario."
         )
 
         if archivo_compras_excel is not None:
@@ -8477,11 +8476,10 @@ elif menu == "Compras":
                         "Sumar estas unidades al stock actual",
                         value=False,
                         key="importar_compras_actualizar_stock",
-                        help=(
-                            "Déjalo desmarcado al importar compras históricas si el "
-                            "stock actual ya refleja esos ingresos. Márcalo solo si "
-                            "esas unidades todavía no están incluidas en el stock."
-                        ),
+                    )
+                    st.caption(
+                        "Déjala desmarcada si el stock actual ya refleja esas compras. "
+                        "Márcala solo si esas unidades aún no están incluidas."
                     )
                     if not actualizar_stock_compras:
                         st.caption(
@@ -9111,7 +9109,6 @@ with st.container(key="theme_toggle"):
             else ":material/light_mode:"
         ),
         on_click=alternar_tema,
-        help="Cambiar entre modo claro y modo oscuro"
     )
 
 # ==========================================================
@@ -10533,6 +10530,10 @@ st.markdown("""
 [class*="st-key-theme_toggle"] button:focus-visible {
     outline: 3px solid rgba(47, 143, 131, .38) !important;
     outline-offset: 3px !important;
+}
+[data-testid="stTooltipIcon"],
+[data-testid="stWidgetLabel"] button[aria-label*="Help"] {
+    display: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
