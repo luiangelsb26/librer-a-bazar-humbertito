@@ -10587,3 +10587,39 @@ body:not(:has(.hb-light-mode)) .st-key-dashboard_productos_panel {
 }
 </style>
 """, unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+/* Mantiene la identidad de marca arriba de la barra lateral al desplazarse. */
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: .35rem !important;
+}
+[data-testid="stSidebar"] [data-testid="stElementContainer"]:has(.sidebar-brand) {
+    position: sticky !important;
+    top: .25rem !important;
+    z-index: 20 !important;
+    align-self: stretch !important;
+    margin-top: 0 !important;
+    margin-bottom: .5rem !important;
+    box-sizing: border-box !important;
+}
+[data-testid="stSidebar"] .sidebar-brand {
+    position: relative !important;
+    top: auto !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand {
+    background: #ffffff !important;
+    border-color: #c8d6da !important;
+    border-left-color: #2d8177 !important;
+    box-shadow: 0 4px 12px rgba(35, 72, 79, .07) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] .sidebar-brand {
+    background: #182027 !important;
+    border-color: #34424b !important;
+    border-left-color: #2d8177 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .2) !important;
+}
+</style>
+""", unsafe_allow_html=True)
