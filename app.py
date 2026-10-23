@@ -10039,3 +10039,287 @@ body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTa
 }
 </style>
 """, unsafe_allow_html=True)
+
+# Ajustes finales de las tarjetas de administración en el tema claro.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) .st-key-user_transfer_panel,
+body:has(.hb-light-mode) .st-key-user_delete_panel {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    padding: 1.1rem 1.15rem 1.15rem !important;
+    border: 1px solid #d6e3e5 !important;
+    border-top: 3px solid #3d9187 !important;
+    border-radius: 16px !important;
+    background: linear-gradient(145deg, #ffffff 0%, #f7fbfb 100%) !important;
+    box-shadow: 0 7px 20px rgba(30, 67, 75, .07) !important;
+    transition: border-color .18s ease, box-shadow .18s ease !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel:hover,
+body:has(.hb-light-mode) .st-key-user_delete_panel:hover {
+    border-color: #bed7d8 !important;
+    border-top-color: #2f8f83 !important;
+    box-shadow: 0 10px 24px rgba(30, 67, 75, .09) !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel h3,
+body:has(.hb-light-mode) .st-key-user_delete_panel h3 {
+    margin: 0 0 .35rem !important;
+    color: #20373e !important;
+    font-size: 1.08rem !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stCaptionContainer"],
+body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stCaptionContainer"] {
+    margin-top: .1rem !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stCaptionContainer"] p,
+body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stCaptionContainer"] p {
+    color: #5d7178 !important;
+    font-size: .9rem !important;
+    line-height: 1.55 !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stAlertContainer"],
+body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stAlertContainer"] {
+    margin-top: .55rem !important;
+    padding: .78rem .95rem !important;
+    border: 1px solid #cfe3df !important;
+    border-left: 3px solid #4b9c90 !important;
+    border-radius: 11px !important;
+    background: #f0f8f6 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
+body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
+    color: #29474a !important;
+    font-size: .9rem !important;
+    font-weight: 550 !important;
+    line-height: 1.5 !important;
+}
+@media (max-width: 640px) {
+    body:has(.hb-light-mode) .st-key-user_transfer_panel,
+    body:has(.hb-light-mode) .st-key-user_delete_panel {
+        padding: .9rem !important;
+        border-radius: 14px !important;
+    }
+    body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stAlertContainer"],
+    body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stAlertContainer"] {
+        padding: .72rem .8rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Controles de fecha, ayuda y cantidad: paletas independientes para cada tema.
+st.markdown("""
+<style>
+/* Modo claro: campos blancos, bordes completos y controles visibles. */
+body:has(.hb-light-mode) [data-testid="stDateInput"] input {
+    box-sizing: border-box !important;
+    min-height: 2.65rem !important;
+    border: 1px solid #b9cdd1 !important;
+    border-radius: 11px !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+    color-scheme: light !important;
+    box-shadow: 0 1px 3px rgba(30, 67, 75, .05) !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInput"] input:focus {
+    border-color: #348f84 !important;
+    box-shadow: 0 0 0 3px rgba(52, 143, 132, .14) !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInput"] [data-baseweb="input"] {
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    border: 1px solid #b9cdd1 !important;
+    border-radius: 11px !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(30, 67, 75, .05) !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input {
+    min-height: 2.55rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInput"] button {
+    min-width: 2.55rem !important;
+    min-height: 2.55rem !important;
+    border: 0 !important;
+    border-left: 1px solid #d5e2e4 !important;
+    border-radius: 0 !important;
+    background: #eef6f6 !important;
+    color: #276d68 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInput"] button:hover {
+    background: #e1f1ee !important;
+    color: #145f57 !important;
+}
+/* El calendario aparece en un portal de BaseWeb fuera del campo. */
+body:has(.hb-light-mode) [data-baseweb="popover"] [data-baseweb="calendar"],
+body:has(.hb-light-mode) [data-baseweb="calendar"],
+body:has(.hb-light-mode) .react-datepicker {
+    color-scheme: light !important;
+    border: 1px solid #cbdadd !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+    box-shadow: 0 14px 34px rgba(23, 48, 56, .18) !important;
+}
+body:has(.hb-light-mode) [data-baseweb="calendar"] button,
+body:has(.hb-light-mode) .react-datepicker button {
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #334b51 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+body:has(.hb-light-mode) [data-baseweb="calendar"] button:hover,
+body:has(.hb-light-mode) .react-datepicker button:hover {
+    background: #e8f4f2 !important;
+    color: #176b62 !important;
+}
+body:has(.hb-light-mode) [data-baseweb="calendar"] [aria-selected="true"],
+body:has(.hb-light-mode) .react-datepicker [aria-selected="true"] {
+    border-radius: 999px !important;
+    background: #2f8f83 !important;
+    color: #ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"],
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"] button {
+    box-sizing: border-box !important;
+    min-width: 1.55rem !important;
+    min-height: 1.55rem !important;
+    border: 1px solid #b9cdd1 !important;
+    border-radius: 50% !important;
+    background: #f3f8f8 !important;
+    color: #42636b !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"] svg {
+    color: #42636b !important;
+    fill: currentColor !important;
+    opacity: 1 !important;
+}
+
+/* Modo oscuro: controles integrados en superficies oscuras con contraste claro. */
+body:not(:has(.hb-light-mode)) [data-testid="stDateInput"] input {
+    box-sizing: border-box !important;
+    min-height: 2.65rem !important;
+    border: 1px solid #465761 !important;
+    border-radius: 11px !important;
+    background: #17232c !important;
+    color: #e2eaee !important;
+    color-scheme: dark !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .16) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stDateInput"] input:focus {
+    border-color: #55b8a9 !important;
+    box-shadow: 0 0 0 3px rgba(85, 184, 169, .17) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInput"] [data-baseweb="input"] {
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    border: 1px solid #465761 !important;
+    border-radius: 11px !important;
+    background: #17232c !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .16) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInput"] input {
+    min-height: 2.55rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #17232c !important;
+    color: #e2eaee !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInput"] button {
+    min-width: 2.55rem !important;
+    min-height: 2.55rem !important;
+    border: 0 !important;
+    border-left: 1px solid #465761 !important;
+    border-radius: 0 !important;
+    background: #22313a !important;
+    color: #c8d6dc !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInput"] button:hover {
+    background: #2b4149 !important;
+    color: #ffffff !important;
+}
+body:not(:has(.hb-light-mode)) [data-baseweb="popover"] [data-baseweb="calendar"],
+body:not(:has(.hb-light-mode)) [data-baseweb="calendar"],
+body:not(:has(.hb-light-mode)) .react-datepicker {
+    color-scheme: dark !important;
+    border: 1px solid #40515a !important;
+    border-radius: 14px !important;
+    background: #18232c !important;
+    color: #e2eaee !important;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .32) !important;
+}
+body:not(:has(.hb-light-mode)) [data-baseweb="calendar"] button,
+body:not(:has(.hb-light-mode)) .react-datepicker button {
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #d4dfe4 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-baseweb="calendar"] button:hover,
+body:not(:has(.hb-light-mode)) .react-datepicker button:hover {
+    background: #293943 !important;
+    color: #ffffff !important;
+}
+body:not(:has(.hb-light-mode)) [data-baseweb="calendar"] [aria-selected="true"],
+body:not(:has(.hb-light-mode)) .react-datepicker [aria-selected="true"] {
+    border-radius: 999px !important;
+    background: #2f8f83 !important;
+    color: #ffffff !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"],
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"] button {
+    box-sizing: border-box !important;
+    min-width: 1.55rem !important;
+    min-height: 1.55rem !important;
+    border: 1px solid #53656f !important;
+    border-radius: 50% !important;
+    background: #1d2a33 !important;
+    color: #c8d6dc !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"] svg {
+    color: #c8d6dc !important;
+    fill: currentColor !important;
+    opacity: 1 !important;
+}
+@media (max-width: 640px) {
+    [data-testid="stDateInput"] input,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stNumberInput"] button {
+        min-height: 2.8rem !important;
+        font-size: 1rem !important;
+    }
+    [data-testid="stNumberInput"] button {
+        min-width: 2.8rem !important;
+    }
+    [data-testid="stTooltipIcon"],
+    [data-testid="stTooltipIcon"] button {
+        min-width: 1.8rem !important;
+        min-height: 1.8rem !important;
+    }
+    [data-baseweb="popover"] [data-baseweb="calendar"],
+    [data-baseweb="calendar"],
+    .react-datepicker {
+        max-width: calc(100vw - 1.5rem) !important;
+        border-radius: 13px !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
