@@ -10590,21 +10590,21 @@ body:not(:has(.hb-light-mode)) .st-key-dashboard_productos_panel {
 
 st.markdown("""
 <style>
-/* Mantiene la identidad de marca arriba de la barra lateral al desplazarse. */
+/* La marca inicia arriba y se desplaza normalmente con el menú lateral. */
 [data-testid="stSidebar"] > div:first-child {
     padding-top: .35rem !important;
 }
 [data-testid="stSidebar"] [data-testid="stElementContainer"]:has(.sidebar-brand) {
-    position: sticky !important;
-    top: 1.1rem !important;
-    z-index: 20 !important;
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
     align-self: stretch !important;
-    margin-top: .65rem !important;
+    margin-top: 0 !important;
     margin-bottom: .5rem !important;
     box-sizing: border-box !important;
 }
 [data-testid="stSidebar"] .sidebar-brand {
-    position: relative !important;
+    position: static !important;
     top: auto !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
