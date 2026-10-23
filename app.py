@@ -7983,16 +7983,16 @@ elif menu == "Ventas":
                 "Precio unitario de la boleta (S/)",
                 min_value=0.01,
                 value=float(productos[indice][5]),
-                step=0.10,
-                help="Si el precio de la boleta antigua difiere del actual, ingresa el que figura en ella."
+                step=0.10
             )
+            st.caption("Si el precio de la boleta antigua difiere del actual, ingresa el que figura en ella.")
 
             fecha_venta = st.date_input(
                 "Fecha de la boleta",
                 value=datetime.now().date(),
-                max_value=datetime.now().date(),
-                help="Para boletas antiguas, selecciona la fecha impresa en el documento."
+                max_value=datetime.now().date()
             )
+            st.caption("Para boletas antiguas, selecciona la fecha impresa en el documento.")
 
             with st.container(key="stock_historico_panel"):
                 descontar_stock_historico = st.checkbox(
