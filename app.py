@@ -4560,14 +4560,14 @@ def pantalla_acceso():
             }
             .login-brand {
                 min-height: auto;
-                padding: 1rem 1.1rem;
+                padding: 1.15rem 1.1rem;
                 border-radius: 16px;
                 box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
             }
             .login-brand-head {
                 gap: 0.8rem;
-                padding-bottom: 0;
-                border-bottom: 0;
+                padding-bottom: 0.8rem;
+                border-bottom: 1px solid rgba(184, 219, 215, 0.16);
             }
             .login-brand-mark {
                 width: 2.8rem;
@@ -4579,10 +4579,28 @@ def pantalla_acceso():
             .login-brand-kicker { margin-bottom: 0.12rem; font-size: 0.58rem; }
             .login-brand-name { font-size: 0.68rem; }
             .login-brand-name-strong { font-size: 1.12rem; }
-            .login-brand-title,
-            .login-brand-subtitle,
+            .login-brand-title {
+                max-width: 100%;
+                margin-top: 0.95rem;
+                font-size: clamp(1.7rem, 7vw, 2.1rem);
+                line-height: 1.08;
+            }
+            .login-brand-subtitle {
+                max-width: 100%;
+                margin-top: 0.55rem;
+                font-size: 0.88rem;
+                line-height: 1.5;
+            }
             .login-brand-features {
-                display: none !important;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0.35rem;
+                margin-top: 0.9rem;
+            }
+            .login-brand-feature {
+                padding-top: 0.5rem;
+                font-size: 0.76rem;
+                line-height: 1.35;
+                white-space: normal;
             }
             .login-form-intro {
                 margin: 0 auto 0.85rem;
@@ -4609,9 +4627,16 @@ def pantalla_acceso():
                 padding: 0.75rem 0.75rem 1.1rem !important;
             }
             .login-brand {
-                padding: 0.85rem 0.95rem;
+                padding: 0.95rem 1rem;
                 border-radius: 14px;
             }
+            .login-brand-mark {
+                width: 2.6rem;
+                height: 2.6rem;
+                flex-basis: 2.6rem;
+            }
+            .login-brand-title { font-size: clamp(1.6rem, 7.5vw, 1.9rem); }
+            .login-brand-subtitle { font-size: 0.84rem; }
             [data-testid="stForm"] {
                 padding: 0.9rem !important;
             }
