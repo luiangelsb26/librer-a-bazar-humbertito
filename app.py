@@ -9292,9 +9292,29 @@ st.markdown("""
     button[aria-label*="collapse sidebar" i],
     button[aria-label*="abrir barra lateral" i],
     button[aria-label*="cerrar barra lateral" i] {
+        position: fixed !important;
         left: 0.65rem !important;
+        right: auto !important;
         top: 0.65rem !important;
-        z-index: 1000001 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 1000005 !important;
+    }
+    [data-testid="stSidebarCollapseButton"] button,
+    [data-testid="stSidebarCollapsedControl"] button,
+    button[aria-label*="open sidebar" i],
+    button[aria-label*="close sidebar" i],
+    button[aria-label*="expand sidebar" i],
+    button[aria-label*="collapse sidebar" i],
+    button[aria-label*="abrir barra lateral" i],
+    button[aria-label*="cerrar barra lateral" i] {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+        min-width: 2.75rem !important;
+        min-height: 2.75rem !important;
+        touch-action: manipulation !important;
     }
 
     /* El selector de tema queda en la franja libre, compacto y sin cubrir las tarjetas. */
@@ -9319,9 +9339,6 @@ st.markdown("""
         width: 1.2rem !important;
         height: 1.2rem !important;
     }
-
-    /* Oculta acciones de alojamiento que no forman parte de la interfaz del negocio. */
-    [data-testid="stToolbar"] { display: none !important; }
 
     [data-testid="stDataFrame"],
     [data-testid="stTable"],
