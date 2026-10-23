@@ -103,11 +103,20 @@ def formatear_soles(valor):
 
 
 def mostrar_tabla_centrada(datos, *args, **kwargs):
-    """Centra de forma consistente los valores de las tablas interactivas."""
+    """Renderiza tablas legibles y centradas con encabezados visibles."""
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
-    configuracion = dict(kwargs.pop("column_config", {}) or {})
+    kwargs.pop("column_config", None)
+    kwargs.pop("key", None)
+    kwargs.pop("on_select", None)
+    kwargs.pop("selection_mode", None)
+    kwargs.pop("selection_default", None)
+    width = kwargs.pop("width", "stretch")
+    height = kwargs.pop("height", "content")
+    hide_index = bool(kwargs.pop("hide_index", False))
 
-    # Las tablas conservan una superficie clara legible en ambos temas.
+    # st.dataframe conserva el color de texto del tema oscuro en el lienzo,
+    # incluso cuando su encabezado o fondo se fuerzan con CSS. st.table genera
+    # HTML nativo, por lo que los encabezados y celdas respetan estos colores.
     color_fondo = "#ffffff"
     color_texto = "#26383e"
     color_cabecera = "#eaf3f3"
@@ -119,6 +128,7 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
                 "background-color": color_fondo,
                 "color": color_texto,
                 "border-color": color_borde,
+                "text-align": "center",
             }
         )
         .set_table_styles(
@@ -130,6 +140,7 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
                         ("color", color_texto),
                         ("border-color", color_borde),
                         ("font-weight", "700"),
+                        ("text-align", "center"),
                     ],
                 },
                 {
@@ -141,94 +152,19 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
         )
     )
 
-    for columna in marco.columns:
-        if columna in configuracion:
-            continue
-        if pd.api.types.is_numeric_dtype(marco[columna]):
-            configuracion[columna] = st.column_config.NumberColumn(
-                str(columna),
-                alignment="center",
-            )
-        else:
-            configuracion[columna] = st.column_config.TextColumn(
-                str(columna),
-                alignment="center",
-            )
+    if hide_index:
+        marco_renderizado = marco_renderizado.hide(axis="index")
 
-    if st.session_state.get("tema_blanco", False):
-        # El lienzo del dataframe mantiene los colores del tema nativo oscuro.
-        # En el tema claro se usa la tabla HTML de Streamlit para garantizar
-        # contraste real en encabezados y celdas, también en teléfonos.
-        hide_index = bool(kwargs.pop("hide_index", False))
-        kwargs.pop("width", None)
-        kwargs.pop("key", None)
-        alto = kwargs.pop("height", 420)
-        kwargs.pop("on_select", None)
-        kwargs.pop("selection_mode", None)
-        kwargs.pop("selection_default", None)
-        try:
-            alto = max(180, min(int(alto), 900))
-        except (TypeError, ValueError):
-            alto = 420
+    try:
+        height = max(180, min(int(height), 900))
+    except (TypeError, ValueError):
+        height = "content"
 
-        if hide_index:
-            marco_renderizado = marco_renderizado.hide(axis="index")
-
-        contador = st.session_state.get("_tabla_clara_contador", 0) + 1
-        st.session_state._tabla_clara_contador = contador
-        clave_tabla = f"static_light_table_{contador}"
-        st.markdown(
-            f"""<style>
-            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] {{
-                max-height: {alto}px !important;
-                overflow: auto !important;
-                width: 100% !important;
-                border: 1px solid #cbdcdf !important;
-                border-radius: 12px !important;
-                background: #ffffff !important;
-                box-shadow: 0 5px 16px rgba(35, 72, 79, .07) !important;
-            }}
-            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] table {{
-                min-width: 100% !important;
-                width: max-content !important;
-                border-collapse: separate !important;
-                border-spacing: 0 !important;
-            }}
-            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] th {{
-                position: sticky !important;
-                top: 0 !important;
-                z-index: 2 !important;
-                background: #e4f1f1 !important;
-                color: #203b42 !important;
-                font-weight: 700 !important;
-                border-color: #cbdcdf !important;
-                white-space: nowrap !important;
-            }}
-            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] td {{
-                background: #ffffff !important;
-                color: #263b42 !important;
-                border-color: #e0e9eb !important;
-                white-space: nowrap !important;
-            }}
-            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] tbody tr:nth-child(even) td {{
-                background: #f4f8f9 !important;
-            }}
-            @media (max-width: 640px) {{
-                body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] {{
-                    max-height: min({alto}px, 58vh) !important;
-                }}
-            }}
-            </style>""",
-            unsafe_allow_html=True,
-        )
-        with st.container(key=clave_tabla):
-            return st.table(marco_renderizado)
-
-    return st.dataframe(
+    return st.table(
         marco_renderizado,
-        *args,
-        column_config=configuracion,
-        **kwargs,
+        width=width,
+        height=height,
+        hide_index=hide_index,
     )
 
 
