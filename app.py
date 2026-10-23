@@ -7423,7 +7423,7 @@ elif menu == "Dashboard gerencial":
     panel_ventas, panel_productos = st.columns([1.2, 1], gap="large")
 
     with panel_ventas:
-        with st.container(border=True):
+        with st.container(key="dashboard_ventas_panel"):
             st.markdown("#### Ventas diarias")
             st.caption("Importe vendido por fecha · soles")
 
@@ -7488,7 +7488,7 @@ elif menu == "Dashboard gerencial":
                 st.info("Aún no hay ventas para mostrar en este periodo.")
 
     with panel_productos:
-        with st.container(border=True):
+        with st.container(key="dashboard_productos_panel"):
             st.markdown("#### Productos más vendidos")
             if not top.empty:
                 top_12 = top.head(12).iloc[::-1]
@@ -10534,6 +10534,56 @@ st.markdown("""
 [data-testid="stTooltipIcon"],
 [data-testid="stWidgetLabel"] button[aria-label*="Help"] {
     display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+/* Tarjetas de gráficos con marco rectangular coherente con el tema activo. */
+body:has(.hb-light-mode) .st-key-dashboard_ventas_panel,
+body:has(.hb-light-mode) .st-key-dashboard_productos_panel {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 1.1rem 1.15rem !important;
+    border: 1px solid #c7d5d9 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(29, 57, 67, .06) !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-dashboard_ventas_panel,
+body:not(:has(.hb-light-mode)) .st-key-dashboard_productos_panel {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 1.1rem 1.15rem !important;
+    border: 1px solid #34424b !important;
+    border-radius: 10px !important;
+    background: #172129 !important;
+    box-shadow: 0 5px 16px rgba(0, 0, 0, .18) !important;
+}
+.st-key-dashboard_ventas_panel h3,
+.st-key-dashboard_productos_panel h3 {
+    margin-top: 0 !important;
+    margin-bottom: .35rem !important;
+}
+.st-key-dashboard_ventas_panel [data-testid="stCaptionContainer"],
+.st-key-dashboard_productos_panel [data-testid="stCaptionContainer"] {
+    margin-bottom: .45rem !important;
+}
+.st-key-dashboard_ventas_chart,
+.st-key-dashboard_productos_chart {
+    min-width: 0 !important;
+    width: 100% !important;
+}
+@media (max-width: 640px) {
+    .st-key-dashboard_ventas_panel,
+    .st-key-dashboard_productos_panel {
+        height: auto !important;
+        padding: .8rem !important;
+        border-radius: 9px !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
