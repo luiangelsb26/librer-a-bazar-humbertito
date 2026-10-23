@@ -7122,13 +7122,12 @@ elif menu == "Administrar usuarios":
             for u in usuarios
         ]
 
-        with st.container(key="registered_users_table"):
-            st.table(
-                pd.DataFrame(tabla_usuarios)
-                .style
-                .hide(axis="index")
-                .set_properties(**{"text-align": "center"}),
+        with st.container(key="registered_users_table_shared"):
+            mostrar_tabla_centrada(
+                pd.DataFrame(tabla_usuarios),
+                hide_index=True,
                 width="stretch",
+                height="content",
             )
 
         usuarios_eliminables = [
