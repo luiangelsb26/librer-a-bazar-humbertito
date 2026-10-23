@@ -10,6 +10,7 @@ import unicodedata
 from datetime import datetime
 import analysis
 import prediction
+import pdf_report
 import database
 import auth
 
@@ -8591,9 +8592,9 @@ elif menu == "Predicción de demanda":
     st.header("Predicción de demanda", icon=":material/trending_up:")
 
     st.write(
-        "Modelos de aprendizaje automático que aprenden patrones de demanda "
-        "del historial de ventas. El sistema compara Random Forest y Extra Trees "
-        "con las mismas fechas de evaluación y selecciona el de menor error."
+        "Pronóstico de demanda a partir del historial de ventas. El sistema "
+        "compara alternativas con las mismas fechas de evaluación y conserva "
+        "la que obtiene menor error."
     )
 
     st.info(
@@ -8609,7 +8610,7 @@ elif menu == "Predicción de demanda":
     estado_actual = prediction.estado_modelo()
     if estado_actual["estado"] == "ok":
         st.success(
-            f"Modelo activo: {estado_actual['algoritmo']}. "
+            "Pronóstico disponible con el historial validado. "
             f"Entrenado el {estado_actual['fecha_entrenamiento']}; "
             f"historial hasta {estado_actual['fecha_fin_historial']}."
         )
@@ -8637,7 +8638,7 @@ elif menu == "Predicción de demanda":
         st.info(estado_actual.get("mensaje", "Entrene el modelo para habilitar predicciones."))
 
     if st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
-        with st.spinner("Preparando el historial y comparando modelos..."):
+        with st.spinner("Preparando el historial y evaluando el pronóstico..."):
             resultado_entrenamiento = prediction.entrenar_modelo()
         evaluacion = resultado_entrenamiento.get("evaluacion", {})
         if resultado_entrenamiento["estado"] == "ok":
@@ -8657,16 +8658,10 @@ elif menu == "Predicción de demanda":
                 f"{evaluacion['observaciones_prueba']} observaciones en "
                 f"{evaluacion['ventanas_prueba_7_dias']} ventanas de 7 días."
             )
-            modelos_comparados = evaluacion.get("modelos_comparados", {})
-            if modelos_comparados:
-                resumen_modelos = "; ".join(
-                    f"{nombre}: MAE {mae:.2f}"
-                    for nombre, mae in modelos_comparados.items()
-                )
-                st.caption(
-                    f"Comparación en las mismas fechas: {resumen_modelos}. "
-                    "Se selecciona el candidato con menor MAE."
-                )
+            st.caption(
+                "Se compararon alternativas con las mismas fechas de prueba y "
+                "se seleccionó la que obtuvo menor error."
+            )
 
     productos = prediction.obtener_productos()
 
@@ -8725,8 +8720,8 @@ elif menu == "Predicción de demanda":
 
                 with c3:
                     st.metric(
-                        "Modelo",
-                        resultado["algoritmo"]
+                        "Estado del pronóstico",
+                        "Disponible"
                     )
 
                 evaluacion = resultado.get("evaluacion", {})
@@ -8852,6 +8847,63 @@ elif menu == "Predicción de demanda":
                     st.success(
                         "El stock actual cubre la demanda estimada "
                         "y el stock mínimo configurado."
+                    )
+
+                filas_pdf = [
+                    [
+                        pd.to_datetime(fecha).strftime("%d/%m/%Y"),
+                        formatear_numero_es(valor, 2),
+                    ]
+                    for fecha, valor in zip(
+                        resultado["fechas_prediccion"],
+                        resultado["predicciones"],
+                    )
+                ]
+                periodo_pdf = (
+                    f"{pd.to_datetime(resultado['fechas_prediccion'][0]).strftime('%d/%m/%Y')} "
+                    f"al {pd.to_datetime(resultado['fechas_prediccion'][-1]).strftime('%d/%m/%Y')}"
+                )
+                datos_informe_pdf = {
+                    "nombre_producto": producto["nombre"],
+                    "codigo_producto": producto["codigo"],
+                    "periodo": periodo_pdf,
+                    "dias_historicos": resultado["dias_historicos"],
+                    "fecha_ultima_venta": pd.to_datetime(
+                        resultado["fecha_ultima_venta_producto"]
+                    ).strftime("%d/%m/%Y"),
+                    "fecha_base": pd.to_datetime(
+                        resultado["fecha_base_prediccion"]
+                    ).strftime("%d/%m/%Y"),
+                    "demanda_predicha": resultado["demanda_predicha"],
+                    "promedio_diario": resultado["promedio_diario_predicho"],
+                    "stock_actual": stock_actual,
+                    "stock_minimo": stock_minimo,
+                    "cantidad_sugerida": cantidad_sugerida,
+                    "filas_prediccion": filas_pdf,
+                    "evaluacion": resultado.get("evaluacion", {}),
+                }
+                try:
+                    contenido_pdf = pdf_report.construir_informe_prediccion(
+                        datos_informe_pdf
+                    )
+                    codigo_archivo = re.sub(
+                        r"[^a-z0-9_-]+",
+                        "-",
+                        str(producto["codigo"]).lower(),
+                    ).strip("-") or "producto"
+                    st.download_button(
+                        "Descargar informe PDF",
+                        data=contenido_pdf,
+                        file_name=f"diagnostico_demanda_{codigo_archivo}.pdf",
+                        mime="application/pdf",
+                        on_click="ignore",
+                        key="descargar_informe_prediccion_pdf",
+                        use_container_width=True,
+                    )
+                except ImportError:
+                    st.error(
+                        "No está instalada la dependencia para generar PDF. "
+                        "Instale las dependencias del proyecto y vuelva a intentarlo."
                     )
 
             else:

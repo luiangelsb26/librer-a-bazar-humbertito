@@ -419,7 +419,7 @@ def entrenar_modelo():
         return {
             "estado": "no_supera_baseline",
             "mensaje": (
-                f"El mejor candidato ({algoritmo}) no mejoro el error de la referencia "
+                "El mejor modelo evaluado no mejoro el error de la referencia "
                 "de ventas de hace 7 dias. No se activo el modelo; acumule mas historial "
                 "y vuelva a evaluar."
             ),
