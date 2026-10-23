@@ -107,8 +107,7 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
     configuracion = dict(kwargs.pop("column_config", {}) or {})
 
-    # Las tablas conservan una superficie clara legible en ambos temas;
-    # Streamlit dibuja sus encabezados con el tema nativo del servidor.
+    # Las tablas conservan una superficie clara legible en ambos temas.
     color_fondo = "#ffffff"
     color_texto = "#26383e"
     color_cabecera = "#eaf3f3"
@@ -155,6 +154,75 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
                 str(columna),
                 alignment="center",
             )
+
+    if st.session_state.get("tema_blanco", False):
+        # El lienzo del dataframe mantiene los colores del tema nativo oscuro.
+        # En el tema claro se usa la tabla HTML de Streamlit para garantizar
+        # contraste real en encabezados y celdas, también en teléfonos.
+        hide_index = bool(kwargs.pop("hide_index", False))
+        kwargs.pop("width", None)
+        kwargs.pop("key", None)
+        alto = kwargs.pop("height", 420)
+        kwargs.pop("on_select", None)
+        kwargs.pop("selection_mode", None)
+        kwargs.pop("selection_default", None)
+        try:
+            alto = max(180, min(int(alto), 900))
+        except (TypeError, ValueError):
+            alto = 420
+
+        if hide_index:
+            marco_renderizado = marco_renderizado.hide(axis="index")
+
+        contador = st.session_state.get("_tabla_clara_contador", 0) + 1
+        st.session_state._tabla_clara_contador = contador
+        clave_tabla = f"static_light_table_{contador}"
+        st.markdown(
+            f"""<style>
+            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] {{
+                max-height: {alto}px !important;
+                overflow: auto !important;
+                width: 100% !important;
+                border: 1px solid #cbdcdf !important;
+                border-radius: 12px !important;
+                background: #ffffff !important;
+                box-shadow: 0 5px 16px rgba(35, 72, 79, .07) !important;
+            }}
+            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] table {{
+                min-width: 100% !important;
+                width: max-content !important;
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+            }}
+            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] th {{
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 2 !important;
+                background: #e4f1f1 !important;
+                color: #203b42 !important;
+                font-weight: 700 !important;
+                border-color: #cbdcdf !important;
+                white-space: nowrap !important;
+            }}
+            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] td {{
+                background: #ffffff !important;
+                color: #263b42 !important;
+                border-color: #e0e9eb !important;
+                white-space: nowrap !important;
+            }}
+            body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] tbody tr:nth-child(even) td {{
+                background: #f4f8f9 !important;
+            }}
+            @media (max-width: 640px) {{
+                body:has(.hb-light-mode) .st-key-{clave_tabla} [data-testid="stTable"] {{
+                    max-height: min({alto}px, 58vh) !important;
+                }}
+            }}
+            </style>""",
+            unsafe_allow_html=True,
+        )
+        with st.container(key=clave_tabla):
+            return st.table(marco_renderizado)
 
     return st.dataframe(
         marco_renderizado,
@@ -7975,15 +8043,16 @@ elif menu == "Ventas":
                 help="Para boletas antiguas, selecciona la fecha impresa en el documento."
             )
 
-            descontar_stock_historico = st.checkbox(
-                "También descontar esta venta histórica del stock actual",
-                value=False,
-                key="stock_historico_checkbox",
-                help=(
-                    "Déjalo desmarcado si el stock actual ya refleja las ventas que "
-                    "ocurrieron. Márcalo solo si todavía necesitas descontar esta cantidad."
+            with st.container(key="stock_historico_panel"):
+                descontar_stock_historico = st.checkbox(
+                    "También descontar esta venta histórica del stock actual",
+                    value=False,
+                    key="stock_historico_checkbox",
                 )
-            )
+                st.caption(
+                    "Márcalo solo si esta venta todavía debe restarse del stock actual. "
+                    "Déjalo desmarcado si el inventario ya refleja esa venta."
+                )
 
             vender = st.form_submit_button(
                 "Registrar venta"
@@ -9519,6 +9588,65 @@ body:has(.hb-light-mode) [data-testid="stFileUploader"] button {
     border-color: #c8dcdf !important;
     background: #ffffff !important;
     color: #29474e !important;
+}
+
+/* Mensajes de ayuda y confirmación con texto legible y un borde definido. */
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlertContainer"] {
+    border: 1px solid #cbdde1 !important;
+    border-left-width: 5px !important;
+    border-radius: 12px !important;
+    padding: 0.85rem 1rem !important;
+    box-shadow: 0 5px 14px rgba(35, 72, 79, .08) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlertContainer"] p {
+    color: #243a42 !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
+    background: #e5f1fb !important;
+    border-color: #bed5e9 !important;
+    border-left-color: #397db5 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
+    background: #fff4dc !important;
+    border-color: #ead49d !important;
+    border-left-color: #bb8110 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+    background: #e6f5eb !important;
+    border-color: #c4e1cc !important;
+    border-left-color: #318355 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
+    background: #fdebea !important;
+    border-color: #edc5c2 !important;
+    border-left-color: #bd4c47 !important;
+}
+
+/* La casilla de ventas históricas y su explicación forman un único bloque. */
+body:has(.hb-light-mode) .st-key-stock_historico_panel {
+    padding: 0.85rem 1rem 0.55rem !important;
+    border: 1px solid #cbdde0 !important;
+    border-radius: 12px !important;
+    background: #f3f8f8 !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox label,
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox label p {
+    color: #263b42 !important;
+    font-weight: 650 !important;
+    line-height: 1.45 !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_checkbox input[type="checkbox"] {
+    width: 1.1rem !important;
+    height: 1.1rem !important;
+    accent-color: #238b7d !important;
+}
+body:has(.hb-light-mode) .st-key-stock_historico_panel [data-testid="stCaptionContainer"] p {
+    margin: 0.25rem 0 0 !important;
+    color: #4b6269 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.45 !important;
 }
 </style>
 """, unsafe_allow_html=True)
