@@ -37,10 +37,46 @@ def notificar_exito(mensaje):
 
 
 def mostrar_grafico_fijo(figura, clave):
-    """Muestra una gráfica fija, conserva la información emergente al pasar."""
-    figura.update_xaxes(fixedrange=True)
-    figura.update_yaxes(fixedrange=True)
-    figura.update_layout(dragmode=False)
+    """Muestra gráficas legibles en tema claro y oscuro, también en móvil."""
+    tema_claro = bool(st.session_state.get("tema_blanco", False))
+    color_texto = "#34464f" if tema_claro else "#d7e1e5"
+    color_eje = "#647780" if tema_claro else "#aab8bf"
+    color_cuadricula = (
+        "rgba(66, 91, 101, 0.20)"
+        if tema_claro
+        else "rgba(145, 160, 174, 0.22)"
+    )
+    color_hover = "#ffffff" if tema_claro else "#18232c"
+
+    # El tema Streamlit puede asignar etiquetas muy claras aun con fondo blanco.
+    # Fijamos explícitamente colores de ejes, categorías, cuadrícula y hover.
+    figura.update_xaxes(
+        fixedrange=True,
+        tickfont={"color": color_eje, "size": 12},
+        title_font={"color": color_texto},
+        linecolor=color_cuadricula,
+        gridcolor=color_cuadricula,
+        zerolinecolor=color_cuadricula,
+    )
+    figura.update_yaxes(
+        fixedrange=True,
+        tickfont={"color": color_eje, "size": 12},
+        title_font={"color": color_texto},
+        linecolor=color_cuadricula,
+        gridcolor=color_cuadricula,
+        zerolinecolor=color_cuadricula,
+    )
+    figura.update_layout(
+        dragmode=False,
+        font={"color": color_texto},
+        hoverlabel={
+            "bgcolor": color_hover,
+            "font": {"color": color_texto, "size": 13},
+            "bordercolor": color_cuadricula,
+        },
+    )
+    # Asegura contraste en etiquetas numéricas colocadas sobre las barras.
+    figura.update_traces(textfont={"color": color_texto})
     st.plotly_chart(
         figura,
         config={
@@ -9304,8 +9340,8 @@ st.markdown("""
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        height: 340px !important;
-        min-height: 340px !important;
+        height: 380px !important;
+        min-height: 380px !important;
         box-sizing: border-box !important;
     }
 
