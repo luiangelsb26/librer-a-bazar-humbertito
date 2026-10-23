@@ -10621,5 +10621,26 @@ body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] .sidebar-brand {
     border-left-color: #2d8177 !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, .2) !important;
 }
+@media (max-width: 640px) {
+    [data-testid="stSidebar"] {
+        width: min(270px, calc(100vw - 2rem)) !important;
+        min-width: min(270px, calc(100vw - 2rem)) !important;
+        max-width: min(270px, calc(100vw - 2rem)) !important;
+        flex: 0 0 min(270px, calc(100vw - 2rem)) !important;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding-right: .6rem !important;
+        padding-left: .6rem !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stElementContainer"]:has(.sidebar-brand),
+    [data-testid="stSidebar"] .sidebar-brand {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
