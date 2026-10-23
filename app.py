@@ -10596,10 +10596,10 @@ st.markdown("""
 }
 [data-testid="stSidebar"] [data-testid="stElementContainer"]:has(.sidebar-brand) {
     position: sticky !important;
-    top: .25rem !important;
+    top: 1.1rem !important;
     z-index: 20 !important;
     align-self: stretch !important;
-    margin-top: 0 !important;
+    margin-top: .65rem !important;
     margin-bottom: .5rem !important;
     box-sizing: border-box !important;
 }
