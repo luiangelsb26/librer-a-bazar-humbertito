@@ -10354,3 +10354,133 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
+# Iconos de ayuda con contraste y estados claros en ambos temas.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"],
+body:has(.hb-light-mode) [data-testid="stWidgetLabel"] button[aria-label*="Help"] {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.7rem !important;
+    height: 1.7rem !important;
+    min-width: 1.7rem !important;
+    min-height: 1.7rem !important;
+    padding: 0 !important;
+    border: 1px solid #8ab9b4 !important;
+    border-radius: 50% !important;
+    background: #eaf6f4 !important;
+    color: #236b63 !important;
+    opacity: 1 !important;
+    box-shadow: 0 1px 3px rgba(31, 89, 83, .12) !important;
+    vertical-align: middle !important;
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease !important;
+}
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"] button,
+body:has(.hb-light-mode) [data-testid="stWidgetLabel"] button[aria-label*="Help"] {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"]:hover,
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"] button:hover,
+body:has(.hb-light-mode) [data-testid="stWidgetLabel"] button[aria-label*="Help"]:hover {
+    border-color: #418f85 !important;
+    background: #d8eeea !important;
+    color: #145f57 !important;
+    box-shadow: 0 0 0 3px rgba(47, 143, 131, .13) !important;
+    transform: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"] svg,
+body:has(.hb-light-mode) [data-testid="stWidgetLabel"] button[aria-label*="Help"] svg {
+    width: .9rem !important;
+    height: .9rem !important;
+    color: currentColor !important;
+    fill: currentColor !important;
+    opacity: 1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTooltipIcon"]:focus-visible,
+body:has(.hb-light-mode) [data-testid="stWidgetLabel"] button[aria-label*="Help"]:focus-visible {
+    outline: 3px solid rgba(47, 143, 131, .3) !important;
+    outline-offset: 2px !important;
+}
+
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"],
+body:not(:has(.hb-light-mode)) [data-testid="stWidgetLabel"] button[aria-label*="Help"] {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.7rem !important;
+    height: 1.7rem !important;
+    min-width: 1.7rem !important;
+    min-height: 1.7rem !important;
+    padding: 0 !important;
+    border: 1px solid #628f8b !important;
+    border-radius: 50% !important;
+    background: #20343a !important;
+    color: #b7e0d9 !important;
+    opacity: 1 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .22) !important;
+    vertical-align: middle !important;
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"] button,
+body:not(:has(.hb-light-mode)) [data-testid="stWidgetLabel"] button[aria-label*="Help"] {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"]:hover,
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"] button:hover,
+body:not(:has(.hb-light-mode)) [data-testid="stWidgetLabel"] button[aria-label*="Help"]:hover {
+    border-color: #78c9bb !important;
+    background: #29464b !important;
+    color: #e3f8f3 !important;
+    box-shadow: 0 0 0 3px rgba(85, 184, 169, .16) !important;
+    transform: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"] svg,
+body:not(:has(.hb-light-mode)) [data-testid="stWidgetLabel"] button[aria-label*="Help"] svg {
+    width: .9rem !important;
+    height: .9rem !important;
+    color: currentColor !important;
+    fill: currentColor !important;
+    opacity: 1 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"]:focus-visible,
+body:not(:has(.hb-light-mode)) [data-testid="stWidgetLabel"] button[aria-label*="Help"]:focus-visible {
+    outline: 3px solid rgba(85, 184, 169, .38) !important;
+    outline-offset: 2px !important;
+}
+@media (max-width: 640px) {
+    body:has(.hb-light-mode) [data-testid="stTooltipIcon"],
+    body:not(:has(.hb-light-mode)) [data-testid="stTooltipIcon"],
+    body:has(.hb-light-mode) [data-testid="stWidgetLabel"] button[aria-label*="Help"],
+    body:not(:has(.hb-light-mode)) [data-testid="stWidgetLabel"] button[aria-label*="Help"] {
+        width: 1.9rem !important;
+        height: 1.9rem !important;
+        min-width: 1.9rem !important;
+        min-height: 1.9rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
