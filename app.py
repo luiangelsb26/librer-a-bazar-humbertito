@@ -9128,6 +9128,9 @@ st.markdown("""
     margin: 0 !important;
     border: 0 !important;
     border-radius: 14px !important;
+    max-width: 1200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     overflow: hidden !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -9138,7 +9141,8 @@ st.markdown("""
 .st-key-registered_users_table [data-testid="stTable"] table {
     display: table !important;
     width: 100% !important;
-    margin: 0 !important;
+    max-width: 1200px !important;
+    margin: .35rem auto !important;
     border: 1px solid #b8cbce !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
@@ -9198,20 +9202,33 @@ st.markdown("""
 
 /* Tema oscuro: conservar el marco y las uniones de los bordes. */
 body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] table {
-    border-color: #344650 !important;
+    border-color: #28343c !important;
     background: #171e23 !important;
 }
 body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] th {
     background: #202a31 !important;
     color: #e7edf0 !important;
-    border-right-color: #344650 !important;
-    border-bottom-color: #344650 !important;
+    border-right-color: #2b3740 !important;
+    border-bottom-color: #2b3740 !important;
+    font-size: .74rem !important;
+    letter-spacing: .035em !important;
+    padding: .9rem .85rem !important;
 }
 body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] td {
     background: #171e23 !important;
     color: #d9e1e5 !important;
-    border-right-color: #344650 !important;
-    border-bottom-color: #344650 !important;
+    border-right-color: #2b3740 !important;
+    border-bottom-color: #2b3740 !important;
+    padding: .92rem .85rem !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] td:nth-child(1),
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] td:nth-child(6) {
+    color: #aebbc2 !important;
+    font-size: .84rem !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] td:nth-child(3) {
+    color: #f0f5f6 !important;
+    font-weight: 700 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -9236,7 +9253,7 @@ st.markdown("""
     content: "" !important;
     position: absolute !important;
     inset: 0 !important;
-    border: 1px solid #263b44 !important;
+    border: 1px solid #bccbd0 !important;
     border-radius: 14px !important;
     box-sizing: border-box !important;
     pointer-events: none !important;
@@ -9946,15 +9963,15 @@ body:not(:has(.hb-light-mode)) [data-testid="stCheckbox"] [role="checkbox"][aria
 
 /* La tabla de usuarios tenía una paleta propia con separadores más claros. */
 body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"]::after {
-    border-color: #303b44 !important;
+    border-color: #28343c !important;
 }
 body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] table {
-    border-color: #303b44 !important;
+    border-color: #28343c !important;
 }
 body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] th,
 body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTable"] td {
-    border-right-color: #2b3740 !important;
-    border-bottom-color: #2b3740 !important;
+    border-right-color: #27323a !important;
+    border-bottom-color: #27323a !important;
 }
 
 /* En pantallas táctiles, cada tabla conserva sus columnas y se desplaza dentro de su marco. */
@@ -10001,6 +10018,14 @@ body:not(:has(.hb-light-mode)) .st-key-registered_users_table [data-testid="stTa
     [data-testid="stTable"] td {
         padding: .62rem .68rem !important;
         font-size: .84rem !important;
+    }
+    .st-key-registered_users_table [data-testid="stTable"] {
+        max-width: 100% !important;
+        overflow-x: auto !important;
+    }
+    .st-key-registered_users_table [data-testid="stTable"] table {
+        min-width: 650px !important;
+        max-width: none !important;
     }
     [data-testid="stVerticalBlockBorderWrapper"],
     [data-testid="stForm"],
