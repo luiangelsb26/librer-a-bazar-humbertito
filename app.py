@@ -10592,7 +10592,7 @@ st.markdown("""
 <style>
 /* La marca inicia arriba y se desplaza normalmente con el menú lateral. */
 [data-testid="stSidebar"] > div:first-child {
-    padding-top: .35rem !important;
+    padding-top: 0 !important;
 }
 [data-testid="stSidebar"] [data-testid="stElementContainer"]:has(.sidebar-brand) {
     position: static !important;
