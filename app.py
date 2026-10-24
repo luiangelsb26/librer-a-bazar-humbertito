@@ -10599,7 +10599,7 @@ st.markdown("""
     top: auto !important;
     z-index: auto !important;
     align-self: stretch !important;
-    margin-top: -.3rem !important;
+    margin-top: -.5rem !important;
     margin-bottom: .5rem !important;
     box-sizing: border-box !important;
 }
