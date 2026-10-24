@@ -209,6 +209,11 @@ def alternar_tema():
     st.session_state.tema_blanco = not st.session_state.tema_blanco
 
 
+def seleccionar_modulo(nombre):
+    """Cambia el módulo antes del rerun natural del clic de navegación."""
+    st.session_state.menu = nombre
+
+
 st.markdown("""
     <style>
     
@@ -4352,14 +4357,20 @@ with st.sidebar:
     )
     st.divider()
 
-database.crear_base_datos()
+@st.cache_resource(show_spinner=False)
+def preparar_esquema_sistema():
+    """Prepara las tablas una sola vez por proceso, no en cada interacción."""
+    database.crear_base_datos()
+    auth.inicializar()
+    return True
+
+
+preparar_esquema_sistema()
 
 
 # ==========================================================
 # AUTENTICACIÓN Y CONTROL DE ACCESO
 # ==========================================================
-
-auth.inicializar()
 
 if not database.usar_supabase():
     st.warning(
@@ -6818,9 +6829,13 @@ with st.sidebar:
 
     for indice, opcion in enumerate(opciones_menu):
         clave = "menu_active" if opcion == st.session_state.menu else f"menu_item_{indice}"
-        if st.button(opcion, key=clave, icon=iconos_menu[opcion]):
-            st.session_state.menu = opcion
-            st.rerun()
+        st.button(
+            opcion,
+            key=clave,
+            icon=iconos_menu[opcion],
+            on_click=seleccionar_modulo,
+            args=(opcion,),
+        )
 
     menu = st.session_state.menu
 
@@ -6935,13 +6950,13 @@ if menu == "Inicio":
             """,
             unsafe_allow_html=True,
         )
-        if st.button(
+        st.button(
             "Ir a productos",
             key="quick_productos",
             icon=":material/inventory_2:",
-        ):
-            st.session_state.menu = "Productos"
-            st.rerun()
+            on_click=seleccionar_modulo,
+            args=("Productos",),
+        )
 
     with a2:
         st.markdown(
@@ -6953,13 +6968,13 @@ if menu == "Inicio":
             """,
             unsafe_allow_html=True,
         )
-        if st.button(
+        st.button(
             "Ir a ventas",
             key="quick_ventas",
             icon=":material/point_of_sale:",
-        ):
-            st.session_state.menu = "Ventas"
-            st.rerun()
+            on_click=seleccionar_modulo,
+            args=("Ventas",),
+        )
 
     with a3:
         st.markdown(
@@ -6971,13 +6986,13 @@ if menu == "Inicio":
             """,
             unsafe_allow_html=True,
         )
-        if st.button(
+        st.button(
             "Ir a compras",
             key="quick_compras",
             icon=":material/shopping_cart:",
-        ):
-            st.session_state.menu = "Compras"
-            st.rerun()
+            on_click=seleccionar_modulo,
+            args=("Compras",),
+        )
 
     with a4:
         st.markdown(
@@ -6989,13 +7004,13 @@ if menu == "Inicio":
             """,
             unsafe_allow_html=True,
         )
-        if st.button(
+        st.button(
             "Ver dashboard",
             key="quick_dashboard",
             icon=":material/dashboard:",
-        ):
-            st.session_state.menu = "Dashboard gerencial"
-            st.rerun()
+            on_click=seleccionar_modulo,
+            args=("Dashboard gerencial",),
+        )
 
     with st.container(border=True):
         st.subheader("Estado del inventario", icon=":material/inventory_2:")
@@ -7007,15 +7022,15 @@ if menu == "Inicio":
                     f"{operacion['stock_bajo']} producto(s) requieren revisión."
                 )
             with action_column:
-                if st.button(
+                st.button(
                     "Revisar inventario",
                     key="quick_stock_review",
                     icon=":material/arrow_forward:",
                     type="primary",
                     width="stretch",
-                ):
-                    st.session_state.menu = "Productos"
-                    st.rerun()
+                    on_click=seleccionar_modulo,
+                    args=("Productos",),
+                )
 
             mostrar_tabla_centrada(
                 [
