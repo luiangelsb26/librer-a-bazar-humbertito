@@ -26,20 +26,25 @@ def obtener_datos_ventas():
 
     consulta = """
         SELECT
-            v.fecha,
+            substr(v.fecha, 1, 10) AS fecha,
             p.id AS producto_id,
             p.codigo,
             p.nombre,
             p.categoria,
-            dv.cantidad,
-            dv.precio_unitario,
-            dv.subtotal
+            SUM(dv.cantidad) AS cantidad,
+            SUM(dv.subtotal) AS subtotal
         FROM ventas v
         JOIN detalle_ventas dv
             ON v.id = dv.venta_id
         JOIN productos p
             ON dv.producto_id = p.id
-        ORDER BY v.fecha
+        GROUP BY
+            substr(v.fecha, 1, 10),
+            p.id,
+            p.codigo,
+            p.nombre,
+            p.categoria
+        ORDER BY fecha, p.nombre
     """
 
     df = pd.read_sql_query(
@@ -59,9 +64,10 @@ def obtener_datos_ventas():
 # PRODUCTOS MÁS VENDIDOS
 # ==========================================================
 
-def productos_mas_vendidos():
+def productos_mas_vendidos(df=None):
 
-    df = obtener_datos_ventas()
+    if df is None:
+        df = obtener_datos_ventas()
 
     if df.empty:
         return pd.DataFrame()
@@ -182,8 +188,12 @@ def tendencia_ventas(df=None):
     fecha_fin = pd.Timestamp.now().normalize()
     fecha_inicio = fecha_fin - pd.Timedelta(days=89)
     fechas = pd.date_range(fecha_inicio, fecha_fin, freq="D")
+    datos_recientes = df.loc[
+        (df["fecha"] >= fecha_inicio)
+        & (df["fecha"] < fecha_fin + pd.Timedelta(days=1))
+    ]
     diario = (
-        df.assign(fecha=df["fecha"].dt.normalize())
+        datos_recientes.assign(fecha=datos_recientes["fecha"].dt.normalize())
         .groupby("fecha")["subtotal"]
         .sum()
         .reindex(fechas, fill_value=0)

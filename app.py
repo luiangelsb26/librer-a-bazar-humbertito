@@ -5002,6 +5002,7 @@ def obtener_productos():
     return resultado
 
 
+@st.cache_data(ttl=60, show_spinner=False, max_entries=3)
 def generar_excel_productos(productos):
     columnas = [
         "ID",
@@ -5071,6 +5072,7 @@ def generar_excel_productos(productos):
     return archivo.getvalue()
 
 
+@st.cache_data(ttl=60, show_spinner=False, max_entries=3)
 def crear_plantilla_productos_excel():
     """Genera una plantilla para registrar productos desde Excel."""
     columnas = [
@@ -5606,6 +5608,7 @@ def eliminar_todos_productos():
 # VENTAS
 # ==========================================================
 
+@st.cache_data(ttl=60, show_spinner=False, max_entries=3)
 def crear_plantilla_ventas_excel():
     """Genera una plantilla vacía para importar ventas históricas."""
     archivo = io.BytesIO()
@@ -6327,6 +6330,17 @@ def registrar_compra(producto_id, cantidad, precio_compra):
 
     finally:
         con.close()
+
+
+@st.cache_data(ttl=60, show_spinner=False, max_entries=3)
+@st.cache_data(ttl=60, show_spinner=False, max_entries=3)
+def generar_excel_historial_compras(tabla):
+    salida = io.BytesIO()
+    with pd.ExcelWriter(salida, engine="openpyxl") as escritor:
+        pd.DataFrame(tabla).to_excel(
+            escritor, index=False, sheet_name="Historial de compras"
+        )
+    return salida.getvalue()
 
 
 def crear_plantilla_compras_excel():
@@ -8594,14 +8608,9 @@ elif menu == "Compras":
                 height=420,
             )
 
-            salida_compras = io.BytesIO()
-            with pd.ExcelWriter(salida_compras, engine="openpyxl") as escritor:
-                pd.DataFrame(tabla).to_excel(
-                    escritor, index=False, sheet_name="Historial de compras"
-                )
             st.download_button(
                 "Descargar historial de compras en Excel",
-                data=salida_compras.getvalue(),
+                data=generar_excel_historial_compras(tabla),
                 file_name="historial_compras_humbertito.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 key="descargar_historial_compras",
@@ -8753,7 +8762,7 @@ elif menu == "Análisis inteligente":
 
     st.subheader("Productos más vendidos")
 
-    top = analysis.productos_mas_vendidos()
+    top = analysis.productos_mas_vendidos(datos_historicos)
 
     if not top.empty:
         mostrar_tabla_centrada(top, width="stretch", hide_index=True, height=360)
