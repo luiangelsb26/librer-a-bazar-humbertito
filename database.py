@@ -1,5 +1,7 @@
+import atexit
 import os
 import sqlite3
+import threading
 from pathlib import Path
 
 # Ubicación de la base de datos local
@@ -9,6 +11,8 @@ _DATABASE_URL = os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_UR
 
 # Si la conexión a Supabase falla, la app debe seguir funcionando con sqlite local.
 _FALLBACK_SQLITE = False
+_POSTGRES_POOL = None
+_POOL_LOCK = threading.Lock()
 
 
 class _CursorPostgres:
@@ -47,8 +51,9 @@ class _CursorPostgres:
 
 
 class _ConexionPostgres:
-    def __init__(self, conexion):
+    def __init__(self, conexion, pool=None):
         self._conexion = conexion
+        self._pool = pool
 
     def cursor(self):
         return _CursorPostgres(self._conexion.cursor())
@@ -66,7 +71,38 @@ class _ConexionPostgres:
         self._conexion.rollback()
 
     def close(self):
-        self._conexion.close()
+        conexion = self._conexion
+        if conexion is None:
+            return
+        self._conexion = None
+        if self._pool is None:
+            conexion.close()
+        else:
+            self._pool.putconn(conexion)
+
+
+def _obtener_pool_postgres():
+    """Crea una piscina pequeña compartida para reutilizar conexiones TLS."""
+    global _POSTGRES_POOL
+
+    if _POSTGRES_POOL is None:
+        with _POOL_LOCK:
+            if _POSTGRES_POOL is None:
+                from psycopg_pool import ConnectionPool
+
+                _POSTGRES_POOL = ConnectionPool(
+                    conninfo=_DATABASE_URL,
+                    min_size=1,
+                    max_size=5,
+                    timeout=10,
+                    open=True,
+                    kwargs={
+                        "connect_timeout": 8,
+                        "sslmode": "require",
+                    },
+                )
+                atexit.register(_POSTGRES_POOL.close)
+    return _POSTGRES_POOL
 
 
 def configurar_desde_streamlit():
@@ -116,13 +152,43 @@ def conectar():
             return sqlite3.connect(DB_PATH)
 
         try:
-            return _ConexionPostgres(
-                psycopg.connect(_DATABASE_URL, connect_timeout=20, sslmode="require")
-            )
+            from psycopg_pool import PoolTimeout
+        except ModuleNotFoundError:
+            # Conserva compatibilidad si el pool todavía no está instalado.
+            try:
+                return _ConexionPostgres(
+                    psycopg.connect(
+                        _DATABASE_URL,
+                        connect_timeout=8,
+                        sslmode="require",
+                    )
+                )
+            except Exception:
+                _FALLBACK_SQLITE = True
+                _DATABASE_URL = None
+                return sqlite3.connect(DB_PATH)
+
+        pool = None
+        try:
+            pool = _obtener_pool_postgres()
+            conexion = pool.getconn(timeout=10)
+            return _ConexionPostgres(conexion, pool)
+        except PoolTimeout:
+            # No cambiar de base si las conexiones existentes solo están ocupadas:
+            # hacerlo separaría las escrituras entre Supabase y SQLite.
+            if pool is not None and pool.get_stats().get("pool_size", 0) > 0:
+                raise
         except Exception:
-            _FALLBACK_SQLITE = True
-            _DATABASE_URL = None
-            return sqlite3.connect(DB_PATH)
+            pass
+
+        if pool is not None:
+            try:
+                pool.close()
+            except Exception:
+                pass
+        _FALLBACK_SQLITE = True
+        _DATABASE_URL = None
+        return sqlite3.connect(DB_PATH)
 
     return sqlite3.connect(DB_PATH)
 
