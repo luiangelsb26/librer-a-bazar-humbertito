@@ -1,16 +1,12 @@
 import io
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 import importlib
 import math
 import hashlib
 import re
 import unicodedata
 from datetime import datetime
-import analysis
-import prediction
-import pdf_report
 import database
 import auth
 
@@ -212,6 +208,11 @@ def alternar_tema():
 def seleccionar_modulo(nombre):
     """Cambia el módulo antes del rerun natural del clic de navegación."""
     st.session_state.menu = nombre
+
+
+def invalidar_cache_operativa():
+    """Refresca las consultas después de cualquier escritura del negocio."""
+    st.cache_data.clear()
 
 
 st.markdown("""
@@ -4959,6 +4960,7 @@ def conectar():
 # CONSULTAS GENERALES
 # ==========================================================
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def contar_productos():
     con = conectar()
     cur = con.cursor()
@@ -4968,6 +4970,7 @@ def contar_productos():
     return resultado
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_stock():
     con = conectar()
     cur = con.cursor()
@@ -4977,6 +4980,7 @@ def obtener_stock():
     return resultado
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_productos():
     con = conectar()
     cur = con.cursor()
@@ -5354,6 +5358,7 @@ def registrar_producto(
         ))
 
         con.commit()
+        invalidar_cache_operativa()
         return True, "Producto registrado correctamente."
 
     except Exception as e:
@@ -5399,6 +5404,7 @@ def actualizar_producto(
             producto_id,
         ))
         con.commit()
+        invalidar_cache_operativa()
 
         if cursor.rowcount == 0:
             return False, "No se encontró el producto seleccionado."
@@ -5439,6 +5445,7 @@ def eliminar_producto(producto_id):
             (producto_id,),
         )
         con.commit()
+        invalidar_cache_operativa()
 
         if cursor.rowcount == 0:
             return False, "No se encontró el producto seleccionado."
@@ -5538,6 +5545,7 @@ def importar_productos_excel(filas):
                 """
             )
         con.commit()
+        invalidar_cache_operativa()
         return True, (
             f"Se procesaron {len(filas)} productos. Los IDs incluidos en el "
             "Excel se conservaron; los vacíos se asignaron automáticamente."
@@ -5585,6 +5593,7 @@ def eliminar_todos_productos():
                 "DELETE FROM sqlite_sequence WHERE name = 'productos'"
             )
         con.commit()
+        invalidar_cache_operativa()
         return True, f"Se eliminaron {cantidad_productos} productos."
     except Exception as e:
         con.rollback()
@@ -5950,6 +5959,7 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
             ),
         )
         con.commit()
+        invalidar_cache_operativa()
         return True, (
             f"Se importaron {len(filas)} filas de venta correctamente.{aviso_stock}"
         )
@@ -5959,6 +5969,7 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
     finally:
         con.close()
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_ventas():
     con = conectar()
 
@@ -6020,6 +6031,7 @@ def eliminar_venta(venta_id, restaurar_stock_venta_antigua=False):
         con.execute("DELETE FROM detalle_ventas WHERE venta_id = ?", (venta_id,))
         con.execute("DELETE FROM ventas WHERE id = ?", (venta_id,))
         con.commit()
+        invalidar_cache_operativa()
 
         if reponer_stock:
             return True, "Venta eliminada y stock restaurado."
@@ -6075,6 +6087,7 @@ def eliminar_todas_ventas():
                 "WHERE name IN ('ventas', 'detalle_ventas')"
             )
         con.commit()
+        invalidar_cache_operativa()
         return True, (
             f"Se eliminaron {cantidad_ventas} ventas. El stock se restauró "
             "para las ventas que estaban marcadas como descontadas."
@@ -6166,6 +6179,7 @@ def registrar_venta(
             """, (nuevo_stock, producto_id))
 
         con.commit()
+        invalidar_cache_operativa()
 
         return True, (
             f"Venta registrada correctamente. "
@@ -6187,6 +6201,7 @@ def registrar_venta(
 # COMPRAS
 # ==========================================================
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_compras():
     con = conectar()
 
@@ -6297,6 +6312,7 @@ def registrar_compra(producto_id, cantidad, precio_compra):
         ))
 
         con.commit()
+        invalidar_cache_operativa()
 
         return True, (
             f"Compra registrada correctamente. "
@@ -6532,6 +6548,7 @@ def hash_importacion_compras_registrada(hash_archivo):
         con.close()
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_auditoria_compras():
     """Resume consistencia interna de compras; no sustituye cotejar comprobantes."""
     con = conectar()
@@ -6577,6 +6594,7 @@ def obtener_auditoria_compras():
         con.close()
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_historial_importaciones_compras():
     """Devuelve auditoría de cargas; NULL indica que la versión antigua no guardó el dato."""
     con = conectar()
@@ -6689,6 +6707,7 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
             ),
         )
         con.commit()
+        invalidar_cache_operativa()
         mensaje_stock = (
             " Se sumaron las unidades al stock y se actualizó el último costo."
             if actualizar_stock
@@ -6709,33 +6728,20 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
 # DASHBOARD
 # ==========================================================
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def resumen_dashboard():
     con = conectar()
-
-    ventas, cantidad_ventas = con.execute("""
-        SELECT COALESCE(SUM(total), 0), COUNT(*)
-        FROM ventas
-    """).fetchone()
-
-    cantidad_lineas_venta = con.execute("""
-        SELECT COUNT(*)
-        FROM detalle_ventas
-    """).fetchone()[0]
-
-    compras = con.execute("""
-        SELECT COALESCE(SUM(total), 0)
-        FROM compras
-    """).fetchone()[0]
-
-    stock_bajo = con.execute("""
-        SELECT COUNT(*)
-        FROM productos
-        WHERE stock <= stock_minimo
-    """).fetchone()[0]
-
-    con.close()
-
-    return ventas, cantidad_ventas, cantidad_lineas_venta, compras, stock_bajo
+    try:
+        return con.execute("""
+            SELECT
+                COALESCE((SELECT SUM(total) FROM ventas), 0),
+                (SELECT COUNT(*) FROM ventas),
+                (SELECT COUNT(*) FROM detalle_ventas),
+                COALESCE((SELECT SUM(total) FROM compras), 0),
+                (SELECT COUNT(*) FROM productos WHERE stock <= stock_minimo)
+        """).fetchone()
+    finally:
+        con.close()
 
 
 def resumen_operativo():
@@ -6751,6 +6757,7 @@ def resumen_operativo():
     }
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=10)
 def obtener_alertas_stock(limit=5):
     con = conectar()
     alertas = con.execute("""
@@ -6867,6 +6874,7 @@ with st.sidebar:
         ):
             try:
                 database.reiniciar_datos()
+                invalidar_cache_operativa()
                 st.session_state.pop("confirmar_reinicio", None)
                 notificar_exito(
                     "Sistema reiniciado correctamente. Ya puedes comenzar un nuevo registro."
@@ -6874,6 +6882,15 @@ with st.sidebar:
                 st.rerun()
             except Exception as error:
                 st.error(f"No se pudo reiniciar el sistema: {error}")
+
+# Carga bajo demanda los módulos pesados solo cuando la sección los necesita.
+if menu in ("Dashboard gerencial", "Análisis inteligente"):
+    import analysis
+if menu in ("Dashboard gerencial", "Predicción de demanda"):
+    import plotly.graph_objects as go
+if menu == "Predicción de demanda":
+    import prediction
+    import pdf_report
 
 # ==========================================================
 # INICIO
@@ -7372,8 +7389,9 @@ elif menu == "Dashboard gerencial":
 
     st.divider()
 
-    resumen = analysis.resumen_ventas()
-    tendencia = analysis.tendencia_ventas()
+    datos_historicos = analysis.obtener_datos_ventas()
+    resumen = analysis.resumen_ventas(datos_historicos)
+    tendencia = analysis.tendencia_ventas(datos_historicos)
 
     s1, s2, s3 = st.columns(3)
 
@@ -7397,7 +7415,7 @@ elif menu == "Dashboard gerencial":
 
     st.subheader("Evolución de las ventas")
 
-    datos_dia = analysis.obtener_datos_ventas()
+    datos_dia = datos_historicos.copy()
     top = pd.DataFrame()
     selector_periodo, detalle_periodo = st.columns([1, 2], vertical_alignment="bottom")
     with selector_periodo:
@@ -8628,8 +8646,9 @@ elif menu == "Análisis inteligente":
 
     st.header("Análisis inteligente", icon=":material/query_stats:")
 
-    resumen = analysis.resumen_ventas()
-    tendencia = analysis.tendencia_ventas()
+    datos_historicos = analysis.obtener_datos_ventas()
+    resumen = analysis.resumen_ventas(datos_historicos)
+    tendencia = analysis.tendencia_ventas(datos_historicos)
 
     st.subheader("Resumen comercial")
 

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import streamlit as st
 
 import database
 
@@ -21,8 +22,10 @@ def conectar():
     return database.conectar()
 
 
-def _cargar_artefacto(joblib):
+@st.cache_resource(ttl=30, show_spinner=False)
+def _cargar_artefacto():
     """Busca primero el modelo persistido en la base y luego el archivo local."""
+    import joblib
     con = conectar()
     try:
         fila = con.execute(
@@ -112,6 +115,7 @@ def _guardar_artefacto(artefacto, joblib):
     return None, error_base or error_local
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_productos():
     con = conectar()
     try:
@@ -127,6 +131,7 @@ def obtener_productos():
         con.close()
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def _obtener_ventas_diarias():
     """Devuelve ventas agregadas por producto y fecha calendario."""
     con = conectar()
@@ -446,6 +451,9 @@ def entrenar_modelo():
         "algoritmo": algoritmo,
     }
     almacenamiento, error_guardado = _guardar_artefacto(artefacto, joblib)
+    if almacenamiento is not None:
+        _cargar_artefacto.clear()
+        st.cache_data.clear()
     if almacenamiento is None:
         return {
             "estado": "error_guardar_modelo",
@@ -479,10 +487,11 @@ def entrenar_modelo():
     }
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def estado_modelo():
     try:
         import joblib
-        artefacto, almacenamiento = _cargar_artefacto(joblib)
+        artefacto, almacenamiento = _cargar_artefacto()
         if artefacto is None:
             return {
                 "estado": "modelo_no_entrenado",
@@ -546,7 +555,7 @@ def predecir_demanda(producto_id, dias_futuro=7):
         }
 
     try:
-        artefacto, _ = _cargar_artefacto(joblib)
+        artefacto, _ = _cargar_artefacto()
     except Exception:
         return {
             "estado": "modelo_invalido",

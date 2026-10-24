@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 import database
 
 
@@ -18,6 +19,7 @@ def conectar():
 # OBTENER INFORMACIÓN DE VENTAS
 # ==========================================================
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_datos_ventas():
 
     conexion = conectar()
@@ -90,6 +92,7 @@ def productos_mas_vendidos():
 # PRODUCTOS CON STOCK BAJO
 # ==========================================================
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def productos_stock_bajo():
 
     conexion = conectar()
@@ -120,9 +123,10 @@ def productos_stock_bajo():
 # RESUMEN DE VENTAS
 # ==========================================================
 
-def resumen_ventas():
+def resumen_ventas(df=None):
 
-    df = obtener_datos_ventas()
+    if df is None:
+        df = obtener_datos_ventas()
 
     if df.empty:
         return {
@@ -156,9 +160,10 @@ def resumen_ventas():
 # TENDENCIA DE VENTAS
 # ==========================================================
 
-def tendencia_ventas():
+def tendencia_ventas(df=None):
 
-    df = obtener_datos_ventas()
+    if df is None:
+        df = obtener_datos_ventas()
 
     if df.empty:
         return {
@@ -291,6 +296,7 @@ def clasificar_producto(
     return "Movimiento bajo"
 
 
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def analisis_productos():
 
     conexion = conectar()
