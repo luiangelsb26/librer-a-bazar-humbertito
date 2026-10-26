@@ -11977,5 +11977,46 @@ body:not(:has(.hb-light-mode)) .st-key-admin_create_panel [data-testid="stWidget
         border-radius: 11px !important;
     }
 }
+/* Streamlit 1.64 renders the date picker in its own floating portal.
+   Target that exact portal so the light theme reaches the popup as well. */
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] {
+    color-scheme: light !important;
+    color: #263b42 !important;
+    background: #ffffff !important;
+    border: 1px solid #cbdadd !important;
+    border-radius: 12px !important;
+    box-shadow: 0 12px 28px rgba(23, 48, 56, .16) !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] * {
+    color-scheme: light !important;
+    color: #334b51 !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [role="grid"],
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [role="row"],
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [role="gridcell"] {
+    background-color: transparent !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] button,
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [role="button"] {
+    border-color: transparent !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #334b51 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] button:hover,
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [role="button"]:hover {
+    background: #e8f4f2 !important;
+    color: #176b62 !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [aria-selected="true"],
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [data-selected="true"] {
+    border-radius: 999px !important;
+    background: #2f8f83 !important;
+    color: #ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [data-outside-month="true"] {
+    color: #9aa8ac !important;
+}
 </style>
 """, unsafe_allow_html=True)
