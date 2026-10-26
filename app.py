@@ -103,7 +103,7 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     """Renderiza tablas legibles y centradas con encabezados visibles."""
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
     kwargs.pop("column_config", None)
-    kwargs.pop("key", None)
+    key = kwargs.pop("key", None)
     kwargs.pop("on_select", None)
     kwargs.pop("selection_mode", None)
     kwargs.pop("selection_default", None)
@@ -172,6 +172,17 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
         height = max(180, min(int(height), 900))
     except (TypeError, ValueError):
         height = "content"
+
+    # En tema claro, la cuadrícula virtualizada evita renderizar miles de
+    # filas como una tabla HTML completa y mantiene el desplazamiento fluido.
+    if tema_claro and len(marco) >= 120:
+        return st.dataframe(
+            marco_renderizado,
+            width=width,
+            height=height,
+            hide_index=hide_index,
+            key=key,
+        )
 
     return st.table(
         marco_renderizado,
@@ -10720,6 +10731,355 @@ body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] .sidebar-brand {
         min-width: 0 !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# Ajustes finales y unificados: solo afectan el tema claro.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) {
+    --hb-light-page: #f3f6f7;
+    --hb-light-surface: #ffffff;
+    --hb-light-surface-soft: #f8fafb;
+    --hb-light-ink: #20323a;
+    --hb-light-muted: #61747c;
+    --hb-light-border: #d8e2e5;
+    --hb-light-border-strong: #b8c9ce;
+    --hb-light-accent: #23786f;
+    --hb-light-accent-hover: #1b665e;
+    --hb-light-accent-soft: #e9f4f2;
+    --hb-light-focus: rgba(35, 120, 111, .22);
+}
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse at 92% 0%, rgba(35,120,111,.075), transparent 28rem),
+        linear-gradient(180deg, #f8fafb 0%, var(--hb-light-page) 100%) !important;
+    color: var(--hb-light-ink) !important;
+    font-family: "Segoe UI", Inter, system-ui, sans-serif !important;
+}
+body:has(.hb-light-mode) [data-testid="stHeader"] {
+    background: rgba(248,250,251,.92) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMainBlockContainer"] {
+    max-width: 1480px !important;
+    padding: clamp(1rem, 2vw, 1.75rem) clamp(.9rem, 3vw, 2.5rem) 3rem !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] {
+    color: var(--hb-light-ink) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] h1,
+body:has(.hb-light-mode) [data-testid="stMain"] h2,
+body:has(.hb-light-mode) [data-testid="stMain"] h3,
+body:has(.hb-light-mode) [data-testid="stMain"] h4 {
+    color: var(--hb-light-ink) !important;
+    letter-spacing: -.018em !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stCaptionContainer"],
+body:has(.hb-light-mode) [data-testid="stMain"] small {
+    color: var(--hb-light-muted) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] hr {
+    border-color: var(--hb-light-border) !important;
+    opacity: 1 !important;
+}
+body:has(.hb-light-mode) .hb-page-title { color: var(--hb-light-ink) !important; }
+body:has(.hb-light-mode) .hb-page-subtitle { color: var(--hb-light-muted) !important; }
+
+/* Superficies claras, con bordes completos y sombras discretas. */
+body:has(.hb-light-mode) [data-testid="stMetric"],
+body:has(.hb-light-mode) [data-testid="stForm"],
+body:has(.hb-light-mode) [data-testid="stExpander"],
+body:has(.hb-light-mode) [data-testid="stVerticalBlockBorderWrapper"],
+body:has(.hb-light-mode) [data-testid="stDataFrame"],
+body:has(.hb-light-mode) [data-testid="stTable"],
+body:has(.hb-light-mode) .st-key-dashboard_ventas_panel,
+body:has(.hb-light-mode) .st-key-dashboard_productos_panel,
+body:has(.hb-light-mode) .st-key-user_transfer_panel,
+body:has(.hb-light-mode) .st-key-user_delete_panel {
+    border: 1px solid var(--hb-light-border) !important;
+    border-radius: 12px !important;
+    background: var(--hb-light-surface) !important;
+    box-shadow: 0 3px 12px rgba(24, 55, 65, .045) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetric"] {
+    min-height: 7.25rem !important;
+    padding: 1rem 1.05rem !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetric"]::after {
+    background: rgba(35,120,111,.055) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetricLabel"] {
+    color: var(--hb-light-muted) !important;
+    letter-spacing: .055em !important;
+}
+body:has(.hb-light-mode) [data-testid="stMetricValue"] {
+    color: var(--hb-light-ink) !important;
+}
+body:has(.hb-light-mode) [data-testid="stForm"] {
+    padding: clamp(.9rem, 1.6vw, 1.35rem) !important;
+}
+body:has(.hb-light-mode) [data-testid="stExpander"] summary {
+    color: var(--hb-light-ink) !important;
+}
+body:has(.hb-light-mode) .quick-card {
+    border-color: var(--hb-light-border) !important;
+    border-radius: 12px !important;
+    background: linear-gradient(145deg, #fff 0%, #f8fbfb 100%) !important;
+    box-shadow: 0 3px 12px rgba(24,55,65,.045) !important;
+}
+body:has(.hb-light-mode) .quick-card:hover {
+    border-color: #b8d4d0 !important;
+    box-shadow: 0 7px 18px rgba(24,55,65,.075) !important;
+}
+body:has(.hb-light-mode) .quick-card strong { color: var(--hb-light-ink) !important; }
+body:has(.hb-light-mode) .quick-card p { color: var(--hb-light-muted) !important; }
+body:has(.hb-light-mode) .hb-hero {
+    border-color: #d1e2df !important;
+    border-radius: 16px !important;
+    background: linear-gradient(120deg, #edf7f5 0%, #f5f9fa 70%, #eef3f6 100%) !important;
+    box-shadow: 0 8px 24px rgba(24,55,65,.055) !important;
+}
+body:has(.hb-light-mode) .hb-hero h1 { color: #1e383c !important; }
+body:has(.hb-light-mode) .hb-hero p { color: #526970 !important; }
+body:has(.hb-light-mode) .hb-hero-eyebrow { color: var(--hb-light-accent) !important; }
+body:has(.hb-light-mode) .hb-hero-date {
+    border-color: #d1e2df !important;
+    background: rgba(255,255,255,.82) !important;
+    color: #35565a !important;
+}
+
+/* Controles consistentes y con foco visible. */
+body:has(.hb-light-mode) [data-testid="stTextInput"] input,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea,
+body:has(.hb-light-mode) [data-testid="stDateInput"] input,
+body:has(.hb-light-mode) [data-testid="stSelectbox"] [role="combobox"],
+body:has(.hb-light-mode) [data-testid="stMultiSelect"] [role="combobox"],
+body:has(.hb-light-mode) [data-baseweb="select"] > div {
+    border: 1px solid var(--hb-light-border-strong) !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: var(--hb-light-ink) !important;
+    box-shadow: inset 0 1px 2px rgba(24,55,65,.025) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] input:hover,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input:hover,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea:hover,
+body:has(.hb-light-mode) [data-testid="stDateInput"] input:hover,
+body:has(.hb-light-mode) [data-testid="stSelectbox"] [role="combobox"]:hover {
+    border-color: #91b6b1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] input:focus,
+body:has(.hb-light-mode) [data-testid="stNumberInput"] input:focus,
+body:has(.hb-light-mode) [data-testid="stTextArea"] textarea:focus,
+body:has(.hb-light-mode) [data-testid="stDateInput"] input:focus,
+body:has(.hb-light-mode) [data-testid="stSelectbox"] [role="combobox"]:focus {
+    border-color: var(--hb-light-accent) !important;
+    box-shadow: 0 0 0 3px var(--hb-light-focus) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button {
+    border-radius: 9px !important;
+    font-weight: 650 !important;
+    transition: background-color .12s ease, border-color .12s ease, box-shadow .12s ease !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button:not([kind="primary"]):not([kind="primaryFormSubmit"]) {
+    border-color: var(--hb-light-border-strong) !important;
+    background: #fff !important;
+    color: #344951 !important;
+    box-shadow: 0 1px 2px rgba(24,55,65,.035) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button:not([kind="primary"]):not([kind="primaryFormSubmit"]):hover {
+    border-color: #9bbcb7 !important;
+    background: var(--hb-light-accent-soft) !important;
+    color: #1f625a !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"],
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
+    border-color: var(--hb-light-accent) !important;
+    background: var(--hb-light-accent) !important;
+    color: #fff !important;
+    box-shadow: 0 3px 9px rgba(35,120,111,.16) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"] *,
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"] * {
+    color: #fff !important;
+    fill: #fff !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"]:hover,
+body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
+    border-color: var(--hb-light-accent-hover) !important;
+    background: var(--hb-light-accent-hover) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] button:disabled {
+    opacity: .58 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] :focus-visible {
+    outline: 2px solid rgba(35,120,111,.58) !important;
+    outline-offset: 2px !important;
+}
+
+/* Navegación, selección y tablas. */
+body:has(.hb-light-mode) [data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #fbfcfc 0%, #f4f7f8 100%) !important;
+    border-right: 1px solid var(--hb-light-border) !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand {
+    border: 1px solid var(--hb-light-border) !important;
+    border-left: 3px solid var(--hb-light-accent) !important;
+    border-radius: 0 12px 12px 0 !important;
+    background: #fff !important;
+    box-shadow: 0 2px 8px rgba(24,55,65,.045) !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-title,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-name,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-name {
+    color: var(--hb-light-ink) !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-brand-subtitle,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-role,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-status-text,
+body:has(.hb-light-mode) [data-testid="stSidebar"] .sidebar-section-title {
+    color: var(--hb-light-muted) !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] .user-card {
+    border: 1px solid var(--hb-light-border) !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button,
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+    min-height: 2.7rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: #40545c !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
+    border-color: #dce8e7 !important;
+    background: #f0f7f6 !important;
+    color: #225f58 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"] button,
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"] button:hover {
+    border-color: #c4dfda !important;
+    border-left: 3px solid var(--hb-light-accent) !important;
+    background: #eaf4f2 !important;
+    color: #205f57 !important;
+    font-weight: 700 !important;
+}
+body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-cerrar_sesion"] button {
+    border: 1px solid var(--hb-light-border) !important;
+    background: #fff !important;
+    color: #52656d !important;
+}
+body:has(.hb-light-mode) [data-testid="stTabs"] [role="tablist"] {
+    border: 1px solid var(--hb-light-border) !important;
+    border-radius: 10px !important;
+    background: #f7f9fa !important;
+}
+body:has(.hb-light-mode) [data-testid="stTabs"] button[role="tab"] {
+    color: var(--hb-light-muted) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    border-radius: 7px !important;
+    background: #fff !important;
+    color: var(--hb-light-accent) !important;
+    box-shadow: 0 1px 4px rgba(24,55,65,.08) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] {
+    padding: 0 !important;
+    border: 1px solid var(--hb-light-border-strong) !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+    overflow: auto !important;
+    box-shadow: 0 2px 8px rgba(24,55,65,.04) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] th {
+    border-bottom: 1px solid #c8d8dc !important;
+    background: #eef4f5 !important;
+    color: #30464e !important;
+    font-size: .74rem !important;
+    font-weight: 750 !important;
+    letter-spacing: .035em !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] td {
+    border-bottom: 1px solid #e4ebed !important;
+    background: #fff !important;
+    color: #30434b !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: #f8fafb !important;
+}
+body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:hover td {
+    background: #eff7f5 !important;
+}
+body:has(.hb-light-mode) [data-testid="stDataFrame"] {
+    border: 1px solid var(--hb-light-border-strong) !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(24,55,65,.04) !important;
+}
+body:has(.hb-light-mode) [data-testid="stAlert"] {
+    border: 1px solid var(--hb-light-border) !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [role="listbox"] {
+    border: 1px solid var(--hb-light-border-strong) !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    box-shadow: 0 8px 22px rgba(24,55,65,.12) !important;
+}
+body:has(.hb-light-mode) [role="listbox"] [role="option"] {
+    color: var(--hb-light-ink) !important;
+}
+body:has(.hb-light-mode) [role="listbox"] [role="option"]:hover,
+body:has(.hb-light-mode) [role="listbox"] [role="option"][aria-selected="true"] {
+    background: var(--hb-light-accent-soft) !important;
+}
+
+@media (max-width: 900px) {
+    body:has(.hb-light-mode) [data-testid="stMainBlockContainer"] {
+        padding: 1.1rem 1rem 2.5rem !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stSidebar"] {
+        box-shadow: 10px 0 28px rgba(24,55,65,.10) !important;
+    }
+}
+@media (max-width: 640px) {
+    body:has(.hb-light-mode) [data-testid="stMainBlockContainer"] {
+        padding: .9rem .75rem 2rem !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stMetric"] {
+        min-height: 5.8rem !important;
+        padding: .8rem !important;
+        border-radius: 10px !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stForm"] {
+        padding: .85rem !important;
+        border-radius: 11px !important;
+    }
+    body:has(.hb-light-mode) .hb-hero {
+        gap: .8rem !important;
+        padding: 1.1rem !important;
+        border-radius: 13px !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stTable"] th,
+    body:has(.hb-light-mode) [data-testid="stTable"] td {
+        padding: .58rem .62rem !important;
+        font-size: .78rem !important;
     }
 }
 </style>

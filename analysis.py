@@ -345,13 +345,17 @@ def analisis_productos():
     if df.empty:
         return df
 
-    df["analisis"] = df.apply(
-        lambda fila: clasificar_producto(
-            fila["unidades_vendidas"],
-            fila["stock"],
-            fila["stock_minimo"]
-        ),
-        axis=1
+    unidades = df["unidades_vendidas"]
+    stock_bajo = df["stock"] <= df["stock_minimo"]
+    df["analisis"] = "Sin movimiento"
+    df.loc[unidades > 0, "analisis"] = "Movimiento bajo"
+    df.loc[unidades >= 5, "analisis"] = "Movimiento medio"
+    df.loc[unidades >= 10, "analisis"] = "Alta rotación"
+    df.loc[(unidades > 0) & stock_bajo, "analisis"] = (
+        "Alta rotación / requiere reposición"
+    )
+    df.loc[(unidades == 0) & stock_bajo, "analisis"] = (
+        "Sin ventas y stock bajo"
     )
 
     return df
