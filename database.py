@@ -92,9 +92,10 @@ def _obtener_pool_postgres():
 
                 _POSTGRES_POOL = ConnectionPool(
                     conninfo=_DATABASE_URL,
+                    # Keep Supabase connections low; concurrent requests queue here.
                     min_size=1,
-                    max_size=8,
-                    timeout=10,
+                    max_size=3,
+                    timeout=20,
                     open=True,
                     kwargs={
                         "connect_timeout": 8,
@@ -171,7 +172,7 @@ def conectar():
         pool = None
         try:
             pool = _obtener_pool_postgres()
-            conexion = pool.getconn(timeout=10)
+            conexion = pool.getconn(timeout=20)
             return _ConexionPostgres(conexion, pool)
         except PoolTimeout:
             # Do not open extra connections beyond Supabase capacity.
