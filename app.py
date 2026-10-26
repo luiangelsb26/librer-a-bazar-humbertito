@@ -233,6 +233,8 @@ def invalidar_cache_operativa():
         "obtener_historial_importaciones_compras",
         "resumen_dashboard",
         "obtener_alertas_stock",
+        "validar_ventas_excel",
+        "validar_compras_excel",
     )
     for nombre in funciones_app:
         funcion = globals().get(nombre)
@@ -4430,6 +4432,12 @@ def contar_usuarios_acceso():
     """Evita consultar el total de usuarios en cada rerun del formulario."""
     return auth.cantidad_usuarios()
 
+@st.cache_data(ttl=15, show_spinner=False, max_entries=1)
+def obtener_usuarios_administracion_cache():
+    """Reutiliza la lista de usuarios entre reruns y se limpia al modificarla."""
+    return auth.listar_usuarios()
+
+
 def pantalla_acceso():
     
     st.markdown("""
@@ -6020,10 +6028,11 @@ def _numero_excel(valor):
         return None
 
 
-def validar_ventas_excel(contenido):
+@st.cache_data(ttl=180, show_spinner=False, max_entries=6)
+def validar_ventas_excel(_contenido, hash_contenido):
     """Lee y valida el Excel sin modificar la base de datos."""
     try:
-        original = pd.read_excel(io.BytesIO(contenido), sheet_name=0)
+        original = pd.read_excel(io.BytesIO(_contenido), sheet_name=0)
     except Exception as e:
         return [], [f"No se pudo leer el archivo Excel: {e}"], pd.DataFrame()
 
@@ -6676,7 +6685,6 @@ def registrar_compra(producto_id, cantidad, precio_compra):
 
 
 @st.cache_data(ttl=60, show_spinner=False, max_entries=3)
-@st.cache_data(ttl=60, show_spinner=False, max_entries=3)
 def generar_excel_historial_compras(tabla):
     salida = io.BytesIO()
     with pd.ExcelWriter(salida, engine="openpyxl") as escritor:
@@ -6747,13 +6755,14 @@ def crear_plantilla_compras_excel():
     return archivo.getvalue()
 
 
-def validar_compras_excel(contenido):
+@st.cache_data(ttl=180, show_spinner=False, max_entries=6)
+def validar_compras_excel(_contenido, hash_contenido):
     """Valida las compras del Excel antes de insertar o modificar el inventario."""
     try:
-        original = pd.read_excel(io.BytesIO(contenido), sheet_name="Compras")
+        original = pd.read_excel(io.BytesIO(_contenido), sheet_name="Compras")
     except ValueError:
         try:
-            original = pd.read_excel(io.BytesIO(contenido), sheet_name=0)
+            original = pd.read_excel(io.BytesIO(_contenido), sheet_name=0)
         except Exception as e:
             return [], [f"No se pudo leer la hoja Compras: {e}"], pd.DataFrame()
     except Exception as e:
@@ -7437,58 +7446,60 @@ elif menu == "Administrar usuarios":
 
     st.header("Administración de usuarios", icon=":material/manage_accounts:")
 
-    st.subheader("Crear una cuenta")
-
-    with st.form("crear_usuario"):
-        nombre = st.text_input("Nombre completo")
-        username = st.text_input("Nombre de usuario")
-
-        password = st.text_input(
-            "Contraseña",
-            type="password"
-        )
-
-        confirmar = st.text_input(
-            "Confirmar contraseña",
-            type="password"
-        )
-
-        rol = st.selectbox(
-            "Rol del usuario",
-            ["empleado", "admin"],
-            format_func=lambda x: (
-                "Empleado" if x == "empleado"
-                else "Administrador"
+    with st.container(key="admin_create_panel", border=True):
+        st.subheader("Crear una cuenta")
+    
+        with st.form("crear_usuario"):
+            nombre = st.text_input("Nombre completo")
+            username = st.text_input("Nombre de usuario")
+    
+            password = st.text_input(
+                "Contraseña",
+                type="password"
             )
-        )
-
-        guardar = st.form_submit_button(
-            "Crear usuario",
-            type="primary"
-        )
-
-        if guardar:
-            if password != confirmar:
-                st.error("Las contraseñas no coinciden.")
-            else:
-                try:
-                    auth.crear_usuario(
-                        username,
-                        nombre,
-                        password,
-                        rol
-                    )
-                    notificar_exito(
-                        f"Usuario {username} creado correctamente."
-                    )
-                    st.rerun()
-                except ValueError as error:
-                    st.error(str(error))
-
+    
+            confirmar = st.text_input(
+                "Confirmar contraseña",
+                type="password"
+            )
+    
+            rol = st.selectbox(
+                "Rol del usuario",
+                ["empleado", "admin"],
+                format_func=lambda x: (
+                    "Empleado" if x == "empleado"
+                    else "Administrador"
+                )
+            )
+    
+            guardar = st.form_submit_button(
+                "Crear usuario",
+                type="primary"
+            )
+    
+            if guardar:
+                if password != confirmar:
+                    st.error("Las contraseñas no coinciden.")
+                else:
+                    try:
+                        auth.crear_usuario(
+                            username,
+                            nombre,
+                            password,
+                            rol
+                        )
+                        obtener_usuarios_administracion_cache.clear()
+                        notificar_exito(
+                            f"Usuario {username} creado correctamente."
+                        )
+                        st.rerun()
+                    except ValueError as error:
+                        st.error(str(error))
+    
     st.divider()
     st.subheader("Usuarios registrados")
 
-    usuarios = auth.listar_usuarios()
+    usuarios = obtener_usuarios_administracion_cache()
 
     if usuarios:
         # La tabla estática mantiene visibles los datos sin depender
@@ -7579,6 +7590,7 @@ elif menu == "Administrar usuarios":
                                 usuario_actual.get("id"),
                                 nuevo_admin_id,
                             )
+                            obtener_usuarios_administracion_cache.clear()
                             notificar_exito(
                                 f"Administración transferida a @{nuevo_admin[1]}. "
                                 "Tu cuenta fue eliminada; inicia sesión con la nueva cuenta."
@@ -7686,6 +7698,7 @@ elif menu == "Administrar usuarios":
                                     usuario_id,
                                     usuario_actual.get("id"),
                                 )
+                                obtener_usuarios_administracion_cache.clear()
                                 st.session_state.pop(
                                     "usuario_pendiente_eliminar_id", None
                                 )
@@ -8355,70 +8368,71 @@ elif menu == "Ventas":
             for p in productos
         ]
 
-        with st.form("form_venta"):
-
-            indice = st.selectbox(
-                "Seleccionar producto",
-                range(len(opciones)),
-                format_func=lambda i: opciones[i]
-            )
-
-            cantidad = st.number_input(
-                "Cantidad",
-                min_value=1,
-                step=1,
-                value=1
-            )
-
-            precio_unitario = st.number_input(
-                "Precio unitario de la boleta (S/)",
-                min_value=0.01,
-                value=float(productos[indice][5]),
-                step=0.10
-            )
-            st.caption("Si el precio de la boleta antigua difiere del actual, ingresa el que figura en ella.")
-
-            fecha_venta = st.date_input(
-                "Fecha de la boleta",
-                value=datetime.now().date(),
-                max_value=datetime.now().date()
-            )
-            st.caption("Para boletas antiguas, selecciona la fecha impresa en el documento.")
-
-            with st.container(key="stock_historico_panel"):
-                descontar_stock_historico = st.checkbox(
-                    "También descontar esta venta histórica del stock actual",
-                    value=False,
-                    key="stock_historico_checkbox",
+        with st.container(key="sales_form_panel", border=True):
+            with st.form("form_venta"):
+    
+                indice = st.selectbox(
+                    "Seleccionar producto",
+                    range(len(opciones)),
+                    format_func=lambda i: opciones[i]
                 )
-                st.caption(
-                    "Márcalo solo si esta venta todavía debe restarse del stock actual. "
-                    "Déjalo desmarcado si el inventario ya refleja esa venta."
+    
+                cantidad = st.number_input(
+                    "Cantidad",
+                    min_value=1,
+                    step=1,
+                    value=1
                 )
-
-            vender = st.form_submit_button(
-                "Registrar venta"
-            )
-
-            if vender:
-
-                ok, mensaje = registrar_venta(
-                    productos[indice][0],
-                    cantidad,
-                    fecha_venta,
-                    precio_unitario,
-                    descontar_stock=(
-                        fecha_venta == datetime.now().date()
-                        or descontar_stock_historico
+    
+                precio_unitario = st.number_input(
+                    "Precio unitario de la boleta (S/)",
+                    min_value=0.01,
+                    value=float(productos[indice][5]),
+                    step=0.10
+                )
+                st.caption("Si el precio de la boleta antigua difiere del actual, ingresa el que figura en ella.")
+    
+                fecha_venta = st.date_input(
+                    "Fecha de la boleta",
+                    value=datetime.now().date(),
+                    max_value=datetime.now().date()
+                )
+                st.caption("Para boletas antiguas, selecciona la fecha impresa en el documento.")
+    
+                with st.container(key="stock_historico_panel"):
+                    descontar_stock_historico = st.checkbox(
+                        "También descontar esta venta histórica del stock actual",
+                        value=False,
+                        key="stock_historico_checkbox",
                     )
+                    st.caption(
+                        "Márcalo solo si esta venta todavía debe restarse del stock actual. "
+                        "Déjalo desmarcado si el inventario ya refleja esa venta."
+                    )
+    
+                vender = st.form_submit_button(
+                    "Registrar venta"
                 )
-
-                if ok:
-                    notificar_exito(mensaje)
-                    st.rerun()
-                else:
-                    st.error(mensaje)
-
+    
+                if vender:
+    
+                    ok, mensaje = registrar_venta(
+                        productos[indice][0],
+                        cantidad,
+                        fecha_venta,
+                        precio_unitario,
+                        descontar_stock=(
+                            fecha_venta == datetime.now().date()
+                            or descontar_stock_historico
+                        )
+                    )
+    
+                    if ok:
+                        notificar_exito(mensaje)
+                        st.rerun()
+                    else:
+                        st.error(mensaje)
+    
         st.divider()
         st.subheader("Importar ventas desde Excel")
         st.caption(
@@ -8447,7 +8461,7 @@ elif menu == "Ventas":
             contenido_excel = archivo_ventas_excel.getvalue()
             hash_archivo_excel = hashlib.sha256(contenido_excel).hexdigest()
             importacion_existente = hash_importacion_registrada(hash_archivo_excel)
-            filas_excel, errores_excel, _ = validar_ventas_excel(contenido_excel)
+            filas_excel, errores_excel, _ = validar_ventas_excel(contenido_excel, hash_archivo_excel)
 
             if importacion_existente:
                 st.warning(
@@ -8738,46 +8752,47 @@ elif menu == "Compras":
             for p in productos
         ]
 
-        with st.form("form_compra"):
-
-            indice = st.selectbox(
-                "Seleccionar producto",
-                range(len(opciones)),
-                format_func=lambda i: opciones[i]
-            )
-
-            cantidad = st.number_input(
-                "Cantidad comprada",
-                min_value=1,
-                step=1,
-                value=1
-            )
-
-            precio_compra = st.number_input(
-                "Precio de compra por unidad",
-                min_value=0.01,
-                step=0.10,
-                format="%.2f"
-            )
-
-            comprar = st.form_submit_button(
-                "Registrar compra"
-            )
-
-            if comprar:
-
-                ok, mensaje = registrar_compra(
-                    productos[indice][0],
-                    cantidad,
-                    precio_compra
+        with st.container(key="purchase_form_panel", border=True):
+            with st.form("form_compra"):
+    
+                indice = st.selectbox(
+                    "Seleccionar producto",
+                    range(len(opciones)),
+                    format_func=lambda i: opciones[i]
                 )
-
-                if ok:
-                    notificar_exito(mensaje)
-                    st.rerun()
-                else:
-                    st.error(mensaje)
-
+    
+                cantidad = st.number_input(
+                    "Cantidad comprada",
+                    min_value=1,
+                    step=1,
+                    value=1
+                )
+    
+                precio_compra = st.number_input(
+                    "Precio de compra por unidad",
+                    min_value=0.01,
+                    step=0.10,
+                    format="%.2f"
+                )
+    
+                comprar = st.form_submit_button(
+                    "Registrar compra"
+                )
+    
+                if comprar:
+    
+                    ok, mensaje = registrar_compra(
+                        productos[indice][0],
+                        cantidad,
+                        precio_compra
+                    )
+    
+                    if ok:
+                        notificar_exito(mensaje)
+                        st.rerun()
+                    else:
+                        st.error(mensaje)
+    
         st.divider()
         st.subheader("Importar compras desde Excel")
         st.caption(
@@ -8824,7 +8839,8 @@ elif menu == "Compras":
                 )
             else:
                 filas_compras, errores_compras, _ = validar_compras_excel(
-                    contenido_compras
+                    contenido_compras,
+                    hash_archivo_compras,
                 )
                 if errores_compras:
                     st.error(
@@ -11622,6 +11638,81 @@ body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="
 body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover svg {
     color: #fff0bd !important;
     -webkit-text-fill-color: #fff0bd !important;
+}
+</style>
+""", unsafe_allow_html=True)
+# Tarjetas de trabajo: ventas, compras y administración, en ambos temas.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) .st-key-sales_form_panel,
+body:has(.hb-light-mode) .st-key-purchase_form_panel,
+body:has(.hb-light-mode) .st-key-admin_create_panel,
+body:has(.hb-light-mode) .st-key-registered_users_table_shared {
+    box-sizing: border-box !important;
+    border: 1px solid #cfdee2 !important;
+    border-radius: 14px !important;
+    background: linear-gradient(145deg, #ffffff, #f5f9fa) !important;
+    padding: 1rem 1.1rem !important;
+    box-shadow: 0 7px 20px rgba(34, 67, 77, .07) !important;
+    transition: border-color .16s ease, box-shadow .16s ease !important;
+}
+body:has(.hb-light-mode) .st-key-sales_form_panel:hover,
+body:has(.hb-light-mode) .st-key-purchase_form_panel:hover,
+body:has(.hb-light-mode) .st-key-admin_create_panel:hover {
+    border-color: #a8c9c9 !important;
+    box-shadow: 0 9px 23px rgba(34, 90, 94, .10) !important;
+}
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stForm"],
+body:has(.hb-light-mode) .st-key-purchase_form_panel [data-testid="stForm"],
+body:has(.hb-light-mode) .st-key-admin_create_panel [data-testid="stForm"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stWidgetLabel"] p,
+body:has(.hb-light-mode) .st-key-purchase_form_panel [data-testid="stWidgetLabel"] p,
+body:has(.hb-light-mode) .st-key-admin_create_panel [data-testid="stWidgetLabel"] p {
+    color: #344b52 !important;
+    font-weight: 600 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel,
+body:not(:has(.hb-light-mode)) .st-key-purchase_form_panel,
+body:not(:has(.hb-light-mode)) .st-key-admin_create_panel,
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table_shared {
+    box-sizing: border-box !important;
+    border: 1px solid #354750 !important;
+    border-radius: 14px !important;
+    background: linear-gradient(145deg, #1b272e, #172229) !important;
+    padding: 1rem 1.1rem !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .18) !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stForm"],
+body:not(:has(.hb-light-mode)) .st-key-purchase_form_panel [data-testid="stForm"],
+body:not(:has(.hb-light-mode)) .st-key-admin_create_panel [data-testid="stForm"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stWidgetLabel"] p,
+body:not(:has(.hb-light-mode)) .st-key-purchase_form_panel [data-testid="stWidgetLabel"] p,
+body:not(:has(.hb-light-mode)) .st-key-admin_create_panel [data-testid="stWidgetLabel"] p {
+    color: #d7e2e6 !important;
+    font-weight: 600 !important;
+}
+@media (max-width: 640px) {
+    .st-key-sales_form_panel,
+    .st-key-purchase_form_panel,
+    .st-key-admin_create_panel,
+    .st-key-registered_users_table_shared {
+        padding: .8rem !important;
+        border-radius: 11px !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
