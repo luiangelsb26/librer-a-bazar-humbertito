@@ -5065,6 +5065,104 @@ def pantalla_acceso():
                 transform: none !important;
             }
         }
+
+
+        .login-setup-step {
+            display: inline-flex;
+            margin-bottom: .55rem;
+            color: #5b797e;
+            font-size: .66rem;
+            font-weight: 750;
+            letter-spacing: .11em;
+        }
+        body:not(:has(.hb-light-mode)) .login-setup-step { color: #8bb8b3; }
+        .login-setup-card {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            box-sizing: border-box;
+            margin: 1rem 0 .55rem;
+            padding: .9rem 1rem;
+            border: 1px solid #d8e2e5;
+            border-radius: 12px;
+            background: rgba(255,255,255,.72);
+        }
+        .login-setup-mark {
+            display: grid;
+            flex: 0 0 2.55rem;
+            width: 2.55rem;
+            height: 2.55rem;
+            place-items: center;
+            border: 1px solid #cbdedc;
+            border-radius: 10px;
+            background: #edf6f4;
+            color: #28766e;
+            font-size: 1.45rem;
+            font-weight: 500;
+            line-height: 1;
+        }
+        .login-setup-copy { display: grid; min-width: 0; gap: .18rem; }
+        .login-setup-label {
+            color: #668187;
+            font-size: .62rem;
+            font-weight: 750;
+            letter-spacing: .11em;
+        }
+        .login-setup-copy strong { color: #2f454c; font-size: .88rem; font-weight: 700; }
+        .login-setup-copy span:last-child { color: #697c82; font-size: .78rem; line-height: 1.4; }
+        body:not(:has(.hb-light-mode)) .login-setup-card {
+            border-color: #34454d;
+            background: rgba(25,36,43,.72);
+        }
+        body:not(:has(.hb-light-mode)) .login-setup-mark {
+            border-color: #3b5757;
+            background: #203638;
+            color: #91c9bd;
+        }
+        body:not(:has(.hb-light-mode)) .login-setup-label { color: #8bb8b3; }
+        body:not(:has(.hb-light-mode)) .login-setup-copy strong { color: #e4ecef; }
+        body:not(:has(.hb-light-mode)) .login-setup-copy span:last-child { color: #aab9bf; }
+        body:has(.hb-light-mode) .login-setup-card {
+            border-color: #d8e3e5;
+            background: rgba(255,255,255,.82);
+        }
+        body:has(.hb-light-mode) .login-setup-mark {
+            border-color: #cbdedc;
+            background: #edf6f4;
+            color: #28766e;
+        }
+        body:has(.hb-light-mode) .login-setup-label { color: #5b797e; }
+        body:has(.hb-light-mode) .login-setup-copy strong { color: #30484f; }
+        body:has(.hb-light-mode) .login-setup-copy span:last-child { color: #647a80; }
+        body:has(.login-brand) .st-key-mostrar_configuracion_admin button {
+            min-height: 2.9rem !important;
+            border: 1px solid #b9ced1 !important;
+            border-radius: 10px !important;
+            background: transparent !important;
+            color: #315b60 !important;
+            box-shadow: none !important;
+            font-weight: 650 !important;
+        }
+        body:has(.login-brand) .st-key-mostrar_configuracion_admin button:hover {
+            border-color: #82a9a5 !important;
+            background: rgba(47,143,131,.055) !important;
+            color: #246d65 !important;
+        }
+        body:not(:has(.hb-light-mode)) .st-key-mostrar_configuracion_admin button {
+            border-color: #3d555d !important;
+            color: #d7e4e6 !important;
+        }
+        body:not(:has(.hb-light-mode)) .st-key-mostrar_configuracion_admin button:hover {
+            border-color: #62827f !important;
+            background: rgba(85,184,169,.08) !important;
+            color: #ffffff !important;
+        }
+        @media (max-width: 760px) {
+            .login-setup-card { margin-top: .75rem; padding: .8rem .85rem; }
+            .login-setup-mark { flex-basis: 2.35rem; width: 2.35rem; height: 2.35rem; }
+            .login-setup-copy strong { font-size: .84rem; }
+            .login-setup-copy span:last-child { font-size: .76rem; }
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -5206,9 +5304,11 @@ def pantalla_acceso():
             st.markdown(
                 """
                 <div class="login-setup-card">
+                    <div class="login-setup-mark" aria-hidden="true">+</div>
                     <div class="login-setup-copy">
-                        <strong>¿Primera vez en Humbertito?</strong>
-                        <span>Configura el acceso inicial de administrador para empezar.</span>
+                        <span class="login-setup-label">ACCESO INICIAL</span>
+                        <strong>¿Es tu primera vez?</strong>
+                        <span>Configura la cuenta administradora para empezar.</span>
                     </div>
                 </div>
                 """,
@@ -12631,70 +12731,3 @@ else:
     }
     </style>
     """, unsafe_allow_html=True)
-
-# Presentación del acceso inicial y acción secundaria de configuración.
-st.markdown("""
-<style>
-.login-setup-step {
-    display: inline-flex;
-    margin-bottom: .55rem;
-    color: #6a858b;
-    font-size: .68rem;
-    font-weight: 750;
-    letter-spacing: .11em;
-}
-.login-setup-card {
-    box-sizing: border-box;
-    margin: 1rem 0 .55rem;
-    padding: .9rem 1rem;
-    border: 1px solid #d8e2e5;
-    border-radius: 12px;
-    background: rgba(255,255,255,.62);
-}
-.login-setup-copy { display: grid; gap: .25rem; }
-.login-setup-copy strong { color: #2f454c; font-size: .88rem; font-weight: 700; }
-.login-setup-copy span { color: #697c82; font-size: .78rem; line-height: 1.45; }
-body:not(:has(.hb-light-mode)) .login-setup-step { color: #8bb8b3; }
-body:not(:has(.hb-light-mode)) .login-setup-card {
-    border-color: #34454d;
-    background: rgba(25,36,43,.72);
-}
-body:not(:has(.hb-light-mode)) .login-setup-copy strong { color: #e4ecef; }
-body:not(:has(.hb-light-mode)) .login-setup-copy span { color: #aab9bf; }
-body:has(.hb-light-mode) .login-setup-step { color: #5b797e; }
-body:has(.hb-light-mode) .login-setup-card {
-    border-color: #d8e3e5;
-    background: rgba(255,255,255,.72);
-}
-body:has(.hb-light-mode) .login-setup-copy strong { color: #30484f; }
-body:has(.hb-light-mode) .login-setup-copy span { color: #647a80; }
-body:has(.login-brand) .st-key-mostrar_configuracion_admin button {
-    min-height: 2.9rem !important;
-    border: 1px solid #b9ced1 !important;
-    border-radius: 10px !important;
-    background: transparent !important;
-    color: #315b60 !important;
-    box-shadow: none !important;
-    font-weight: 650 !important;
-}
-body:has(.login-brand) .st-key-mostrar_configuracion_admin button:hover {
-    border-color: #82a9a5 !important;
-    background: rgba(47,143,131,.055) !important;
-    color: #246d65 !important;
-}
-body:not(:has(.hb-light-mode)) .st-key-mostrar_configuracion_admin button {
-    border-color: #3d555d !important;
-    color: #d7e4e6 !important;
-}
-body:not(:has(.hb-light-mode)) .st-key-mostrar_configuracion_admin button:hover {
-    border-color: #62827f !important;
-    background: rgba(85,184,169,.08) !important;
-    color: #ffffff !important;
-}
-@media (max-width: 760px) {
-    .login-setup-card { margin-top: .75rem; padding: .8rem .85rem; }
-    .login-setup-copy strong { font-size: .84rem; }
-    .login-setup-copy span { font-size: .76rem; }
-}
-</style>
-""", unsafe_allow_html=True)
