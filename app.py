@@ -5123,8 +5123,9 @@ def pantalla_acceso():
             st.markdown(
                 """
                 <div class="login-form-intro">
-                    <h2>Configuración inicial</h2>
-                    <p>Crea una cuenta de administrador para comenzar a usar el sistema.</p>
+                    <span class="login-setup-step">CONFIGURACIÓN INICIAL · PASO 1</span>
+                    <h2>Crear administrador</h2>
+                    <p>Registra la cuenta principal para proteger y administrar tu sistema.</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -5202,13 +5203,38 @@ def pantalla_acceso():
                         "Revisa la conexión e inténtalo otra vez."
                     )
 
+            st.markdown(
+                """
+                <div class="login-setup-card">
+                    <div class="login-setup-copy">
+                        <strong>¿Primera vez en Humbertito?</strong>
+                        <span>Configura el acceso inicial de administrador para empezar.</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             if st.button(
-                "¿Primera vez? Configurar administrador",
+                "Configurar administrador",
                 key="mostrar_configuracion_admin",
+                icon=":material/admin_panel_settings:",
+                type="secondary",
                 width="stretch",
             ):
-                st.session_state["_configurar_primer_admin"] = True
-                st.rerun()
+                try:
+                    if contar_usuarios_acceso() != 0:
+                        st.warning(
+                            "La configuración inicial ya se completó. "
+                            "Inicia sesión con tu cuenta."
+                        )
+                    else:
+                        st.session_state["_configurar_primer_admin"] = True
+                        st.rerun()
+                except Exception:
+                    st.error(
+                        "No se pudo comprobar la configuración. "
+                        "Revisa la conexión e inténtalo de nuevo."
+                    )
 
 if "usuario" not in st.session_state:
     pantalla_acceso()
@@ -12605,3 +12631,70 @@ else:
     }
     </style>
     """, unsafe_allow_html=True)
+
+# Presentación del acceso inicial y acción secundaria de configuración.
+st.markdown("""
+<style>
+.login-setup-step {
+    display: inline-flex;
+    margin-bottom: .55rem;
+    color: #6a858b;
+    font-size: .68rem;
+    font-weight: 750;
+    letter-spacing: .11em;
+}
+.login-setup-card {
+    box-sizing: border-box;
+    margin: 1rem 0 .55rem;
+    padding: .9rem 1rem;
+    border: 1px solid #d8e2e5;
+    border-radius: 12px;
+    background: rgba(255,255,255,.62);
+}
+.login-setup-copy { display: grid; gap: .25rem; }
+.login-setup-copy strong { color: #2f454c; font-size: .88rem; font-weight: 700; }
+.login-setup-copy span { color: #697c82; font-size: .78rem; line-height: 1.45; }
+body:not(:has(.hb-light-mode)) .login-setup-step { color: #8bb8b3; }
+body:not(:has(.hb-light-mode)) .login-setup-card {
+    border-color: #34454d;
+    background: rgba(25,36,43,.72);
+}
+body:not(:has(.hb-light-mode)) .login-setup-copy strong { color: #e4ecef; }
+body:not(:has(.hb-light-mode)) .login-setup-copy span { color: #aab9bf; }
+body:has(.hb-light-mode) .login-setup-step { color: #5b797e; }
+body:has(.hb-light-mode) .login-setup-card {
+    border-color: #d8e3e5;
+    background: rgba(255,255,255,.72);
+}
+body:has(.hb-light-mode) .login-setup-copy strong { color: #30484f; }
+body:has(.hb-light-mode) .login-setup-copy span { color: #647a80; }
+body:has(.login-brand) .st-key-mostrar_configuracion_admin button {
+    min-height: 2.9rem !important;
+    border: 1px solid #b9ced1 !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    color: #315b60 !important;
+    box-shadow: none !important;
+    font-weight: 650 !important;
+}
+body:has(.login-brand) .st-key-mostrar_configuracion_admin button:hover {
+    border-color: #82a9a5 !important;
+    background: rgba(47,143,131,.055) !important;
+    color: #246d65 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-mostrar_configuracion_admin button {
+    border-color: #3d555d !important;
+    color: #d7e4e6 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-mostrar_configuracion_admin button:hover {
+    border-color: #62827f !important;
+    background: rgba(85,184,169,.08) !important;
+    color: #ffffff !important;
+}
+@media (max-width: 760px) {
+    .login-setup-card { margin-top: .75rem; padding: .8rem .85rem; }
+    .login-setup-copy strong { font-size: .84rem; }
+    .login-setup-copy span { font-size: .76rem; }
+}
+</style>
+""", unsafe_allow_html=True)
