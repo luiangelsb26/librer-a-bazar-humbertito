@@ -12558,3 +12558,50 @@ if st.session_state.get("tema_blanco", True):
     }
     </style>
     """, unsafe_allow_html=True)
+# Solo se elimina el relleno del botón de visibilidad; se conservan contornos de 1 px.
+if st.session_state.get("tema_blanco", True):
+    st.markdown("""
+    <style>
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+        border-width: 1px !important;
+    }
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        border: 0 !important;
+        border-left: 1px solid #d8e2e5 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover,
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:active {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+        border-width: 1px !important;
+    }
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        border: 0 !important;
+        border-left: 1px solid #35454d !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover,
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:active {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
