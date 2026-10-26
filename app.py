@@ -4893,6 +4893,66 @@ def pantalla_acceso():
                 padding-top: 0.75rem !important;
             }
         }
+        /* Selector de tema y botón para revelar contraseña: acabado discreto */
+        [class*="st-key-theme_toggle"] button {
+            border: 1px solid #c8d5d9 !important;
+            background: #ffffff !important;
+            color: #47616a !important;
+            box-shadow: 0 2px 8px rgba(25, 48, 56, .10) !important;
+        }
+        [class*="st-key-theme_toggle"] button:hover {
+            border-color: #8eaaa9 !important;
+            background: #f2f7f7 !important;
+            color: #285d5d !important;
+        }
+        body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button {
+            border-color: #3b4b53 !important;
+            background: #1c2830 !important;
+            color: #dce7e9 !important;
+            box-shadow: 0 2px 9px rgba(0, 0, 0, .20) !important;
+        }
+        body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:hover {
+            border-color: #61747a !important;
+            background: #26353d !important;
+            color: #ffffff !important;
+        }
+        [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+            overflow: hidden !important;
+            border: 1px solid #c5d1d5 !important;
+            border-radius: 10px !important;
+            background: #ffffff !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+            border-color: #7c9b9b !important;
+            box-shadow: 0 0 0 2px rgba(83, 130, 130, .13) !important;
+        }
+        [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+            min-width: 2.65rem !important;
+            border: 0 !important;
+            border-left: 1px solid #d7e0e2 !important;
+            border-radius: 0 !important;
+            background: #f7f9f9 !important;
+            color: #60747b !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover {
+            background: #edf3f3 !important;
+            color: #38575d !important;
+        }
+        body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+            border-color: #43535b !important;
+            background: #172128 !important;
+        }
+        body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+            border-left-color: #3b4a51 !important;
+            background: #202c33 !important;
+            color: #bccbd0 !important;
+        }
+        body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover {
+            background: #2a3941 !important;
+            color: #f1f6f7 !important;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -11189,6 +11249,82 @@ body:has(.hb-light-mode) [role="listbox"] [role="option"][aria-selected="true"] 
         padding: .58rem .62rem !important;
         font-size: .78rem !important;
     }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Ajustes finales de contraste para el control de tema y el revelado de contraseña.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button {
+    border: 1px solid #c8d5d9 !important;
+    background: #ffffff !important;
+    color: #47616a !important;
+    box-shadow: 0 2px 8px rgba(25,48,56,.10) !important;
+}
+body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button:hover {
+    border-color: #8eaaa9 !important;
+    background: #f2f7f7 !important;
+    color: #285d5d !important;
+}
+body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button {
+    border: 1px solid #3b4b53 !important;
+    background: #1c2830 !important;
+    color: #dce7e9 !important;
+    box-shadow: 0 2px 9px rgba(0,0,0,.20) !important;
+}
+body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:hover {
+    border-color: #61747a !important;
+    background: #26353d !important;
+    color: #ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    overflow: hidden !important;
+    border: 1px solid #c5d1d5 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+    border-color: #7c9b9b !important;
+    box-shadow: 0 0 0 2px rgba(83,130,130,.13) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    min-width: 2.65rem !important;
+    border: 0 !important;
+    border-left: 1px solid #d7e0e2 !important;
+    border-radius: 0 !important;
+    background: #f7f9f9 !important;
+    color: #60747b !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover {
+    background: #edf3f3 !important;
+    color: #38575d !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    overflow: hidden !important;
+    border: 1px solid #43535b !important;
+    border-radius: 10px !important;
+    background: #172128 !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+    border-color: #718b91 !important;
+    box-shadow: 0 0 0 2px rgba(113,139,145,.16) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    min-width: 2.65rem !important;
+    border: 0 !important;
+    border-left: 1px solid #3b4a51 !important;
+    border-radius: 0 !important;
+    background: #202c33 !important;
+    color: #bccbd0 !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover {
+    background: #2a3941 !important;
+    color: #f1f6f7 !important;
 }
 </style>
 """, unsafe_allow_html=True)
