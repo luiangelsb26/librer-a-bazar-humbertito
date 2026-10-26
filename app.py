@@ -99,7 +99,7 @@ def formatear_soles(valor):
 
 
 def mostrar_tabla_centrada(datos, *args, **kwargs):
-    """Renderiza tablas legibles y centradas con encabezados visibles."""
+    """Renderiza tablas compactas con estilo y virtualiza las tablas grandes."""
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
     kwargs.pop("column_config", None)
     key = kwargs.pop("key", None)
@@ -110,9 +110,26 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     height = kwargs.pop("height", "content")
     hide_index = bool(kwargs.pop("hide_index", False))
 
-    # st.dataframe conserva el color de texto del tema oscuro en el lienzo,
-    # incluso cuando su encabezado o fondo se fuerzan con CSS. st.table genera
-    # HTML nativo, por lo que los encabezados y celdas respetan estos colores.
+    try:
+        height = max(180, min(int(height), 900))
+    except (TypeError, ValueError):
+        height = "content"
+
+    if len(marco) >= 150:
+        # El marco fijo evita alargar demasiado la sección. La carga diferida
+        # envía historiales muy largos al navegador conforme el usuario los recorre.
+        if height == "content":
+            height = 560
+        return st.dataframe(
+            marco,
+            width=width,
+            height=height,
+            hide_index=hide_index,
+            key=key,
+            lazy=len(marco) > 1000,
+        )
+
+    # Las tablas cortas conservan la paleta clara u oscura personalizada.
     tema_claro = bool(st.session_state.get("tema_blanco", False))
     if tema_claro:
         color_fondo = "#ffffff"
@@ -126,6 +143,7 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
         color_cabecera = "#25343d"
         color_fila_alterna = "#1e2a33"
         color_borde = "#3a4b55"
+
     marco_renderizado = (
         marco.style
         .set_properties(
@@ -167,13 +185,6 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     if hide_index:
         marco_renderizado = marco_renderizado.hide(axis="index")
 
-    try:
-        height = max(180, min(int(height), 900))
-    except (TypeError, ValueError):
-        height = "content"
-
-    # Mantiene el renderizado HTML para que los encabezados y las celdas
-    # respeten la paleta elegida, también en tablas extensas.
     return st.table(
         marco_renderizado,
         width=width,
@@ -4400,7 +4411,7 @@ with st.sidebar:
 
 @st.cache_resource(ttl=300, show_spinner=False)
 def preparar_tabla_usuarios():
-    """Crea la tabla y consulta administradores activos con una conexión."""
+    """Prepara la autenticación y refresca en segundo plano al vencer."""
     return auth.inicializar()
 
 # La base no se consulta al cargar la página de acceso.
@@ -5213,7 +5224,8 @@ def pantalla_acceso():
 
             if entrar:
                 try:
-                    usuario = auth.verificar_usuario(username, password)
+                    with st.spinner("Verificando tus datos de acceso..."):
+                        usuario = auth.verificar_usuario(username, password)
                     if usuario:
                         st.session_state["usuario"] = usuario
                         st.session_state["menu"] = "Inicio"
@@ -7255,9 +7267,6 @@ if menu == "Predicción de demanda":
 
 if menu == "Inicio":
 
-    operacion = resumen_operativo()
-    alertas = obtener_alertas_stock(3)
-
     st.markdown(
         f"""
         <section class="hb-hero">
@@ -7274,6 +7283,10 @@ if menu == "Inicio":
         """,
         unsafe_allow_html=True,
     )
+
+    with st.spinner("Cargando el resumen del negocio..."):
+        operacion = resumen_operativo()
+        alertas = obtener_alertas_stock(3)
 
     st.caption(":material/database: Resumen operativo")
 
@@ -7949,395 +7962,400 @@ elif menu == "Productos":
 
     st.header("Gestión de productos", icon=":material/inventory_2:")
 
-    tab1, tab2 = st.tabs([
-        "Registrar producto",
-        "Productos registrados"
-    ])
+    tab1, tab2 = st.tabs(
+        [
+            "Registrar producto",
+            "Productos registrados",
+        ],
+        on_change="rerun",
+    )
 
-    with tab1:
+    if tab1.open:
+        with tab1:
 
-        with st.form("form_producto"):
+            with st.form("form_producto"):
 
-            c1, c2 = st.columns(2)
+                c1, c2 = st.columns(2)
 
-            with c1:
-                codigo = st.text_input("Código del producto")
-                nombre = st.text_input("Nombre del producto")
-                categoria = st.text_input("Categoría")
-                precio_compra = st.number_input(
-                    "Precio de compra",
-                    min_value=0.0,
-                    step=0.10,
-                    format="%.2f"
-                )
-
-            with c2:
-                precio_venta = st.number_input(
-                    "Precio de venta",
-                    min_value=0.0,
-                    step=0.10,
-                    format="%.2f"
-                )
-                stock = st.number_input(
-                    "Stock inicial",
-                    min_value=0,
-                    step=1
-                )
-                stock_minimo = st.number_input(
-                    "Stock mínimo",
-                    min_value=0,
-                    step=1,
-                    value=5
-                )
-
-            guardar = st.form_submit_button(
-                "Registrar producto"
-            )
-
-            if guardar:
-
-                if not codigo.strip():
-                    st.error("Ingrese el código.")
-
-                elif not nombre.strip():
-                    st.error("Ingrese el nombre.")
-
-                elif precio_venta <= 0:
-                    st.error("El precio de venta debe ser mayor que 0.")
-
-                else:
-
-                    ok, mensaje = registrar_producto(
-                        codigo.strip(),
-                        nombre.strip(),
-                        categoria.strip(),
-                        precio_compra,
-                        precio_venta,
-                        stock,
-                        stock_minimo
+                with c1:
+                    codigo = st.text_input("Código del producto")
+                    nombre = st.text_input("Nombre del producto")
+                    categoria = st.text_input("Categoría")
+                    precio_compra = st.number_input(
+                        "Precio de compra",
+                        min_value=0.0,
+                        step=0.10,
+                        format="%.2f"
                     )
 
-                    if ok:
-                        notificar_exito(mensaje)
-                        st.rerun()
+                with c2:
+                    precio_venta = st.number_input(
+                        "Precio de venta",
+                        min_value=0.0,
+                        step=0.10,
+                        format="%.2f"
+                    )
+                    stock = st.number_input(
+                        "Stock inicial",
+                        min_value=0,
+                        step=1
+                    )
+                    stock_minimo = st.number_input(
+                        "Stock mínimo",
+                        min_value=0,
+                        step=1,
+                        value=5
+                    )
+
+                guardar = st.form_submit_button(
+                    "Registrar producto"
+                )
+
+                if guardar:
+
+                    if not codigo.strip():
+                        st.error("Ingrese el código.")
+
+                    elif not nombre.strip():
+                        st.error("Ingrese el nombre.")
+
+                    elif precio_venta <= 0:
+                        st.error("El precio de venta debe ser mayor que 0.")
+
                     else:
-                        st.error(mensaje)
 
-    with tab2:
+                        ok, mensaje = registrar_producto(
+                            codigo.strip(),
+                            nombre.strip(),
+                            categoria.strip(),
+                            precio_compra,
+                            precio_venta,
+                            stock,
+                            stock_minimo
+                        )
 
-        st.subheader("Cargar productos desde Excel")
-        col_plantilla, col_archivo = st.columns([1, 2])
-        with col_plantilla:
-            st.download_button(
-                "Descargar plantilla de productos",
-                data=crear_plantilla_productos_excel(),
-                file_name="plantilla_productos_humbertito.xlsx",
-                mime=(
-                    "application/vnd.openxmlformats-officedocument."
-                    "spreadsheetml.sheet"
-                ),
-                key="descargar_plantilla_productos_excel",
-            )
-        with col_archivo:
-            version_carga_productos = st.session_state.setdefault(
-                "version_carga_productos_excel", 0
-            )
-            archivo_productos_excel = st.file_uploader(
-                "Seleccionar archivo Excel de productos (.xlsx)",
-                type=["xlsx"],
-                key=f"carga_productos_excel_{version_carga_productos}",
-            )
+                        if ok:
+                            notificar_exito(mensaje)
+                            st.rerun()
+                        else:
+                            st.error(mensaje)
 
-        if archivo_productos_excel is not None:
-            contenido_productos_excel = archivo_productos_excel.getvalue()
-            hash_productos_excel = hashlib.sha256(
-                contenido_productos_excel
-            ).hexdigest()[:12]
-            filas_productos_excel, errores_productos_excel = (
-                validar_productos_excel(contenido_productos_excel)
-            )
+    if tab2.open:
+        with tab2:
 
-            if filas_productos_excel:
-                vista_productos_excel = pd.DataFrame([
-                    {
-                        "ID": (
-                            fila["id"] if fila["id"] is not None else "Automático"
-                        ),
-                        "Código": fila["codigo"],
-                        "Producto": fila["nombre"],
-                        "Categoría": fila["categoria"],
-                        "Precio compra": f"S/ {fila['precio_compra']:.2f}",
-                        "Precio venta": f"S/ {fila['precio_venta']:.2f}",
-                        "Stock": fila["stock"],
-                        "Stock mínimo": fila["stock_minimo"],
-                    }
-                    for fila in filas_productos_excel
-                ])
+            st.subheader("Cargar productos desde Excel")
+            col_plantilla, col_archivo = st.columns([1, 2])
+            with col_plantilla:
+                st.download_button(
+                    "Descargar plantilla de productos",
+                    data=crear_plantilla_productos_excel(),
+                    file_name="plantilla_productos_humbertito.xlsx",
+                    mime=(
+                        "application/vnd.openxmlformats-officedocument."
+                        "spreadsheetml.sheet"
+                    ),
+                    key="descargar_plantilla_productos_excel",
+                )
+            with col_archivo:
+                version_carga_productos = st.session_state.setdefault(
+                    "version_carga_productos_excel", 0
+                )
+                archivo_productos_excel = st.file_uploader(
+                    "Seleccionar archivo Excel de productos (.xlsx)",
+                    type=["xlsx"],
+                    key=f"carga_productos_excel_{version_carga_productos}",
+                )
+
+            if archivo_productos_excel is not None:
+                contenido_productos_excel = archivo_productos_excel.getvalue()
+                hash_productos_excel = hashlib.sha256(
+                    contenido_productos_excel
+                ).hexdigest()[:12]
+                filas_productos_excel, errores_productos_excel = (
+                    validar_productos_excel(contenido_productos_excel)
+                )
+
+                if filas_productos_excel:
+                    vista_productos_excel = pd.DataFrame([
+                        {
+                            "ID": (
+                                fila["id"] if fila["id"] is not None else "Automático"
+                            ),
+                            "Código": fila["codigo"],
+                            "Producto": fila["nombre"],
+                            "Categoría": fila["categoria"],
+                            "Precio compra": f"S/ {fila['precio_compra']:.2f}",
+                            "Precio venta": f"S/ {fila['precio_venta']:.2f}",
+                            "Stock": fila["stock"],
+                            "Stock mínimo": fila["stock_minimo"],
+                        }
+                        for fila in filas_productos_excel
+                    ])
+                    mostrar_tabla_centrada(
+                        vista_productos_excel,
+                        width="stretch",
+                        hide_index=True,
+                        height=420,
+                        key=f"vista_productos_excel_{hash_productos_excel}",
+                        column_config={
+                            "ID": st.column_config.TextColumn(
+                                "ID", width=85, alignment="center"
+                            ),
+                            "Código": st.column_config.TextColumn(
+                                "Código", width=125, alignment="center"
+                            ),
+                            "Producto": st.column_config.TextColumn(
+                                "Producto", width=220, alignment="center"
+                            ),
+                            "Categoría": st.column_config.TextColumn(
+                                "Categoría", width=170, alignment="center"
+                            ),
+                            "Precio compra": st.column_config.TextColumn(
+                                "Precio compra", width=130, alignment="center"
+                            ),
+                            "Precio venta": st.column_config.TextColumn(
+                                "Precio venta", width=130, alignment="center"
+                            ),
+                            "Stock": st.column_config.NumberColumn(
+                                "Stock", width=80, alignment="center"
+                            ),
+                            "Stock mínimo": st.column_config.NumberColumn(
+                                "Stock mínimo", width=100, alignment="center"
+                            ),
+                        },
+                    )
+                    st.caption(
+                        f"Productos válidos: {len(filas_productos_excel)}. "
+                        "La importación se realizará completa, sin omitir filas."
+                    )
+
+                if errores_productos_excel:
+                    st.error(
+                        f"Se encontraron {len(errores_productos_excel)} errores. "
+                        "Corrige el archivo; no se importará parcialmente."
+                    )
+                    for error_producto_excel in errores_productos_excel[:20]:
+                        st.write(f"• {error_producto_excel}")
+                    if len(errores_productos_excel) > 20:
+                        st.caption("Se muestran los primeros 20 errores.")
+
+                if filas_productos_excel and not errores_productos_excel:
+                    if st.button(
+                        "Importar productos validados",
+                        key="confirmar_importacion_productos_excel",
+                        type="primary",
+                    ):
+                        ok, mensaje = importar_productos_excel(
+                            filas_productos_excel
+                        )
+                        if ok:
+                            st.session_state[
+                                "version_carga_productos_excel"
+                            ] += 1
+                            notificar_exito(mensaje)
+                            st.rerun()
+                        else:
+                            st.error(mensaje)
+
+            st.divider()
+
+            productos = obtener_productos()
+
+            if productos:
+
+                tabla = []
+
+                productos_por_id = {p[0]: p for p in productos}
+
+                for p in productos:
+                    tabla.append({
+                        "ID": p[0],
+                        "Código": p[1],
+                        "Producto": p[2],
+                        "Categoría": p[3],
+                        "Precio compra": p[4],
+                        "Precio venta": p[5],
+                        "Stock": p[6],
+                        "Stock mínimo": p[7]
+                    })
+
                 mostrar_tabla_centrada(
-                    vista_productos_excel,
+                    tabla,
                     width="stretch",
                     hide_index=True,
                     height=420,
-                    key=f"vista_productos_excel_{hash_productos_excel}",
-                    column_config={
-                        "ID": st.column_config.TextColumn(
-                            "ID", width=85, alignment="center"
-                        ),
-                        "Código": st.column_config.TextColumn(
-                            "Código", width=125, alignment="center"
-                        ),
-                        "Producto": st.column_config.TextColumn(
-                            "Producto", width=220, alignment="center"
-                        ),
-                        "Categoría": st.column_config.TextColumn(
-                            "Categoría", width=170, alignment="center"
-                        ),
-                        "Precio compra": st.column_config.TextColumn(
-                            "Precio compra", width=130, alignment="center"
-                        ),
-                        "Precio venta": st.column_config.TextColumn(
-                            "Precio venta", width=130, alignment="center"
-                        ),
-                        "Stock": st.column_config.NumberColumn(
-                            "Stock", width=80, alignment="center"
-                        ),
-                        "Stock mínimo": st.column_config.NumberColumn(
-                            "Stock mínimo", width=100, alignment="center"
-                        ),
-                    },
-                )
-                st.caption(
-                    f"Productos válidos: {len(filas_productos_excel)}. "
-                    "La importación se realizará completa, sin omitir filas."
+                    key="productos_registrados_orden_id_asc",
                 )
 
-            if errores_productos_excel:
-                st.error(
-                    f"Se encontraron {len(errores_productos_excel)} errores. "
-                    "Corrige el archivo; no se importará parcialmente."
+                st.download_button(
+                    "Descargar productos en Excel",
+                    data=generar_excel_productos(productos),
+                    file_name=(
+                        f"productos_humbertito_{datetime.now():%Y%m%d_%H%M}.xlsx"
+                    ),
+                    mime=(
+                        "application/vnd.openxmlformats-officedocument."
+                        "spreadsheetml.sheet"
+                    ),
+                    key="descargar_productos_excel",
                 )
-                for error_producto_excel in errores_productos_excel[:20]:
-                    st.write(f"• {error_producto_excel}")
-                if len(errores_productos_excel) > 20:
-                    st.caption("Se muestran los primeros 20 errores.")
 
-            if filas_productos_excel and not errores_productos_excel:
-                if st.button(
-                    "Importar productos validados",
-                    key="confirmar_importacion_productos_excel",
-                    type="primary",
-                ):
-                    ok, mensaje = importar_productos_excel(
-                        filas_productos_excel
-                    )
-                    if ok:
-                        st.session_state[
-                            "version_carga_productos_excel"
-                        ] += 1
-                        notificar_exito(mensaje)
-                        st.rerun()
-                    else:
-                        st.error(mensaje)
+                st.divider()
+                st.subheader("Editar o eliminar un producto")
+                producto_id = st.selectbox(
+                    "Selecciona el producto",
+                    options=list(productos_por_id),
+                    format_func=lambda identificador: (
+                        f"{productos_por_id[identificador][1]} — "
+                        f"{productos_por_id[identificador][2]}"
+                    ),
+                    key="producto_seleccionado_edicion",
+                )
+                producto = productos_por_id[producto_id]
 
-        st.divider()
+                with st.expander("Editar datos del producto"):
+                    with st.form(f"form_editar_producto_{producto_id}"):
+                        edit_c1, edit_c2 = st.columns(2)
 
-        productos = obtener_productos()
-
-        if productos:
-
-            tabla = []
-
-            productos_por_id = {p[0]: p for p in productos}
-
-            for p in productos:
-                tabla.append({
-                    "ID": p[0],
-                    "Código": p[1],
-                    "Producto": p[2],
-                    "Categoría": p[3],
-                    "Precio compra": p[4],
-                    "Precio venta": p[5],
-                    "Stock": p[6],
-                    "Stock mínimo": p[7]
-                })
-
-            mostrar_tabla_centrada(
-                tabla,
-                width="stretch",
-                hide_index=True,
-                height=420,
-                key="productos_registrados_orden_id_asc",
-            )
-
-            st.download_button(
-                "Descargar productos en Excel",
-                data=generar_excel_productos(productos),
-                file_name=(
-                    f"productos_humbertito_{datetime.now():%Y%m%d_%H%M}.xlsx"
-                ),
-                mime=(
-                    "application/vnd.openxmlformats-officedocument."
-                    "spreadsheetml.sheet"
-                ),
-                key="descargar_productos_excel",
-            )
-
-            st.divider()
-            st.subheader("Editar o eliminar un producto")
-            producto_id = st.selectbox(
-                "Selecciona el producto",
-                options=list(productos_por_id),
-                format_func=lambda identificador: (
-                    f"{productos_por_id[identificador][1]} — "
-                    f"{productos_por_id[identificador][2]}"
-                ),
-                key="producto_seleccionado_edicion",
-            )
-            producto = productos_por_id[producto_id]
-
-            with st.expander("Editar datos del producto"):
-                with st.form(f"form_editar_producto_{producto_id}"):
-                    edit_c1, edit_c2 = st.columns(2)
-
-                    with edit_c1:
-                        nuevo_codigo = st.text_input(
-                            "Código del producto",
-                            value=producto[1],
-                        )
-                        nuevo_nombre = st.text_input(
-                            "Nombre del producto",
-                            value=producto[2],
-                        )
-                        nueva_categoria = st.text_input(
-                            "Categoría",
-                            value=producto[3] or "",
-                        )
-                        nuevo_precio_compra = st.number_input(
-                            "Precio de compra",
-                            min_value=0.0,
-                            step=0.10,
-                            format="%.2f",
-                            value=float(producto[4] or 0),
-                        )
-
-                    with edit_c2:
-                        nuevo_precio_venta = st.number_input(
-                            "Precio de venta",
-                            min_value=0.0,
-                            step=0.10,
-                            format="%.2f",
-                            value=float(producto[5] or 0),
-                        )
-                        nuevo_stock = st.number_input(
-                            "Stock",
-                            min_value=0,
-                            step=1,
-                            value=int(producto[6] or 0),
-                        )
-                        nuevo_stock_minimo = st.number_input(
-                            "Stock mínimo",
-                            min_value=0,
-                            step=1,
-                            value=int(producto[7] or 0),
-                        )
-
-                    guardar_cambios = st.form_submit_button(
-                        "Guardar cambios",
-                        type="primary",
-                    )
-
-                    if guardar_cambios:
-                        if not nuevo_codigo.strip():
-                            st.error("Ingrese el código del producto.")
-                        elif not nuevo_nombre.strip():
-                            st.error("Ingrese el nombre del producto.")
-                        elif nuevo_precio_venta <= 0:
-                            st.error("El precio de venta debe ser mayor que 0.")
-                        else:
-                            ok, mensaje = actualizar_producto(
-                                producto_id,
-                                nuevo_codigo.strip(),
-                                nuevo_nombre.strip(),
-                                nueva_categoria.strip(),
-                                nuevo_precio_compra,
-                                nuevo_precio_venta,
-                                nuevo_stock,
-                                nuevo_stock_minimo,
+                        with edit_c1:
+                            nuevo_codigo = st.text_input(
+                                "Código del producto",
+                                value=producto[1],
+                            )
+                            nuevo_nombre = st.text_input(
+                                "Nombre del producto",
+                                value=producto[2],
+                            )
+                            nueva_categoria = st.text_input(
+                                "Categoría",
+                                value=producto[3] or "",
+                            )
+                            nuevo_precio_compra = st.number_input(
+                                "Precio de compra",
+                                min_value=0.0,
+                                step=0.10,
+                                format="%.2f",
+                                value=float(producto[4] or 0),
                             )
 
-                            if ok:
-                                notificar_exito(mensaje)
-                                st.rerun()
-                            else:
-                                st.error(mensaje)
-
-            with st.expander("Eliminar producto"):
-                st.warning(
-                    "La eliminación es permanente. Si el producto ya tiene "
-                    "ventas o compras registradas, se conservará para no "
-                    "alterar ese historial."
-                )
-
-                with st.form(f"form_eliminar_producto_{producto_id}"):
-                    confirmar_eliminacion = st.checkbox(
-                        f"Confirmo que deseo eliminar “{producto[2]}”."
-                    )
-                    eliminar = st.form_submit_button(
-                        "Eliminar producto",
-                        type="secondary",
-                    )
-
-                    if eliminar:
-                        if not confirmar_eliminacion:
-                            st.error("Marca la confirmación para continuar.")
-                        else:
-                            ok, mensaje = eliminar_producto(producto_id)
-
-                            if ok:
-                                notificar_exito(mensaje)
-                                st.session_state.pop(
-                                    "producto_seleccionado_edicion",
-                                    None,
-                                )
-                                st.rerun()
-                            else:
-                                st.error(mensaje)
-
-            with st.expander("Eliminar todos los productos"):
-                st.warning(
-                    "Esto elimina el catálogo completo. Si existen ventas o "
-                    "compras asociadas, el sistema conservará los productos para "
-                    "proteger ese historial."
-                )
-                with st.form("form_eliminar_todos_productos"):
-                    confirmar_eliminacion_total = st.checkbox(
-                        "Confirmo que deseo eliminar todos los productos registrados."
-                    )
-                    eliminar_todos = st.form_submit_button(
-                        "Eliminar todos los productos",
-                        type="secondary",
-                    )
-
-                    if eliminar_todos:
-                        if not confirmar_eliminacion_total:
-                            st.error(
-                                "Marca la confirmación para eliminar el catálogo."
+                        with edit_c2:
+                            nuevo_precio_venta = st.number_input(
+                                "Precio de venta",
+                                min_value=0.0,
+                                step=0.10,
+                                format="%.2f",
+                                value=float(producto[5] or 0),
                             )
-                        else:
-                            ok, mensaje = eliminar_todos_productos()
-                            if ok:
-                                notificar_exito(mensaje)
-                                st.session_state.pop(
-                                    "producto_seleccionado_edicion",
-                                    None,
-                                )
-                                st.rerun()
+                            nuevo_stock = st.number_input(
+                                "Stock",
+                                min_value=0,
+                                step=1,
+                                value=int(producto[6] or 0),
+                            )
+                            nuevo_stock_minimo = st.number_input(
+                                "Stock mínimo",
+                                min_value=0,
+                                step=1,
+                                value=int(producto[7] or 0),
+                            )
+
+                        guardar_cambios = st.form_submit_button(
+                            "Guardar cambios",
+                            type="primary",
+                        )
+
+                        if guardar_cambios:
+                            if not nuevo_codigo.strip():
+                                st.error("Ingrese el código del producto.")
+                            elif not nuevo_nombre.strip():
+                                st.error("Ingrese el nombre del producto.")
+                            elif nuevo_precio_venta <= 0:
+                                st.error("El precio de venta debe ser mayor que 0.")
                             else:
-                                st.error(mensaje)
+                                ok, mensaje = actualizar_producto(
+                                    producto_id,
+                                    nuevo_codigo.strip(),
+                                    nuevo_nombre.strip(),
+                                    nueva_categoria.strip(),
+                                    nuevo_precio_compra,
+                                    nuevo_precio_venta,
+                                    nuevo_stock,
+                                    nuevo_stock_minimo,
+                                )
 
-        else:
+                                if ok:
+                                    notificar_exito(mensaje)
+                                    st.rerun()
+                                else:
+                                    st.error(mensaje)
 
-            st.info("Todavía no hay productos registrados.")
+                with st.expander("Eliminar producto"):
+                    st.warning(
+                        "La eliminación es permanente. Si el producto ya tiene "
+                        "ventas o compras registradas, se conservará para no "
+                        "alterar ese historial."
+                    )
+
+                    with st.form(f"form_eliminar_producto_{producto_id}"):
+                        confirmar_eliminacion = st.checkbox(
+                            f"Confirmo que deseo eliminar “{producto[2]}”."
+                        )
+                        eliminar = st.form_submit_button(
+                            "Eliminar producto",
+                            type="secondary",
+                        )
+
+                        if eliminar:
+                            if not confirmar_eliminacion:
+                                st.error("Marca la confirmación para continuar.")
+                            else:
+                                ok, mensaje = eliminar_producto(producto_id)
+
+                                if ok:
+                                    notificar_exito(mensaje)
+                                    st.session_state.pop(
+                                        "producto_seleccionado_edicion",
+                                        None,
+                                    )
+                                    st.rerun()
+                                else:
+                                    st.error(mensaje)
+
+                with st.expander("Eliminar todos los productos"):
+                    st.warning(
+                        "Esto elimina el catálogo completo. Si existen ventas o "
+                        "compras asociadas, el sistema conservará los productos para "
+                        "proteger ese historial."
+                    )
+                    with st.form("form_eliminar_todos_productos"):
+                        confirmar_eliminacion_total = st.checkbox(
+                            "Confirmo que deseo eliminar todos los productos registrados."
+                        )
+                        eliminar_todos = st.form_submit_button(
+                            "Eliminar todos los productos",
+                            type="secondary",
+                        )
+
+                        if eliminar_todos:
+                            if not confirmar_eliminacion_total:
+                                st.error(
+                                    "Marca la confirmación para eliminar el catálogo."
+                                )
+                            else:
+                                ok, mensaje = eliminar_todos_productos()
+                                if ok:
+                                    notificar_exito(mensaje)
+                                    st.session_state.pop(
+                                        "producto_seleccionado_edicion",
+                                        None,
+                                    )
+                                    st.rerun()
+                                else:
+                                    st.error(mensaje)
+
+            else:
+
+                st.info("Todavía no hay productos registrados.")
 
 
 # ==========================================================
