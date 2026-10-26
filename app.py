@@ -8723,7 +8723,7 @@ elif menu == "Ventas":
                     options=opciones_pagina,
                     format_func=lambda numero: f"Página {numero} de {total_paginas}",
                     key="historial_ventas_pagina",
-                    width="content",
+                    width=220,
                 )
             else:
                 pagina = 1
@@ -12665,6 +12665,71 @@ body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(
     border-left: 1px solid #d8e2e5 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+}
+/* Ajustes finales del tema claro para widgets cuyo popup usa portales BaseWeb. */
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]),
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]),
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]),
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] {
+    color-scheme: light !important;
+    border: 1px solid #cfdee2 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+    box-shadow: 0 12px 28px rgba(23, 48, 56, .16) !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]) *,
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]) *,
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) *,
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] * {
+    color-scheme: light !important;
+    color: #334b51 !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]) button,
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]) button,
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) button,
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] button {
+    border-color: transparent !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #334b51 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]) button:hover,
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]) button:hover,
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) button:hover,
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] button:hover {
+    background: #e8f4f2 !important;
+    color: #176b62 !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]) [aria-selected="true"],
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]) [aria-selected="true"],
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) [aria-selected="true"],
+body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [aria-selected="true"] {
+    border-radius: 999px !important;
+    background: #2f8f83 !important;
+    color: #ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stFileUploaderDropzone"] {
+    border: 1px dashed #b9cdd1 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    color: #334b51 !important;
+}
+body:has(.hb-light-mode) [data-testid="stFileUploaderDropzone"] *:not(button) {
+    color: #526970 !important;
+    background-color: transparent !important;
+    opacity: 1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stFileUploaderDropzone"] button {
+    border: 1px solid #c8dcdf !important;
+    border-radius: 9px !important;
+    background: #f6fafb !important;
+    color: #29474e !important;
+}
+body:has(.hb-light-mode) [data-testid="stFileUploaderDropzone"] button:hover {
+    background: #e8f4f2 !important;
+    color: #176b62 !important;
 }
 </style>
 """, unsafe_allow_html=True)
