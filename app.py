@@ -5006,17 +5006,79 @@ def pantalla_acceso():
         }
         [class*="st-key-theme_toggle"] button:hover svg {
             transform: rotate(-8deg) !important;
-        }        </style>
+        }
+        /* Selector compacto con modo actual visible, compartido por acceso y app. */
+        [class*="st-key-theme_toggle"] button {
+            width: auto !important;
+            min-width: 6.15rem !important;
+            max-width: 8rem !important;
+            height: 2.55rem !important;
+            min-height: 2.55rem !important;
+            max-height: 2.55rem !important;
+            padding: 0 .82rem !important;
+            border-radius: 999px !important;
+            overflow: visible !important;
+            font-size: .84rem !important;
+            font-weight: 650 !important;
+            letter-spacing: .01em !important;
+            white-space: nowrap !important;
+        }
+        [class*="st-key-theme_toggle"] button > div {
+            width: auto !important;
+            min-width: 0 !important;
+            height: 100% !important;
+            gap: .48rem !important;
+        }
+        [class*="st-key-theme_toggle"] button p {
+            position: static !important;
+            width: auto !important;
+            height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            clip: auto !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+            font-size: .84rem !important;
+            font-weight: 650 !important;
+            line-height: 1 !important;
+        }
+        [class*="st-key-theme_toggle"] button svg {
+            flex: 0 0 1.05rem !important;
+            width: 1.05rem !important;
+            height: 1.05rem !important;
+        }
+        @media (max-width: 640px) {
+            [class*="st-key-theme_toggle"] button {
+                min-width: 5.7rem !important;
+                height: 2.4rem !important;
+                min-height: 2.4rem !important;
+                max-height: 2.4rem !important;
+                padding: 0 .68rem !important;
+                font-size: .8rem !important;
+            }
+            [class*="st-key-theme_toggle"] button p {
+                font-size: .8rem !important;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            [class*="st-key-theme_toggle"] button,
+            [class*="st-key-theme_toggle"] button svg {
+                transition: none !important;
+                transform: none !important;
+            }
+        }
+        </style>
     """, unsafe_allow_html=True)
 
     with st.container(key="theme_toggle"):
         st.button(
-            "Tema",
+            "Claro" if st.session_state.tema_blanco else "Oscuro",
             key="darkModeBtn",
             icon=(
-                ":material/dark_mode:"
+                ":material/light_mode:"
                 if st.session_state.tema_blanco
-                else ":material/light_mode:"
+                else ":material/dark_mode:"
             ),
             on_click=alternar_tema,
         )
@@ -9427,12 +9489,12 @@ elif menu == "Predicción de demanda":
 
 with st.container(key="theme_toggle"):
     st.button(
-        "Tema",
+        "Claro" if st.session_state.tema_blanco else "Oscuro",
         key="darkModeBtn",
         icon=(
-            ":material/dark_mode:"
-            if st.session_state.tema_blanco
-            else ":material/light_mode:"
+            ":material/light_mode:"
+                if st.session_state.tema_blanco
+                else ":material/dark_mode:"
         ),
         on_click=alternar_tema,
     )
@@ -11444,5 +11506,66 @@ body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:focus-visib
 }
 [class*="st-key-theme_toggle"] button:hover svg {
     transform: rotate(-8deg) !important;
+}
+/* Selector compacto con modo actual visible, compartido por acceso y app. */
+[class*="st-key-theme_toggle"] button {
+    width: auto !important;
+    min-width: 6.15rem !important;
+    max-width: 8rem !important;
+    height: 2.55rem !important;
+    min-height: 2.55rem !important;
+    max-height: 2.55rem !important;
+    padding: 0 .82rem !important;
+    border-radius: 999px !important;
+    overflow: visible !important;
+    font-size: .84rem !important;
+    font-weight: 650 !important;
+    letter-spacing: .01em !important;
+    white-space: nowrap !important;
+}
+[class*="st-key-theme_toggle"] button > div {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    gap: .48rem !important;
+}
+[class*="st-key-theme_toggle"] button p {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    font-size: .84rem !important;
+    font-weight: 650 !important;
+    line-height: 1 !important;
+}
+[class*="st-key-theme_toggle"] button svg {
+    flex: 0 0 1.05rem !important;
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+}
+@media (max-width: 640px) {
+    [class*="st-key-theme_toggle"] button {
+min-width: 5.7rem !important;
+height: 2.4rem !important;
+min-height: 2.4rem !important;
+max-height: 2.4rem !important;
+padding: 0 .68rem !important;
+font-size: .8rem !important;
+    }
+    [class*="st-key-theme_toggle"] button p {
+font-size: .8rem !important;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    [class*="st-key-theme_toggle"] button,
+    [class*="st-key-theme_toggle"] button svg {
+transition: none !important;
+transform: none !important;
+    }
 }</style>
 """, unsafe_allow_html=True)
