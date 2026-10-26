@@ -95,7 +95,7 @@ def _obtener_pool_postgres():
                     # Keep Supabase connections low; concurrent requests queue here.
                     min_size=1,
                     max_size=3,
-                    timeout=8,
+                    timeout=20,
                     open=True,
                     kwargs={
                         "connect_timeout": 8,
