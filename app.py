@@ -4412,7 +4412,8 @@ def preparar_tabla_usuarios():
     """Crea la tabla y consulta el conteo con una sola conexión."""
     return auth.inicializar()
 
-preparar_tabla_usuarios()
+# La base no se consulta al cargar la página de acceso.
+# Se conecta únicamente al iniciar sesión o crear el primer administrador.
 
 # ==========================================================
 # AUTENTICACIÓN Y CONTROL DE ACCESO
@@ -5126,7 +5127,8 @@ def pantalla_acceso():
         )
 
     with access_column:
-        if contar_usuarios_acceso() == 0:
+        configurar_admin = st.session_state.get("_configurar_primer_admin", False)
+        if configurar_admin:
             st.markdown(
                 """
                 <div class="login-form-intro">
@@ -5140,40 +5142,40 @@ def pantalla_acceso():
             with st.form("crear_primer_admin"):
                 nombre = st.text_input("Nombre completo")
                 username = st.text_input("Usuario")
-                password = st.text_input(
-                    "Contraseña",
-                    type="password"
-                )
-                confirmar = st.text_input(
-                    "Confirmar contraseña",
-                    type="password"
-                )
-
+                password = st.text_input("Contraseña", type="password")
+                confirmar = st.text_input("Confirmar contraseña", type="password")
                 enviar = st.form_submit_button(
                     "Crear administrador",
                     type="primary",
-                    width="stretch"
+                    width="stretch",
                 )
 
-                if enviar:
-                    if password != confirmar:
-                        st.error("Las contraseñas no coinciden.")
-                    else:
-                        try:
-                            auth.crear_usuario(
-                                username,
-                                nombre,
-                                password,
-                                "admin"
-                            )
+            if enviar:
+                if password != confirmar:
+                    st.error("Las contraseñas no coinciden.")
+                else:
+                    try:
+                        cantidad = contar_usuarios_acceso()
+                        if cantidad != 0:
+                            st.error("Ya existe una cuenta. Inicia sesión.")
+                            st.session_state.pop("_configurar_primer_admin", None)
+                        else:
+                            auth.crear_usuario(username, nombre, password, "admin")
                             preparar_tabla_usuarios.clear()
-                            notificar_exito(
-                                "Administrador creado. Inicia sesión."
-                            )
+                            st.session_state.pop("_configurar_primer_admin", None)
+                            notificar_exito("Administrador creado. Inicia sesión.")
                             st.rerun()
-                        except ValueError as error:
-                            st.error(str(error))
+                    except ValueError as error:
+                        st.error(str(error))
+                    except Exception:
+                        st.error(
+                            "No se pudo conectar con la base de datos. "
+                            "Vuelve a intentarlo en unos segundos."
+                        )
 
+            if st.button("Volver a iniciar sesión", key="volver_login", width="stretch"):
+                st.session_state.pop("_configurar_primer_admin", None)
+                st.rerun()
         else:
             st.markdown(
                 """
@@ -5187,31 +5189,35 @@ def pantalla_acceso():
 
             with st.form("form_login"):
                 username = st.text_input("Usuario")
-                password = st.text_input(
-                    "Contraseña",
-                    type="password"
-                )
-
+                password = st.text_input("Contraseña", type="password")
                 entrar = st.form_submit_button(
                     "Iniciar sesión",
                     type="primary",
-                    width="stretch"
+                    width="stretch",
                 )
 
-                if entrar:
-                    usuario = auth.verificar_usuario(
-                        username,
-                        password
-                    )
-
+            if entrar:
+                try:
+                    usuario = auth.verificar_usuario(username, password)
                     if usuario:
                         st.session_state["usuario"] = usuario
                         st.session_state["menu"] = "Inicio"
                         st.rerun()
                     else:
-                        st.error(
-                            "Usuario o contraseña incorrectos."
-                        )
+                        st.error("Usuario o contraseña incorrectos.")
+                except Exception:
+                    st.error(
+                        "No se pudo conectar con la base de datos. "
+                        "Revisa la conexión e inténtalo otra vez."
+                    )
+
+            if st.button(
+                "¿Primera vez? Configurar administrador",
+                key="mostrar_configuracion_admin",
+                width="stretch",
+            ):
+                st.session_state["_configurar_primer_admin"] = True
+                st.rerun()
 
 if "usuario" not in st.session_state:
     pantalla_acceso()
