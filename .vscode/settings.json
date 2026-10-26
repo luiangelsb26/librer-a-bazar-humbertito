@@ -1,3 +1,4 @@
+
 {
     "files.exclude": {
         "**/__pycache__": true,
@@ -18,5 +19,7 @@
         "**/datamkdir": true,
         "**/app_backup.py": true
     },
-    "python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe"
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python.analysis.useLibraryCodeForTypes": true
 }
