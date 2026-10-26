@@ -1,4 +1,5 @@
 import atexit
+import logging
 import os
 import sqlite3
 import threading
@@ -13,6 +14,7 @@ _DATABASE_URL = os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_UR
 _FALLBACK_SQLITE = False
 _POSTGRES_POOL = None
 _POOL_LOCK = threading.Lock()
+_LOGGER = logging.getLogger(__name__)
 
 
 class _CursorPostgres:
@@ -92,9 +94,10 @@ def _obtener_pool_postgres():
 
                 _POSTGRES_POOL = ConnectionPool(
                     conninfo=_DATABASE_URL,
-                    # Keep Supabase connections low; concurrent requests queue here.
+                    # Allow several Streamlit sessions to query concurrently
+                    # without exhausting Supabase's connection budget.
                     min_size=1,
-                    max_size=3,
+                    max_size=8,
                     timeout=20,
                     open=True,
                     kwargs={
@@ -175,7 +178,12 @@ def conectar():
             conexion = pool.getconn(timeout=20)
             return _ConexionPostgres(conexion, pool)
         except PoolTimeout:
-            # Do not open extra connections beyond Supabase capacity.
+            # Log only pool statistics; never include the DSN or credentials.
+            if pool is not None:
+                try:
+                    _LOGGER.error("Supabase connection pool timed out: %s", pool.get_stats())
+                except Exception:
+                    _LOGGER.error("Supabase connection pool timed out; stats unavailable")
             raise
         except Exception:
             pass
