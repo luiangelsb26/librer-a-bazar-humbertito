@@ -70,52 +70,43 @@ def verificar_hash(password, hash_guardado):
 # ==========================================================
 
 def inicializar():
-
+    """Crea la tabla de usuarios y devuelve su cantidad con una conexión."""
     con = conectar()
-    cur = con.cursor()
-    id_type = (
-        "SERIAL PRIMARY KEY"
-        if database.usar_supabase()
-        else "INTEGER PRIMARY KEY AUTOINCREMENT"
-    )
-
-    cur.execute(f"""
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id {id_type},
-            username TEXT UNIQUE NOT NULL,
-            nombre TEXT NOT NULL,
-            password TEXT NOT NULL,
-            rol TEXT NOT NULL DEFAULT 'empleado',
-            activo INTEGER NOT NULL DEFAULT 1,
-            creado TEXT NOT NULL
+    try:
+        cur = con.cursor()
+        id_type = (
+            "SERIAL PRIMARY KEY"
+            if database.usar_supabase()
+            else "INTEGER PRIMARY KEY AUTOINCREMENT"
         )
-    """)
-
-    con.commit()
-    con.close()
-
-
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id {id_type},
+                username TEXT UNIQUE NOT NULL,
+                nombre TEXT NOT NULL,
+                password TEXT NOT NULL,
+                rol TEXT NOT NULL DEFAULT 'empleado',
+                activo INTEGER NOT NULL DEFAULT 1,
+                creado TEXT NOT NULL
+            )
+        """)
+        con.commit()
+        cur.execute("SELECT COUNT(*) FROM usuarios")
+        return cur.fetchone()[0]
+    finally:
+        con.close()
 # ==========================================================
 # CANTIDAD DE USUARIOS
 # ==========================================================
 
 def cantidad_usuarios():
-
     con = conectar()
-    cur = con.cursor()
-
-    cur.execute("""
-        SELECT COUNT(*)
-        FROM usuarios
-    """)
-
-    cantidad = cur.fetchone()[0]
-
-    con.close()
-
-    return cantidad
-
-
+    try:
+        cur = con.cursor()
+        cur.execute("SELECT COUNT(*) FROM usuarios")
+        return cur.fetchone()[0]
+    finally:
+        con.close()
 # ==========================================================
 # CREAR USUARIO
 # ==========================================================
@@ -126,79 +117,36 @@ def crear_usuario(
     password,
     rol="empleado"
 ):
-
     username = username.strip()
     nombre = nombre.strip()
-
     if not username:
-        raise ValueError(
-            "El nombre de usuario es obligatorio."
-        )
-
+        raise ValueError("El nombre de usuario es obligatorio.")
     if not nombre:
-        raise ValueError(
-            "El nombre completo es obligatorio."
-        )
-
+        raise ValueError("El nombre completo es obligatorio.")
     if not password:
-        raise ValueError(
-            "La contraseña es obligatoria."
-        )
-
+        raise ValueError("La contraseña es obligatoria.")
     if rol not in ("admin", "empleado"):
-        raise ValueError(
-            "El rol seleccionado no es válido."
-        )
+        raise ValueError("El rol seleccionado no es válido.")
 
-    con = conectar()
-    cur = con.cursor()
-
-    # Comprobar si ya existe
-    cur.execute("""
-        SELECT id
-        FROM usuarios
-        WHERE username = ?
-    """, (
-        username,
-    ))
-
-    existente = cur.fetchone()
-
-    if existente:
-        con.close()
-
-        raise ValueError(
-            "El nombre de usuario ya existe."
-        )
-
+    # El cálculo PBKDF2 ocurre antes de reservar la conexión del pool.
     password_hash = generar_hash(password)
-
-    fecha_creacion = datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-
-    cur.execute("""
-        INSERT INTO usuarios (
-            username,
-            nombre,
-            password,
-            rol,
-            activo,
-            creado
-        )
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        username,
-        nombre,
-        password_hash,
-        rol,
-        1,
-        fecha_creacion
-    ))
-
-    con.commit()
-    con.close()
-
+    fecha_creacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    con = conectar()
+    try:
+        cur = con.cursor()
+        cur.execute("SELECT id FROM usuarios WHERE username = ?", (username,))
+        if cur.fetchone():
+            raise ValueError("El nombre de usuario ya existe.")
+        cur.execute("""
+            INSERT INTO usuarios (username, nombre, password, rol, activo, creado)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (username, nombre, password_hash, rol, 1, fecha_creacion))
+        con.commit()
+    except Exception:
+        con.rollback()
+        raise
+    finally:
+        con.close()
 
 # ==========================================================
 # VERIFICAR USUARIO
@@ -208,93 +156,66 @@ def verificar_usuario(
     username,
     password
 ):
-
     username = username.strip()
-
     con = conectar()
-    cur = con.cursor()
-
-    cur.execute("""
-        SELECT
-            id,
-            username,
-            nombre,
-            rol,
-            activo,
-            password
-        FROM usuarios
-        WHERE username = ?
-          AND activo = 1
-    """, (username,))
-
-    fila = cur.fetchone()
+    try:
+        cur = con.cursor()
+        cur.execute("""
+            SELECT id, username, nombre, rol, activo, password
+            FROM usuarios
+            WHERE username = ? AND activo = 1
+        """, (username,))
+        fila = cur.fetchone()
+    finally:
+        con.close()
 
     if fila is None:
-        con.close()
         return None
 
+    # No mantener una conexión ocupada durante el cálculo costoso de PBKDF2.
     valido, actualizar_hash = verificar_hash(password, fila[5])
     if not valido:
-        con.close()
         return None
 
     if actualizar_hash:
         nuevo_hash = generar_hash(password)
+        con_actualizacion = conectar()
         try:
-            cur.execute(
+            cur_actualizacion = con_actualizacion.cursor()
+            cur_actualizacion.execute(
                 "UPDATE usuarios SET password = ? WHERE id = ? AND password = ?",
                 (nuevo_hash, fila[0], fila[5]),
             )
-            con.commit()
+            con_actualizacion.commit()
         except Exception:
-            con.rollback()
-
-    con.close()
-
-    # IMPORTANTE:
-    # app.py utiliza:
-    # usuario_actual["rol"]
-    #
-    # Por eso debemos devolver un diccionario,
-    # no una tupla.
+            con_actualizacion.rollback()
+        finally:
+            con_actualizacion.close()
 
     return {
         "id": fila[0],
         "username": fila[1],
         "nombre": fila[2],
         "rol": fila[3],
-        "activo": fila[4]
+        "activo": fila[4],
     }
-
 
 # ==========================================================
 # LISTAR USUARIOS
 # ==========================================================
 
 def listar_usuarios():
-
     con = conectar()
-    cur = con.cursor()
-
-    cur.execute("""
-        SELECT
-            id,
-            username,
-            nombre,
-            rol,
-            activo,
-            creado
-        FROM usuarios
-        ORDER BY id
-    """)
-
-    usuarios = cur.fetchall()
-
-    con.close()
-
-    return usuarios
-
-
+    try:
+        cur = con.cursor()
+        cur.execute("""
+            SELECT id, username, nombre, rol, activo, creado
+            FROM usuarios
+            ORDER BY id
+        """)
+        return cur.fetchall()
+    finally:
+        con.close()
 # ==========================================================
 # ELIMINAR USUARIO
 # ==========================================================

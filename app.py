@@ -4409,10 +4409,8 @@ with st.sidebar:
 
 @st.cache_resource(show_spinner=False)
 def preparar_tabla_usuarios():
-    """Prepara solo autenticación antes de mostrar la pantalla de acceso."""
-    auth.inicializar()
-    return True
-
+    """Crea la tabla y consulta el conteo con una sola conexión."""
+    return auth.inicializar()
 
 preparar_tabla_usuarios()
 
@@ -4427,10 +4425,9 @@ if not database.usar_supabase():
     )
 
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def contar_usuarios_acceso():
-    """Evita consultar el total de usuarios en cada rerun del formulario."""
-    return auth.cantidad_usuarios()
+    """Usa el conteo obtenido al preparar la conexión de autenticación."""
+    return preparar_tabla_usuarios()
 
 @st.cache_data(ttl=15, show_spinner=False, max_entries=1)
 def obtener_usuarios_administracion_cache():
@@ -5169,7 +5166,7 @@ def pantalla_acceso():
                                 password,
                                 "admin"
                             )
-                            contar_usuarios_acceso.clear()
+                            preparar_tabla_usuarios.clear()
                             notificar_exito(
                                 "Administrador creado. Inicia sesión."
                             )
@@ -5296,7 +5293,6 @@ def preparar_esquema_sistema():
 preparar_esquema_sistema()
 
 # pandas se usa en módulos operativos, no en la pantalla de inicio de sesión.
-import pandas as pd
 
 
 # ==========================================================
@@ -5314,44 +5310,33 @@ def conectar():
 @st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def contar_productos():
     con = conectar()
-    cur = con.cursor()
-    cur.execute("SELECT COUNT(*) FROM productos")
-    resultado = cur.fetchone()[0]
-    con.close()
-    return resultado
-
+    try:
+        return con.execute("SELECT COUNT(*) FROM productos").fetchone()[0]
+    finally:
+        con.close()
 
 @st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_stock():
     con = conectar()
-    cur = con.cursor()
-    cur.execute("SELECT COALESCE(SUM(stock), 0) FROM productos")
-    resultado = cur.fetchone()[0]
-    con.close()
-    return resultado
-
+    try:
+        return con.execute("SELECT COALESCE(SUM(stock), 0) FROM productos").fetchone()[0]
+    finally:
+        con.close()
 
 @st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def obtener_productos():
     con = conectar()
-    cur = con.cursor()
-    cur.execute("""
-        SELECT
-            id,
-            codigo,
-            nombre,
-            categoria,
-            precio_compra,
-            precio_venta,
-            stock,
-            stock_minimo
-        FROM productos
-        ORDER BY id ASC
-    """)
-    resultado = cur.fetchall()
-    con.close()
-    return resultado
-
+    try:
+        cur = con.cursor()
+        cur.execute("""
+            SELECT id, codigo, nombre, categoria, precio_compra, precio_venta,
+                   stock, stock_minimo
+            FROM productos
+            ORDER BY id ASC
+        """)
+        return cur.fetchall()
+    finally:
+        con.close()
 
 @st.cache_data(ttl=60, show_spinner=False, max_entries=3)
 def generar_excel_productos(productos):
@@ -6327,30 +6312,18 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
 @st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_ventas():
     con = conectar()
-
-    resultado = con.execute("""
-        SELECT
-            v.id,
-            v.fecha,
-            v.total,
-            p.nombre,
-            dv.cantidad,
-            dv.precio_unitario,
-            dv.subtotal,
-            v.stock_descontado,
-            v.referencia,
-            dv.id
-        FROM ventas v
-        JOIN detalle_ventas dv
-            ON v.id = dv.venta_id
-        JOIN productos p
-            ON dv.producto_id = p.id
-        ORDER BY dv.id ASC
-    """).fetchall()
-
-    con.close()
-    return resultado
-
+    try:
+        return con.execute("""
+            SELECT v.id, v.fecha, v.total, p.nombre, dv.cantidad,
+                   dv.precio_unitario, dv.subtotal, v.stock_descontado,
+                   v.referencia, dv.id
+            FROM ventas v
+            JOIN detalle_ventas dv ON v.id = dv.venta_id
+            JOIN productos p ON dv.producto_id = p.id
+            ORDER BY dv.id ASC
+        """).fetchall()
+    finally:
+        con.close()
 
 def eliminar_venta(venta_id, restaurar_stock_venta_antigua=False):
     """Elimina una venta y restaura el stock si esa venta lo había descontado."""
@@ -7126,16 +7099,16 @@ def resumen_operativo():
 @st.cache_data(ttl=10, show_spinner=False, max_entries=10)
 def obtener_alertas_stock(limit=5):
     con = conectar()
-    alertas = con.execute("""
-        SELECT codigo, nombre, stock, stock_minimo
-        FROM productos
-        WHERE stock <= stock_minimo
-        ORDER BY stock ASC, nombre ASC
-        LIMIT ?
-    """, (limit,)).fetchall()
-    con.close()
-    return alertas
-
+    try:
+        return con.execute("""
+            SELECT codigo, nombre, stock, stock_minimo
+            FROM productos
+            WHERE stock <= stock_minimo
+            ORDER BY stock ASC, nombre ASC
+            LIMIT ?
+        """, (limit,)).fetchall()
+    finally:
+        con.close()
 
 # ==========================================================
 # MENÚ
@@ -7249,6 +7222,9 @@ with st.sidebar:
                 st.rerun()
             except Exception as error:
                 st.error(f"No se pudo reiniciar el sistema: {error}")
+
+if menu != "Inicio":
+    import pandas as pd
 
 # Carga bajo demanda los módulos pesados solo cuando la sección los necesita.
 if menu in ("Dashboard gerencial", "Análisis inteligente"):
@@ -7489,6 +7465,7 @@ elif menu == "Administrar usuarios":
                             rol
                         )
                         obtener_usuarios_administracion_cache.clear()
+                        preparar_tabla_usuarios.clear()
                         notificar_exito(
                             f"Usuario {username} creado correctamente."
                         )
@@ -7591,6 +7568,7 @@ elif menu == "Administrar usuarios":
                                 nuevo_admin_id,
                             )
                             obtener_usuarios_administracion_cache.clear()
+                            preparar_tabla_usuarios.clear()
                             notificar_exito(
                                 f"Administración transferida a @{nuevo_admin[1]}. "
                                 "Tu cuenta fue eliminada; inicia sesión con la nueva cuenta."
@@ -7699,6 +7677,7 @@ elif menu == "Administrar usuarios":
                                     usuario_actual.get("id"),
                                 )
                                 obtener_usuarios_administracion_cache.clear()
+                                preparar_tabla_usuarios.clear()
                                 st.session_state.pop(
                                     "usuario_pendiente_eliminar_id", None
                                 )

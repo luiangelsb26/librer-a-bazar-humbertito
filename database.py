@@ -93,7 +93,7 @@ def _obtener_pool_postgres():
                 _POSTGRES_POOL = ConnectionPool(
                     conninfo=_DATABASE_URL,
                     min_size=1,
-                    max_size=5,
+                    max_size=8,
                     timeout=10,
                     open=True,
                     kwargs={
