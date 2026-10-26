@@ -12061,5 +12061,96 @@ body:not(:has(.hb-light-mode)) [data-testid="stDateInputField"] [role="spinbutto
     color: #e2eaee !important;
     box-shadow: none !important;
 }
+/* Controles +/- con divisores finos y contorno cerrado en ambos temas. */
+body:has(.hb-light-mode) [data-testid="stNumberInputContainer"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #b9cdd1 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInputField"] {
+    box-sizing: border-box !important;
+    min-height: 2.55rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #263b42 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInputStepDown"],
+body:has(.hb-light-mode) [data-testid="stNumberInputStepUp"] {
+    box-sizing: border-box !important;
+    min-width: 2.55rem !important;
+    min-height: 2.55rem !important;
+    border: 0 !important;
+    border-left: 1px solid #d5e2e4 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #344b52 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInputStepDown"]:disabled,
+body:has(.hb-light-mode) [data-testid="stNumberInputStepUp"]:disabled {
+    background: #f0f4f5 !important;
+    color: #8b999d !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInputStepDown"]:hover:enabled,
+body:has(.hb-light-mode) [data-testid="stNumberInputStepUp"]:hover:enabled {
+    background: #e8f4f2 !important;
+    color: #176b62 !important;
+}
+body:has(.hb-light-mode) [data-testid="stNumberInputContainer"]:focus-within {
+    border-color: #348f84 !important;
+    box-shadow: 0 0 0 2px rgba(52, 143, 132, .12) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputContainer"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #465761 !important;
+    border-radius: 10px !important;
+    background: #17232c !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputField"] {
+    box-sizing: border-box !important;
+    min-height: 2.55rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #e2eaee !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputStepDown"],
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputStepUp"] {
+    box-sizing: border-box !important;
+    min-width: 2.55rem !important;
+    min-height: 2.55rem !important;
+    border: 0 !important;
+    border-left: 1px solid #465761 !important;
+    border-radius: 0 !important;
+    background: #1d2b34 !important;
+    color: #d4dfe4 !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputStepDown"]:disabled,
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputStepUp"]:disabled {
+    background: #25323a !important;
+    color: #85949b !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputStepDown"]:hover:enabled,
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputStepUp"]:hover:enabled {
+    background: #2b4149 !important;
+    color: #ffffff !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stNumberInputContainer"]:focus-within {
+    border-color: #55b8a9 !important;
+    box-shadow: 0 0 0 2px rgba(85, 184, 169, .14) !important;
+}
 </style>
 """, unsafe_allow_html=True)
