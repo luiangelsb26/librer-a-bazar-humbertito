@@ -11773,6 +11773,65 @@ body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stDateInpu
     box-shadow: none !important;
 }
 
+/* Forza una superficie blanca completa en el calendario del tema claro. */
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]),
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]),
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]),
+body:has(.hb-light-mode) .react-datepicker-popper .react-datepicker {
+    box-sizing: border-box !important;
+    color-scheme: light !important;
+    border: 1px solid #cbdadd !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+    box-shadow: 0 12px 28px rgba(23, 48, 56, .16) !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]) *,
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]) *,
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) * {
+    color-scheme: light !important;
+    color: #334b51 !important;
+    background-color: transparent !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]) button,
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]) button,
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) button {
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #334b51 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]) button:hover,
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]) button:hover,
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) button:hover {
+    background: #e8f4f2 !important;
+    color: #176b62 !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([role="grid"]) [aria-selected="true"],
+body:has(.hb-light-mode) [data-baseweb="popover"]:has([data-baseweb="calendar"]) [aria-selected="true"],
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) [aria-selected="true"] {
+    border-radius: 999px !important;
+    background: #2f8f83 !important;
+    color: #ffffff !important;
+}
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stDateInput"],
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stDateInput"] [data-baseweb="input"],
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stDateInput"],
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stDateInput"] [data-baseweb="input"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stDateInput"] [data-baseweb="input"] {
+    border-right: 1px solid #b8c9cd !important;
+    border-bottom: 1px solid #b8c9cd !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stDateInput"] [data-baseweb="input"] {
+    border-right: 1px solid #46545d !important;
+    border-bottom: 1px solid #46545d !important;
+}
+
 body:has(.hb-light-mode) .st-key-sales_form_panel,
 body:has(.hb-light-mode) .st-key-purchase_form_panel,
 body:has(.hb-light-mode) .st-key-admin_create_panel,
