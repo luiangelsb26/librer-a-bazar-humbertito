@@ -5232,10 +5232,14 @@ def pantalla_acceso():
                         st.rerun()
                     else:
                         st.error("Usuario o contraseña incorrectos.")
-                except Exception:
+                except Exception as error:
                     st.error(
                         "No se pudo conectar con la base de datos. "
                         "Revisa la conexión e inténtalo otra vez."
+                    )
+                    st.caption(
+                        "Diagnóstico técnico: "
+                        f"{type(error).__name__}."
                     )
 
 
