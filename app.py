@@ -12884,3 +12884,36 @@ body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="st
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* El botón de mostrar contraseña queda alineado con el borde fino del campo. */
+#root [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    box-sizing: border-box !important;
+    align-self: stretch !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-left: 1px solid #d4dfe2 !important;
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+#root [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover,
+#root [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:focus,
+#root [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:focus-visible,
+#root [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:active {
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    border-left-color: #35454d !important;
+}
+</style>
+""", unsafe_allow_html=True)
