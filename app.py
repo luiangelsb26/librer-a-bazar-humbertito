@@ -8000,9 +8000,6 @@ elif menu == "Dashboard gerencial":
                             "color": "#2a9d8f",
                             "line": {"width": 0},
                         },
-                        text=top_12["unidades_vendidas"],
-                        textposition="outside",
-                        cliponaxis=False,
                         hovertemplate="%{y}<br>Unidades: %{x}<extra></extra>",
                     )
                 )
@@ -8026,10 +8023,29 @@ elif menu == "Dashboard gerencial":
                         "title": None,
                         "fixedrange": True,
                         "automargin": True,
+                        "ticklabelstandoff": 8,
                     },
                     separators=",.",
                     uirevision="dashboard-productos",
                 )
+                color_etiquetas_productos = (
+                    "#34464f"
+                    if st.session_state.get("tema_blanco", False)
+                    else "#d7e1e5"
+                )
+                for _, producto in top_12.iterrows():
+                    grafico_productos_mas_vendidos.add_annotation(
+                        x=float(producto["unidades_vendidas"]),
+                        y=producto["nombre"],
+                        text=str(int(producto["unidades_vendidas"])),
+                        xref="x",
+                        yref="y",
+                        xanchor="left",
+                        yanchor="middle",
+                        xshift=7,
+                        showarrow=False,
+                        font={"color": color_etiquetas_productos, "size": 12},
+                    )
                 with st.container(key="dashboard_productos_chart"):
                     mostrar_grafico_fijo(
                         grafico_productos_mas_vendidos,
@@ -10130,12 +10146,13 @@ body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([dat
 body:has(.hb-light-mode) .st-key-stock_historico_panel {
     box-sizing: border-box !important;
     width: 100% !important;
-    min-height: 0 !important;
-    margin: 0.25rem 0 0.6rem !important;
-    padding: 0.25rem 0.75rem !important;
+    min-height: 4.4rem !important;
+    margin: 0.35rem 0 0.25rem !important;
+    padding: 0.95rem 1rem !important;
     border: 1px solid #cbdde0 !important;
-    border-radius: 12px !important;
-    background: #f3f8f8 !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(35, 72, 79, .05) !important;
     overflow: visible !important;
 }
 body:has(.hb-light-mode) .st-key-stock_historico_panel [data-testid="stVerticalBlock"] {
@@ -11854,6 +11871,12 @@ body:not(:has(.hb-light-mode)) .sales-form-intro p {
     .st-key-sales_form_panel [data-testid="stFormSubmitButton"] button {
         width: 100%;
     }
+}
+
+/* Mantén la misma separación entre la casilla y el botón en modo claro. */
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stFormSubmitButton"] {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
 
 /* Contorno continuo y fino para la fecha de la boleta. */
