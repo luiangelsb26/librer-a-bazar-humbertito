@@ -12490,3 +12490,31 @@ body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"
 }
 </style>
 """, unsafe_allow_html=True)
+
+# En tema claro, mantener el campo y el botón del ojo blancos; solo afinar el contorno.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    border: 1px solid #cbd8dc !important;
+    border-radius: 9px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) div,
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input,
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    background: #ffffff !important;
+    color: #263b42 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
+    border: 0 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    border: 0 !important;
+    border-left: 1px solid #d8e2e5 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
