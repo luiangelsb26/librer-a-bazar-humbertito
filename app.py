@@ -12145,3 +12145,208 @@ body:not(:has(.hb-light-mode)) [data-testid="stNumberInputContainer"]:focus-with
 }
 </style>
 """, unsafe_allow_html=True)
+# Ajustes finales del módulo de usuarios: bordes finos, contraste y espaciado coherentes.
+st.markdown("""
+<style>
+/* Tabla de cuentas: marco continuo y divisiones interiores discretas. */
+.st-key-registered_users_table_shared {
+    box-sizing: border-box !important;
+    padding: .45rem !important;
+    border: 1px solid #d4e0e3 !important;
+    border-radius: 11px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(28, 54, 63, .045) !important;
+    overflow: hidden !important;
+}
+.st-key-registered_users_table_shared [data-testid="stTable"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid #d8e2e5 !important;
+    border-radius: 9px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+.st-key-registered_users_table_shared [data-testid="stTable"] table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    overflow: hidden !important;
+}
+.st-key-registered_users_table_shared [data-testid="stTable"] th,
+.st-key-registered_users_table_shared [data-testid="stTable"] td {
+    border: 0 !important;
+    border-right: 1px solid #e1e8ea !important;
+    border-bottom: 1px solid #e1e8ea !important;
+    padding: .72rem .8rem !important;
+    vertical-align: middle !important;
+}
+.st-key-registered_users_table_shared [data-testid="stTable"] th:last-child,
+.st-key-registered_users_table_shared [data-testid="stTable"] td:last-child {
+    border-right: 0 !important;
+}
+.st-key-registered_users_table_shared [data-testid="stTable"] tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+body:has(.hb-light-mode) .st-key-registered_users_table_shared [data-testid="stTable"] th {
+    background: #f1f5f6 !important;
+    color: #40565e !important;
+    font-size: .74rem !important;
+    font-weight: 700 !important;
+    letter-spacing: .035em !important;
+    text-transform: uppercase !important;
+}
+body:has(.hb-light-mode) .st-key-registered_users_table_shared [data-testid="stTable"] td {
+    background: #ffffff !important;
+    color: #344950 !important;
+    font-size: .84rem !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table_shared {
+    border-color: #34434b !important;
+    background: #19232a !important;
+    box-shadow: 0 5px 16px rgba(0, 0, 0, .15) !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table_shared [data-testid="stTable"] {
+    border-color: #35444c !important;
+    background: #172128 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table_shared [data-testid="stTable"] th,
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table_shared [data-testid="stTable"] td {
+    border-right-color: #2d3a42 !important;
+    border-bottom-color: #2d3a42 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table_shared [data-testid="stTable"] th {
+    background: #202c33 !important;
+    color: #dce6e9 !important;
+    font-size: .74rem !important;
+    font-weight: 700 !important;
+    letter-spacing: .035em !important;
+    text-transform: uppercase !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-registered_users_table_shared [data-testid="stTable"] td {
+    background: #172128 !important;
+    color: #d3dee2 !important;
+    font-size: .84rem !important;
+}
+
+/* Paneles de transferencia y eliminación con contorno delgado y parejo. */
+.st-key-user_transfer_panel,
+.st-key-user_delete_panel {
+    box-sizing: border-box !important;
+    border: 1px solid #d7e1e4 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(28, 54, 63, .045) !important;
+    transition: border-color .16s ease, box-shadow .16s ease !important;
+}
+.st-key-user_transfer_panel:hover,
+.st-key-user_delete_panel:hover {
+    border-color: #bdced2 !important;
+    box-shadow: 0 6px 17px rgba(28, 54, 63, .07) !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel h3,
+body:has(.hb-light-mode) .st-key-user_delete_panel h3 {
+    color: #20363e !important;
+}
+body:has(.hb-light-mode) .st-key-user_transfer_panel [data-testid="stCaptionContainer"],
+body:has(.hb-light-mode) .st-key-user_delete_panel [data-testid="stCaptionContainer"] {
+    color: #60737a !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-user_transfer_panel,
+body:not(:has(.hb-light-mode)) .st-key-user_delete_panel {
+    border-color: #35454d !important;
+    background: linear-gradient(145deg, #1b272e, #172229) !important;
+    box-shadow: 0 5px 16px rgba(0, 0, 0, .16) !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-user_transfer_panel:hover,
+body:not(:has(.hb-light-mode)) .st-key-user_delete_panel:hover {
+    border-color: #4a6069 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-user_transfer_panel h3,
+body:not(:has(.hb-light-mode)) .st-key-user_delete_panel h3 {
+    color: #e5edf0 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-user_transfer_panel [data-testid="stCaptionContainer"],
+body:not(:has(.hb-light-mode)) .st-key-user_delete_panel [data-testid="stCaptionContainer"] {
+    color: #aabac0 !important;
+}
+.st-key-user_transfer_panel [data-testid="stAlertContainer"],
+.st-key-user_delete_panel [data-testid="stAlertContainer"] {
+    border: 1px solid #d6e2e6 !important;
+    border-left: 3px solid #4b91c2 !important;
+    border-radius: 9px !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-user_transfer_panel [data-testid="stAlertContainer"],
+body:not(:has(.hb-light-mode)) .st-key-user_delete_panel [data-testid="stAlertContainer"] {
+    border-color: #344650 !important;
+    border-left-color: #67a9d1 !important;
+}
+
+/* Campos de contraseña: un solo contorno cerrado, separador fino en el botón de ojo. */
+[data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+    border-radius: 9px !important;
+    box-shadow: none !important;
+}
+[data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    min-width: 2.5rem !important;
+    border: 0 !important;
+    border-left: 1px solid #d8e2e5 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    border-color: #cbd8dc !important;
+    background: #ffffff !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+    border-color: #5b928d !important;
+    box-shadow: 0 0 0 2px rgba(47, 143, 131, .11) !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    border-left-color: #d8e2e5 !important;
+    background: #f7f9fa !important;
+    color: #526a72 !important;
+}
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover {
+    background: #edf4f4 !important;
+    color: #245e59 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    border-color: #40515a !important;
+    background: #172128 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+    border-color: #70928f !important;
+    box-shadow: 0 0 0 2px rgba(85, 184, 169, .13) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    border-left-color: #35454d !important;
+    background: #202c33 !important;
+    color: #c5d1d5 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button:hover {
+    background: #2b3b43 !important;
+    color: #f1f5f6 !important;
+}
+@media (max-width: 640px) {
+    .st-key-registered_users_table_shared,
+    .st-key-registered_users_table_shared [data-testid="stTable"] {
+        max-width: 100% !important;
+        border-radius: 9px !important;
+    }
+    .st-key-registered_users_table_shared [data-testid="stTable"] th,
+    .st-key-registered_users_table_shared [data-testid="stTable"] td {
+        padding: .58rem .5rem !important;
+        font-size: .76rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
