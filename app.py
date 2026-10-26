@@ -4700,28 +4700,68 @@ def pantalla_acceso():
             color: #fff !important;
             box-shadow: 0 4px 12px rgba(35,120,111,.18) !important;
         }
-        .st-key-login_theme_toggle {
-            display: flex !important;
-            justify-content: flex-end !important;
-            margin: 0 0 .35rem !important;
-        }
-        .st-key-login_theme_toggle button {
+        [class*="st-key-theme_toggle"] {
+            position: fixed !important;
+            top: 3rem !important;
+            right: 1.25rem !important;
+            z-index: 1000002 !important;
             width: auto !important;
-            min-height: 2.5rem !important;
-            padding: .45rem .85rem !important;
-            border-radius: 999px !important;
-            font-size: .82rem !important;
-            font-weight: 650 !important;
+            max-width: calc(100vw - 2rem) !important;
         }
-        body:has(.hb-light-mode) .st-key-login_theme_toggle button {
-            border: 1px solid #c8d9dc !important;
-            background: #fff !important;
-            color: #35525a !important;
+        [class*="st-key-theme_toggle"] button {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+            width: 2.75rem !important;
+            min-width: 2.75rem !important;
+            max-width: 2.75rem !important;
+            height: 2.75rem !important;
+            min-height: 2.75rem !important;
+            max-height: 2.75rem !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            border-radius: 50% !important;
+            font-size: 0 !important;
         }
-        body:not(:has(.hb-light-mode)) .st-key-login_theme_toggle button {
-            border: 1px solid #3c5058 !important;
-            background: #1b2930 !important;
-            color: #d7e5e8 !important;
+        [class*="st-key-theme_toggle"] button > div {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            padding: 0 !important;
+        }
+        [class*="st-key-theme_toggle"] button p {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+        }
+        [class*="st-key-theme_toggle"] button svg {
+            display: block !important;
+            flex: 0 0 1.2rem !important;
+            width: 1.2rem !important;
+            height: 1.2rem !important;
+            margin: 0 !important;
+        }
+        @media (max-width: 640px) {
+            [class*="st-key-theme_toggle"] {
+                top: .55rem !important;
+                right: .65rem !important;
+            }
+            [class*="st-key-theme_toggle"] button {
+                width: 2.55rem !important;
+                min-width: 2.55rem !important;
+                max-width: 2.55rem !important;
+                height: 2.55rem !important;
+                min-height: 2.55rem !important;
+                max-height: 2.55rem !important;
+            }
         }
         @media (max-width: 760px) {
             body:has(.login-brand),
@@ -4856,10 +4896,10 @@ def pantalla_acceso():
         </style>
     """, unsafe_allow_html=True)
 
-    with st.container(key="login_theme_toggle"):
+    with st.container(key="theme_toggle"):
         st.button(
-            "Modo oscuro" if st.session_state.tema_blanco else "Modo claro",
-            key="alternar_tema_login",
+            "Tema",
+            key="darkModeBtn",
             icon=(
                 ":material/dark_mode:"
                 if st.session_state.tema_blanco
