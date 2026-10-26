@@ -12350,3 +12350,87 @@ body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"
 }
 </style>
 """, unsafe_allow_html=True)
+
+# Acabado definitivo del control de contraseña: el ojo forma parte del mismo campo.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]),
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    display: flex !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.5rem !important;
+    overflow: hidden !important;
+    border: 1px solid #cbd8dc !important;
+    border-radius: 9px !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    background: #ffffff !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+    border-color: #40515a !important;
+    background: #172128 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+    border-color: #5b928d !important;
+    box-shadow: 0 0 0 2px rgba(47, 143, 131, .11) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+    border-color: #70928f !important;
+    box-shadow: 0 0 0 2px rgba(85, 184, 169, .13) !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTextInput"] input[type="password"],
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"] input[type="password"] {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    min-height: 2.4rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTextInput"] input[type="password"] {
+    background: transparent !important;
+    color: #263b42 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"] input[type="password"] {
+    background: transparent !important;
+    color: #e2eaee !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) > button,
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) > button {
+    flex: 0 0 2.5rem !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-left: 1px solid #d8e2e5 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) > button {
+    background: #f7f9fa !important;
+    color: #526a72 !important;
+}
+body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) > button:hover {
+    background: #edf4f4 !important;
+    color: #245e59 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) > button {
+    border-left-color: #35454d !important;
+    background: #202c33 !important;
+    color: #c5d1d5 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) > button:hover {
+    background: #2b3b43 !important;
+    color: #f1f5f6 !important;
+}
+</style>
+""", unsafe_allow_html=True)
