@@ -47,12 +47,13 @@ def obtener_datos_ventas():
         ORDER BY fecha, p.nombre
     """
 
-    df = pd.read_sql_query(
-        consulta,
-        conexion
-    )
-
-    conexion.close()
+    try:
+        df = pd.read_sql_query(
+            consulta,
+            conexion
+        )
+    finally:
+        conexion.close()
 
     if not df.empty:
         df["fecha"] = pd.to_datetime(df["fecha"])
@@ -115,12 +116,13 @@ def productos_stock_bajo():
         ORDER BY stock ASC
     """
 
-    df = pd.read_sql_query(
-        consulta,
-        conexion
-    )
-
-    conexion.close()
+    try:
+        df = pd.read_sql_query(
+            consulta,
+            conexion
+        )
+    finally:
+        conexion.close()
 
     return df
 
@@ -335,12 +337,13 @@ def analisis_productos():
             p.stock_minimo
     """
 
-    df = pd.read_sql_query(
-        consulta,
-        conexion
-    )
-
-    conexion.close()
+    try:
+        df = pd.read_sql_query(
+            consulta,
+            conexion
+        )
+    finally:
+        conexion.close()
 
     if df.empty:
         return df
