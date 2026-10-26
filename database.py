@@ -94,15 +94,17 @@ def _obtener_pool_postgres():
 
                 _POSTGRES_POOL = ConnectionPool(
                     conninfo=_DATABASE_URL,
-                    # Allow several Streamlit sessions to query concurrently
-                    # without exhausting Supabase's connection budget.
+                    # Keep the app-side pool small. Supabase's transaction-mode
+                    # pooler (port 6543) multiplexes these client connections.
                     min_size=1,
-                    max_size=8,
+                    max_size=3,
                     timeout=20,
                     open=True,
                     kwargs={
                         "connect_timeout": 8,
                         "sslmode": "require",
+                        # Supabase transaction mode does not support prepared statements.
+                        "prepare_threshold": None,
                     },
                 )
                 atexit.register(_POSTGRES_POOL.close)
