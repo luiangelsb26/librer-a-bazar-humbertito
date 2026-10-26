@@ -13,6 +13,7 @@ _DATABASE_URL = os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_UR
 _FALLBACK_SQLITE = False
 _POSTGRES_POOL = None
 _POOL_LOCK = threading.Lock()
+_POOL_FALLBACK_SLOTS = threading.BoundedSemaphore(2)
 
 
 class _CursorPostgres:
@@ -51,9 +52,10 @@ class _CursorPostgres:
 
 
 class _ConexionPostgres:
-    def __init__(self, conexion, pool=None):
+    def __init__(self, conexion, pool=None, fallback_slot=False):
         self._conexion = conexion
         self._pool = pool
+        self._fallback_slot = fallback_slot
 
     def cursor(self):
         return _CursorPostgres(self._conexion.cursor())
@@ -76,7 +78,11 @@ class _ConexionPostgres:
             return
         self._conexion = None
         if self._pool is None:
-            conexion.close()
+            try:
+                conexion.close()
+            finally:
+                if self._fallback_slot:
+                    _POOL_FALLBACK_SLOTS.release()
         else:
             self._pool.putconn(conexion)
 
@@ -93,7 +99,7 @@ def _obtener_pool_postgres():
                 _POSTGRES_POOL = ConnectionPool(
                     conninfo=_DATABASE_URL,
                     min_size=1,
-                    max_size=8,
+                    max_size=10,
                     timeout=10,
                     open=True,
                     kwargs={
@@ -171,13 +177,24 @@ def conectar():
         pool = None
         try:
             pool = _obtener_pool_postgres()
-            conexion = pool.getconn(timeout=10)
+            conexion = pool.getconn(timeout=5)
             return _ConexionPostgres(conexion, pool)
         except PoolTimeout:
-            # No cambiar de base si las conexiones existentes solo están ocupadas:
-            # hacerlo separaría las escrituras entre Supabase y SQLite.
+            # Si el pool local está ocupado, abre un máximo de dos conexiones
+            # transitorias al mismo Supabase para evitar que el login se caiga.
             if pool is not None and pool.get_stats().get("pool_size", 0) > 0:
-                raise
+                if not _POOL_FALLBACK_SLOTS.acquire(blocking=False):
+                    raise
+                try:
+                    conexion = psycopg.connect(
+                        _DATABASE_URL,
+                        connect_timeout=4,
+                        sslmode="require",
+                    )
+                    return _ConexionPostgres(conexion, fallback_slot=True)
+                except Exception:
+                    _POOL_FALLBACK_SLOTS.release()
+                    raise
         except Exception:
             pass
 
