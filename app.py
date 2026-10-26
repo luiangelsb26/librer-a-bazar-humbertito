@@ -4670,6 +4670,59 @@ def pantalla_acceso():
         body:has(.hb-light-mode) .login-brand-name-strong {
             color: #1b3438;
         }
+        body:has(.hb-light-mode) .stApp,
+        body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
+            background:
+                radial-gradient(circle at 8% 5%, rgba(35,120,111,.09), transparent 24rem),
+                linear-gradient(145deg, #f8fbfc 0%, #eef4f5 100%) !important;
+        }
+        body:has(.hb-light-mode) [data-testid="stForm"] {
+            border: 1px solid #d7e2e5 !important;
+            border-radius: 18px !important;
+            background: rgba(255,255,255,.96) !important;
+            box-shadow: 0 18px 42px rgba(31,59,68,.09) !important;
+        }
+        body:has(.hb-light-mode) [data-testid="stForm"] label {
+            color: #354c54 !important;
+        }
+        body:has(.hb-light-mode) [data-testid="stForm"] input {
+            border-color: #bfced3 !important;
+            background: #fff !important;
+            color: #20343c !important;
+        }
+        body:has(.hb-light-mode) [data-testid="stForm"] input:focus {
+            border-color: #23786f !important;
+            box-shadow: 0 0 0 3px rgba(35,120,111,.16) !important;
+        }
+        body:has(.hb-light-mode) [data-testid="stForm"] button[kind="primaryFormSubmit"] {
+            border-color: #23786f !important;
+            background: #23786f !important;
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(35,120,111,.18) !important;
+        }
+        .st-key-login_theme_toggle {
+            display: flex !important;
+            justify-content: flex-end !important;
+            margin: 0 0 .35rem !important;
+        }
+        .st-key-login_theme_toggle button {
+            width: auto !important;
+            min-height: 2.5rem !important;
+            padding: .45rem .85rem !important;
+            border-radius: 999px !important;
+            font-size: .82rem !important;
+            font-weight: 650 !important;
+        }
+        body:has(.hb-light-mode) .st-key-login_theme_toggle button {
+            border: 1px solid #c8d9dc !important;
+            background: #fff !important;
+            color: #35525a !important;
+        }
+        body:not(:has(.hb-light-mode)) .st-key-login_theme_toggle button {
+            border: 1px solid #3c5058 !important;
+            background: #1b2930 !important;
+            color: #d7e5e8 !important;
+        }
         @media (max-width: 760px) {
             body:has(.login-brand),
             body:has(.login-brand) [data-testid="stAppViewContainer"],
@@ -4803,6 +4856,18 @@ def pantalla_acceso():
         </style>
     """, unsafe_allow_html=True)
 
+    with st.container(key="login_theme_toggle"):
+        st.button(
+            "Modo oscuro" if st.session_state.tema_blanco else "Modo claro",
+            key="alternar_tema_login",
+            icon=(
+                ":material/dark_mode:"
+                if st.session_state.tema_blanco
+                else ":material/light_mode:"
+            ),
+            on_click=alternar_tema,
+        )
+
     brand_column, access_column = st.columns(
         [1.08, 0.92],
         vertical_alignment="center",
@@ -4921,7 +4986,6 @@ def pantalla_acceso():
                     if usuario:
                         st.session_state["usuario"] = usuario
                         st.session_state["menu"] = "Inicio"
-                        st.session_state["tema_blanco"] = True
                         st.rerun()
                     else:
                         st.error(
