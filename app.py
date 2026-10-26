@@ -12434,3 +12434,59 @@ body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stTextInput"
 }
 </style>
 """, unsafe_allow_html=True)
+st.markdown("""
+<style>
+/* El relleno del ojo se aplica a la estructura interna BaseWeb, no solo al input. */
+.st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) div,
+[data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) div {
+    min-width: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+.st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input,
+[data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+.st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button,
+[data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    align-self: stretch !important;
+    height: auto !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-left: 1px solid #d8e2e5 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+body:has(.hb-light-mode) .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) div,
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) div,
+body:has(.hb-light-mode) .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input,
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
+    background: #ffffff !important;
+    color: #263b42 !important;
+}
+body:has(.hb-light-mode) .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button,
+body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    border-left-color: #d8e2e5 !important;
+    background: #f7f9fa !important;
+    color: #526a72 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) div,
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) div,
+body:not(:has(.hb-light-mode)) .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input,
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
+    background: #172128 !important;
+    color: #e2eaee !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button,
+body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+    border-left-color: #35454d !important;
+    background: #202c33 !important;
+    color: #c5d1d5 !important;
+}
+</style>
+""", unsafe_allow_html=True)
