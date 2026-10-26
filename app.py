@@ -12518,3 +12518,43 @@ body:has(.hb-light-mode) [data-testid="stTextInput"] [data-baseweb="input"]:has(
 }
 </style>
 """, unsafe_allow_html=True)
+# En el formulario de usuarios, el tema de sesión controla el interior del campo.
+if st.session_state.get("tema_blanco", True):
+    st.markdown("""
+    <style>
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        border: 1px solid #cbd5d9 !important;
+        border-radius: 10px !important;
+        background: #ffffff !important;
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) div,
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input,
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+        background: #ffffff !important;
+        background-image: none !important;
+        color: #263b42 !important;
+        box-shadow: none !important;
+    }
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
+        border: 0 !important;
+        border-radius: 0 !important;
+    }
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+        align-self: stretch !important;
+        min-width: 2.5rem !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-left: 1px solid #d8e2e5 !important;
+        border-radius: 0 !important;
+        transform: none !important;
+    }
+    #root .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+        border-color: #9aadb3 !important;
+        box-shadow: 0 0 0 1px rgba(80, 108, 116, .10) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
