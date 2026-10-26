@@ -70,7 +70,7 @@ def verificar_hash(password, hash_guardado):
 # ==========================================================
 
 def inicializar():
-    """Crea la tabla de usuarios y devuelve su cantidad con una conexión."""
+    """Prepara usuarios y devuelve cuántas cuentas admin están activas."""
     con = conectar()
     try:
         cur = con.cursor()
@@ -91,7 +91,9 @@ def inicializar():
             )
         """)
         con.commit()
-        cur.execute("SELECT COUNT(*) FROM usuarios")
+        cur.execute(
+            "SELECT COUNT(*) FROM usuarios WHERE rol = 'admin' AND activo = 1"
+        )
         return cur.fetchone()[0]
     finally:
         con.close()

@@ -4398,9 +4398,9 @@ with st.sidebar:
     )
     st.divider()
 
-@st.cache_resource(show_spinner=False)
+@st.cache_resource(ttl=15, show_spinner=False)
 def preparar_tabla_usuarios():
-    """Crea la tabla y consulta el conteo con una sola conexión."""
+    """Crea la tabla y consulta administradores activos con una conexión."""
     return auth.inicializar()
 
 # La base no se consulta al cargar la página de acceso.
@@ -4429,6 +4429,13 @@ def obtener_usuarios_administracion_cache():
 
 def pantalla_acceso():
     
+    try:
+        administradores_activos = contar_usuarios_acceso()
+        error_revision_admin = False
+    except Exception:
+        administradores_activos = None
+        error_revision_admin = True
+
     st.markdown("""
         <style>
         /* Ocultar la barra lateral durante el login */
@@ -5076,93 +5083,15 @@ def pantalla_acceso():
             letter-spacing: .11em;
         }
         body:not(:has(.hb-light-mode)) .login-setup-step { color: #8bb8b3; }
-        .login-setup-card {
-            display: flex;
-            align-items: center;
-            gap: .85rem;
-            box-sizing: border-box;
-            margin: 1rem 0 .55rem;
-            padding: .9rem 1rem;
-            border: 1px solid #d8e2e5;
-            border-radius: 12px;
-            background: rgba(255,255,255,.72);
-        }
-        .login-setup-mark {
-            display: grid;
-            flex: 0 0 2.55rem;
-            width: 2.55rem;
-            height: 2.55rem;
-            place-items: center;
-            border: 1px solid #cbdedc;
-            border-radius: 10px;
-            background: #edf6f4;
-            color: #28766e;
-            font-size: 1.45rem;
-            font-weight: 500;
-            line-height: 1;
-        }
-        .login-setup-copy { display: grid; min-width: 0; gap: .18rem; }
-        .login-setup-label {
-            color: #668187;
-            font-size: .62rem;
+        .login-setup-step {
+            display: inline-flex;
+            margin-bottom: .55rem;
+            color: #5b797e;
+            font-size: .66rem;
             font-weight: 750;
             letter-spacing: .11em;
         }
-        .login-setup-copy strong { color: #2f454c; font-size: .88rem; font-weight: 700; }
-        .login-setup-copy span:last-child { color: #697c82; font-size: .78rem; line-height: 1.4; }
-        body:not(:has(.hb-light-mode)) .login-setup-card {
-            border-color: #34454d;
-            background: rgba(25,36,43,.72);
-        }
-        body:not(:has(.hb-light-mode)) .login-setup-mark {
-            border-color: #3b5757;
-            background: #203638;
-            color: #91c9bd;
-        }
-        body:not(:has(.hb-light-mode)) .login-setup-label { color: #8bb8b3; }
-        body:not(:has(.hb-light-mode)) .login-setup-copy strong { color: #e4ecef; }
-        body:not(:has(.hb-light-mode)) .login-setup-copy span:last-child { color: #aab9bf; }
-        body:has(.hb-light-mode) .login-setup-card {
-            border-color: #d8e3e5;
-            background: rgba(255,255,255,.82);
-        }
-        body:has(.hb-light-mode) .login-setup-mark {
-            border-color: #cbdedc;
-            background: #edf6f4;
-            color: #28766e;
-        }
-        body:has(.hb-light-mode) .login-setup-label { color: #5b797e; }
-        body:has(.hb-light-mode) .login-setup-copy strong { color: #30484f; }
-        body:has(.hb-light-mode) .login-setup-copy span:last-child { color: #647a80; }
-        body:has(.login-brand) .st-key-mostrar_configuracion_admin button {
-            min-height: 2.9rem !important;
-            border: 1px solid #b9ced1 !important;
-            border-radius: 10px !important;
-            background: transparent !important;
-            color: #315b60 !important;
-            box-shadow: none !important;
-            font-weight: 650 !important;
-        }
-        body:has(.login-brand) .st-key-mostrar_configuracion_admin button:hover {
-            border-color: #82a9a5 !important;
-            background: rgba(47,143,131,.055) !important;
-            color: #246d65 !important;
-        }
-        body:not(:has(.hb-light-mode)) .st-key-mostrar_configuracion_admin button {
-            border-color: #3d555d !important;
-            color: #d7e4e6 !important;
-        }
-        body:not(:has(.hb-light-mode)) .st-key-mostrar_configuracion_admin button:hover {
-            border-color: #62827f !important;
-            background: rgba(85,184,169,.08) !important;
-            color: #ffffff !important;
-        }
-        @media (max-width: 760px) {
-            .login-setup-card { margin-top: .75rem; padding: .8rem .85rem; }
-            .login-setup-mark { flex-basis: 2.35rem; width: 2.35rem; height: 2.35rem; }
-            .login-setup-copy strong { font-size: .84rem; }
-            .login-setup-copy span:last-child { font-size: .76rem; }
-        }
+        body:not(:has(.hb-light-mode)) .login-setup-step { color: #8bb8b3; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -5216,7 +5145,7 @@ def pantalla_acceso():
         )
 
     with access_column:
-        configurar_admin = st.session_state.get("_configurar_primer_admin", False)
+        configurar_admin = administradores_activos == 0
         if configurar_admin:
             st.markdown(
                 """
@@ -5245,14 +5174,13 @@ def pantalla_acceso():
                     st.error("Las contraseñas no coinciden.")
                 else:
                     try:
+                        preparar_tabla_usuarios.clear()
                         cantidad = contar_usuarios_acceso()
                         if cantidad != 0:
-                            st.error("Ya existe una cuenta. Inicia sesión.")
-                            st.session_state.pop("_configurar_primer_admin", None)
+                            st.error("Ya existe una cuenta administradora activa. Inicia sesión.")
                         else:
                             auth.crear_usuario(username, nombre, password, "admin")
                             preparar_tabla_usuarios.clear()
-                            st.session_state.pop("_configurar_primer_admin", None)
                             notificar_exito("Administrador creado. Inicia sesión.")
                             st.rerun()
                     except ValueError as error:
@@ -5263,9 +5191,6 @@ def pantalla_acceso():
                             "Vuelve a intentarlo en unos segundos."
                         )
 
-            if st.button("Volver a iniciar sesión", key="volver_login", width="stretch"):
-                st.session_state.pop("_configurar_primer_admin", None)
-                st.rerun()
         else:
             st.markdown(
                 """
@@ -5286,6 +5211,12 @@ def pantalla_acceso():
                     width="stretch",
                 )
 
+            if error_revision_admin:
+                st.info(
+                    "No se pudo comprobar si hay un administrador activo. "
+                    "Puedes intentar iniciar sesión; revisa la conexión si falla."
+                )
+
             if entrar:
                 try:
                     usuario = auth.verificar_usuario(username, password)
@@ -5301,40 +5232,6 @@ def pantalla_acceso():
                         "Revisa la conexión e inténtalo otra vez."
                     )
 
-            st.markdown(
-                """
-                <div class="login-setup-card">
-                    <div class="login-setup-mark" aria-hidden="true">+</div>
-                    <div class="login-setup-copy">
-                        <span class="login-setup-label">ACCESO INICIAL</span>
-                        <strong>¿Es tu primera vez?</strong>
-                        <span>Configura la cuenta administradora para empezar.</span>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            if st.button(
-                "Configurar administrador",
-                key="mostrar_configuracion_admin",
-                icon=":material/admin_panel_settings:",
-                type="secondary",
-                width="stretch",
-            ):
-                try:
-                    if contar_usuarios_acceso() != 0:
-                        st.warning(
-                            "La configuración inicial ya se completó. "
-                            "Inicia sesión con tu cuenta."
-                        )
-                    else:
-                        st.session_state["_configurar_primer_admin"] = True
-                        st.rerun()
-                except Exception:
-                    st.error(
-                        "No se pudo comprobar la configuración. "
-                        "Revisa la conexión e inténtalo de nuevo."
-                    )
 
 if "usuario" not in st.session_state:
     pantalla_acceso()
