@@ -172,17 +172,8 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     except (TypeError, ValueError):
         height = "content"
 
-    # En tema claro, la cuadrícula virtualizada evita renderizar miles de
-    # filas como una tabla HTML completa y mantiene el desplazamiento fluido.
-    if tema_claro and len(marco) >= 120:
-        return st.dataframe(
-            marco_renderizado,
-            width=width,
-            height=height,
-            hide_index=hide_index,
-            key=key,
-        )
-
+    # Mantiene el renderizado HTML para que los encabezados y las celdas
+    # respeten la paleta elegida, también en tablas extensas.
     return st.table(
         marco_renderizado,
         width=width,
