@@ -1,7 +1,6 @@
 import io
 import sys
 import streamlit as st
-import pandas as pd
 import importlib
 import math
 import hashlib
@@ -4407,15 +4406,13 @@ with st.sidebar:
     st.divider()
 
 @st.cache_resource(show_spinner=False)
-def preparar_esquema_sistema():
-    """Prepara las tablas una sola vez por proceso, no en cada interacción."""
-    database.crear_base_datos()
+def preparar_tabla_usuarios():
+    """Prepara solo autenticación antes de mostrar la pantalla de acceso."""
     auth.inicializar()
     return True
 
 
-preparar_esquema_sistema()
-
+preparar_tabla_usuarios()
 
 # ==========================================================
 # AUTENTICACIÓN Y CONTROL DE ACCESO
@@ -4427,6 +4424,11 @@ if not database.usar_supabase():
         "en los Secrets de Streamlit Cloud para usar la base persistente."
     )
 
+
+@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+def contar_usuarios_acceso():
+    """Evita consultar el total de usuarios en cada rerun del formulario."""
+    return auth.cantidad_usuarios()
 
 def pantalla_acceso():
     
@@ -5006,7 +5008,7 @@ def pantalla_acceso():
         )
 
     with access_column:
-        if auth.cantidad_usuarios() == 0:
+        if contar_usuarios_acceso() == 0:
             st.markdown(
                 """
                 <div class="login-form-intro">
@@ -5046,6 +5048,7 @@ def pantalla_acceso():
                                 password,
                                 "admin"
                             )
+                            contar_usuarios_acceso.clear()
                             notificar_exito(
                                 "Administrador creado. Inicia sesión."
                             )
@@ -5160,6 +5163,19 @@ if usuario_actual is None:
 
 st.session_state["usuario"] = usuario_actual
 es_admin = usuario_actual.get("rol", "empleado") == "admin"
+# Las tablas operativas no bloquean la pantalla de acceso; se preparan al entrar.
+@st.cache_resource(show_spinner=False)
+def preparar_esquema_sistema():
+    """Prepara el esquema operativo una sola vez por proceso."""
+    if not database.usar_supabase():
+        database.crear_base_datos()
+    return True
+
+
+preparar_esquema_sistema()
+
+# pandas se usa en módulos operativos, no en la pantalla de inicio de sesión.
+import pandas as pd
 
 
 # ==========================================================
