@@ -11832,6 +11832,75 @@ body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stDateInpu
     border-bottom: 1px solid #46545d !important;
 }
 
+/* El selector de fecha se renderiza en un portal global de BaseWeb. */
+body:has(.hb-light-mode),
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
+    color-scheme: light !important;
+}
+body:not(:has(.hb-light-mode)),
+body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] {
+    color-scheme: dark !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"],
+body:has(.hb-light-mode) [data-baseweb="popover"] > div,
+body:has(.hb-light-mode) [role="dialog"]:has([data-baseweb="calendar"]),
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) {
+    color-scheme: light !important;
+    border: 1px solid #cbdadd !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+    box-shadow: 0 12px 28px rgba(23, 48, 56, .16) !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"] [data-baseweb="calendar"],
+body:has(.hb-light-mode) [data-baseweb="popover"] [role="grid"],
+body:has(.hb-light-mode) [role="dialog"] [data-baseweb="calendar"],
+body:has(.hb-light-mode) [role="dialog"] [role="grid"] {
+    color-scheme: light !important;
+    border: 0 !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"] button,
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) button {
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #334b51 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"] button:hover,
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) button:hover {
+    background: #e8f4f2 !important;
+    color: #176b62 !important;
+}
+body:has(.hb-light-mode) [data-baseweb="popover"] [aria-selected="true"],
+body:has(.hb-light-mode) [role="dialog"]:has([role="grid"]) [aria-selected="true"] {
+    border-radius: 999px !important;
+    background: #2f8f83 !important;
+    color: #ffffff !important;
+}
+body:not(:has(.hb-light-mode)) [data-baseweb="popover"],
+body:not(:has(.hb-light-mode)) [data-baseweb="popover"] > div,
+body:not(:has(.hb-light-mode)) [role="dialog"]:has([data-baseweb="calendar"]),
+body:not(:has(.hb-light-mode)) [role="dialog"]:has([role="grid"]) {
+    color-scheme: dark !important;
+    border: 1px solid #40515a !important;
+    border-radius: 12px !important;
+    background: #18232c !important;
+    color: #e2eaee !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .32) !important;
+}
+body:not(:has(.hb-light-mode)) [data-baseweb="popover"] [data-baseweb="calendar"],
+body:not(:has(.hb-light-mode)) [data-baseweb="popover"] [role="grid"],
+body:not(:has(.hb-light-mode)) [role="dialog"] [data-baseweb="calendar"],
+body:not(:has(.hb-light-mode)) [role="dialog"] [role="grid"] {
+    color-scheme: dark !important;
+    border: 0 !important;
+    background: #18232c !important;
+    color: #e2eaee !important;
+}
+
 body:has(.hb-light-mode) .st-key-sales_form_panel,
 body:has(.hb-light-mode) .st-key-purchase_form_panel,
 body:has(.hb-light-mode) .st-key-admin_create_panel,
