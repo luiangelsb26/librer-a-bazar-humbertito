@@ -230,18 +230,23 @@ def estilizar_historial_ventas(marco):
         .set_table_styles(
             [
                 {
-                    "selector": "th",
+                    "selector": "th, th.col_heading",
                     "props": [
                         ("background-color", color_cabecera),
                         ("color", color_texto),
                         ("border-color", color_borde),
                         ("font-weight", "700"),
                         ("text-align", "left"),
+                        ("padding", "0.7rem 0.8rem"),
+                        ("white-space", "nowrap"),
                     ],
                 },
                 {
                     "selector": "td",
-                    "props": [("border-color", color_borde)],
+                    "props": [
+                        ("border-color", color_borde),
+                        ("padding", "0.65rem 0.8rem"),
+                    ],
                 },
                 {
                     "selector": "tbody tr:nth-child(even) td",
@@ -8502,21 +8507,15 @@ elif menu == "Ventas":
                         )
 
                 with st.container(key="stock_historico_panel", border=True):
-                    stock_checkbox_column, stock_help_column = st.columns(
-                        [1.2, 1.8],
-                        vertical_alignment="center",
+                    descontar_stock_historico = st.checkbox(
+                        "Descontar esta venta histórica del stock actual",
+                        value=False,
+                        key="stock_historico_checkbox",
                     )
-                    with stock_checkbox_column:
-                        descontar_stock_historico = st.checkbox(
-                            "Descontar del stock actual",
-                            value=False,
-                            key="stock_historico_checkbox",
-                        )
-                    with stock_help_column:
-                        st.caption(
-                            "Actívalo solo si esta venta todavía no está reflejada "
-                            "en el inventario."
-                        )
+                    st.caption(
+                        "Actívalo solo si esta venta todavía no está reflejada "
+                        "en el inventario."
+                    )
 
                 vender = st.form_submit_button(
                     "Registrar venta",
@@ -8735,39 +8734,11 @@ elif menu == "Ventas":
                 f"{formatear_numero_es(fin)} de {formatear_numero_es(len(tabla))}."
             )
             tabla_pagina = pd.DataFrame(tabla[inicio:fin])
-            st.dataframe(
+            st.table(
                 estilizar_historial_ventas(tabla_pagina),
                 width="stretch",
                 height=520,
                 hide_index=True,
-                key=f"historial_ventas_pagina_{pagina}",
-                lazy=False,
-                column_config={
-                    "N.º": st.column_config.NumberColumn(
-                        "N.º", width=65, alignment="center"
-                    ),
-                    "Boleta": st.column_config.TextColumn(
-                        "Boleta", width=205
-                    ),
-                    "Fecha": st.column_config.TextColumn(
-                        "Fecha", width=145
-                    ),
-                    "Total de boleta": st.column_config.TextColumn(
-                        "Total de boleta", width=125, alignment="right"
-                    ),
-                    "Producto": st.column_config.TextColumn(
-                        "Producto", width=230
-                    ),
-                    "Cantidad": st.column_config.NumberColumn(
-                        "Cantidad", width=85, alignment="center"
-                    ),
-                    "Precio unitario": st.column_config.TextColumn(
-                        "Precio unitario", width=125, alignment="right"
-                    ),
-                    "Subtotal de línea": st.column_config.TextColumn(
-                        "Subtotal de línea", width=135, alignment="right"
-                    ),
-                },
             )
 
             with st.expander("Eliminar una venta registrada por error"):
