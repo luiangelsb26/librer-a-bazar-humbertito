@@ -238,6 +238,7 @@ def invalidar_cache_operativa():
         ),
         "prediction": (
             "obtener_productos",
+            "_obtener_ventas_diarias",
             "estado_modelo",
         ),
     }
@@ -4996,7 +4997,7 @@ def conectar():
 # CONSULTAS GENERALES
 # ==========================================================
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def contar_productos():
     con = conectar()
     cur = con.cursor()
@@ -5006,7 +5007,7 @@ def contar_productos():
     return resultado
 
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_stock():
     con = conectar()
     cur = con.cursor()
@@ -6008,7 +6009,7 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
     finally:
         con.close()
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_ventas():
     con = conectar()
 
@@ -6240,7 +6241,7 @@ def registrar_venta(
 # COMPRAS
 # ==========================================================
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_compras():
     con = conectar()
 
@@ -6598,7 +6599,7 @@ def hash_importacion_compras_registrada(hash_archivo):
         con.close()
 
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_auditoria_compras():
     """Resume consistencia interna de compras; no sustituye cotejar comprobantes."""
     con = conectar()
@@ -6644,7 +6645,7 @@ def obtener_auditoria_compras():
         con.close()
 
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_historial_importaciones_compras():
     """Devuelve auditoría de cargas; NULL indica que la versión antigua no guardó el dato."""
     con = conectar()
@@ -6778,7 +6779,7 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
 # DASHBOARD
 # ==========================================================
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def resumen_dashboard():
     con = conectar()
     try:

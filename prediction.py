@@ -22,7 +22,7 @@ def conectar():
     return database.conectar()
 
 
-@st.cache_resource(ttl=30, show_spinner=False)
+@st.cache_resource(ttl=60, show_spinner=False)
 def _cargar_artefacto():
     """Busca primero el modelo persistido en la base y luego el archivo local."""
     import joblib
@@ -115,7 +115,7 @@ def _guardar_artefacto(artefacto, joblib):
     return None, error_base or error_local
 
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_productos():
     con = conectar()
     try:
@@ -131,7 +131,7 @@ def obtener_productos():
         con.close()
 
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=60, show_spinner=False, max_entries=1)
 def _obtener_ventas_diarias():
     """Reutiliza el historial agregado compartido con el módulo de análisis."""
     import analysis
@@ -482,7 +482,7 @@ def entrenar_modelo():
     }
 
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=60, show_spinner=False, max_entries=1)
 def estado_modelo():
     try:
         import joblib
