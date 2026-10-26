@@ -11569,3 +11569,59 @@ transform: none !important;
     }
 }</style>
 """, unsafe_allow_html=True)
+
+# Corrección de contraste para el selector dentro del área principal.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button {
+    border: 1px solid #579c94 !important;
+    background: linear-gradient(145deg, #e7f5f2, #d9efeb) !important;
+    color: #174f4b !important;
+    -webkit-text-fill-color: #174f4b !important;
+    box-shadow: 0 3px 11px rgba(27, 95, 88, .18), inset 0 1px 0 rgba(255,255,255,.95) !important;
+}
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button *,
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button svg {
+    color: #174f4b !important;
+    -webkit-text-fill-color: #174f4b !important;
+    opacity: 1 !important;
+}
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover {
+    border-color: #2d8177 !important;
+    background: linear-gradient(145deg, #d8efeb, #cce8e3) !important;
+    color: #103f3c !important;
+    -webkit-text-fill-color: #103f3c !important;
+    box-shadow: 0 5px 14px rgba(27, 95, 88, .23) !important;
+}
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover *,
+body:has(.hb-light-mode) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover svg {
+    color: #103f3c !important;
+    -webkit-text-fill-color: #103f3c !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button {
+    border: 1px solid #607880 !important;
+    background: linear-gradient(145deg, #273941, #1c2a31) !important;
+    color: #f2dfa5 !important;
+    -webkit-text-fill-color: #f2dfa5 !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .32), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button *,
+body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button svg {
+    color: #f2dfa5 !important;
+    -webkit-text-fill-color: #f2dfa5 !important;
+    opacity: 1 !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover {
+    border-color: #829b9e !important;
+    background: linear-gradient(145deg, #334a51, #24343b) !important;
+    color: #fff0bd !important;
+    -webkit-text-fill-color: #fff0bd !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .38) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover *,
+body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="stMain"] [class*="st-key-theme_toggle"] button:hover svg {
+    color: #fff0bd !important;
+    -webkit-text-fill-color: #fff0bd !important;
+}
+</style>
+""", unsafe_allow_html=True)
