@@ -8761,12 +8761,13 @@ elif menu == "Ventas":
                 f"{formatear_numero_es(fin)} de {formatear_numero_es(len(tabla))}."
             )
             tabla_pagina = pd.DataFrame(tabla[inicio:fin])
-            st.table(
-                estilizar_historial_ventas(tabla_pagina),
-                width="stretch",
-                height=520,
-                hide_index=True,
-            )
+            with st.container(key="sales_history_table"):
+                st.table(
+                    estilizar_historial_ventas(tabla_pagina),
+                    width="stretch",
+                    height=520,
+                    hide_index=True,
+                )
 
             with st.expander("Eliminar una venta registrada por error"):
                 ventas_por_id = {venta[0]: venta for venta in ventas}
@@ -8839,12 +8840,16 @@ elif menu == "Ventas":
             )
 
             with st.expander("Eliminar todas las ventas"):
-                with st.container(key="delete_all_sales_warning"):
-                    st.warning(
-                        f"Se eliminarán permanentemente las {cantidad_ventas_total} "
-                        "ventas y sus detalles. Se restaurará el stock solo de las "
-                        "ventas que el sistema marcó como descontadas.",
-                        icon=":material/delete_forever:",
+                with st.container(key="delete_all_sales_warning", border=True):
+                    st.markdown(
+                        ":material/delete_forever: **Eliminación permanente**",
+                        text_alignment="center",
+                    )
+                    st.markdown(
+                        f"Se eliminarán **{formatear_numero_es(cantidad_ventas_total)} "
+                        "ventas** y sus detalles. El stock se restaurará solo para "
+                        "las ventas que el sistema marcó como descontadas.",
+                        text_alignment="center",
                     )
                 if ventas_stock_desconocido:
                     st.info(
@@ -12822,52 +12827,59 @@ else:
     </style>
     """, unsafe_allow_html=True)
 
-# Estilo centrado y específico para encabezados y aviso de eliminación de ventas.
+# Encabezados centrados y aviso discreto, integrado con los dos temas.
 st.markdown("""
 <style>
-body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] {
+body:has(.hb-light-mode) .st-key-sales_history_table [data-testid="stTable"] thead th,
+body:has(.hb-light-mode) .st-key-sales_history_table [data-testid="stTable"] th.col_heading,
+body:not(:has(.hb-light-mode)) .st-key-sales_history_table [data-testid="stTable"] thead th,
+body:not(:has(.hb-light-mode)) .st-key-sales_history_table [data-testid="stTable"] th.col_heading {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+body:has(.hb-light-mode) .st-key-delete_all_sales_warning {
     box-sizing: border-box !important;
-    border: 1px solid #efc6c2 !important;
-    border-left: 5px solid #c5574f !important;
-    border-radius: 14px !important;
-    background: #fff1ef !important;
-    padding: 1rem 1.2rem !important;
-    box-shadow: 0 5px 14px rgba(140, 55, 48, .08) !important;
+    border: 1px solid #e5e1d7 !important;
+    border-left: 3px solid #c3b27f !important;
+    border-radius: 12px !important;
+    background: #faf9f6 !important;
+    padding: 0.75rem 1rem !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stVerticalBlock"] {
+    gap: 0.25rem !important;
+}
+body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stMarkdown"] p {
+    margin: 0.15rem 0 !important;
+    color: #566267 !important;
+    line-height: 1.5 !important;
     text-align: center !important;
 }
-body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] p {
-    width: 100% !important;
-    margin: 0 !important;
-    color: #713b37 !important;
+body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stMarkdown"] p:first-child {
+    color: #46565b !important;
     font-weight: 650 !important;
-    line-height: 1.55 !important;
-    text-align: center !important;
 }
-body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] svg {
-    color: #b84842 !important;
-    fill: #b84842 !important;
-}
-body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] {
+body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning {
     box-sizing: border-box !important;
-    border: 1px solid #65403e !important;
-    border-left: 5px solid #d8756d !important;
-    border-radius: 14px !important;
-    background: #2d2021 !important;
-    padding: 1rem 1.2rem !important;
-    box-shadow: 0 5px 16px rgba(0, 0, 0, .18) !important;
+    border: 1px solid #3b474d !important;
+    border-left: 3px solid #938861 !important;
+    border-radius: 12px !important;
+    background: #202a30 !important;
+    padding: 0.75rem 1rem !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stVerticalBlock"] {
+    gap: 0.25rem !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stMarkdown"] p {
+    margin: 0.15rem 0 !important;
+    color: #cbd4d7 !important;
+    line-height: 1.5 !important;
     text-align: center !important;
 }
-body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] p {
-    width: 100% !important;
-    margin: 0 !important;
-    color: #f0d6d3 !important;
+body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stMarkdown"] p:first-child {
+    color: #e0e4e2 !important;
     font-weight: 650 !important;
-    line-height: 1.55 !important;
-    text-align: center !important;
-}
-body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] svg {
-    color: #e58b83 !important;
-    fill: #e58b83 !important;
 }
 </style>
 """, unsafe_allow_html=True)
