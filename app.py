@@ -5304,7 +5304,7 @@ def conectar():
 # CONSULTAS GENERALES
 # ==========================================================
 
-@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def contar_productos():
     con = conectar()
     try:
@@ -5312,7 +5312,7 @@ def contar_productos():
     finally:
         con.close()
 
-@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def obtener_stock():
     con = conectar()
     try:
@@ -5320,7 +5320,7 @@ def obtener_stock():
     finally:
         con.close()
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=60, show_spinner=False, max_entries=1)
 def obtener_productos():
     con = conectar()
     try:
@@ -6306,7 +6306,7 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
     finally:
         con.close()
 
-@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def obtener_ventas():
     con = conectar()
     try:
@@ -6526,7 +6526,7 @@ def registrar_venta(
 # COMPRAS
 # ==========================================================
 
-@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def obtener_compras():
     con = conectar()
 
@@ -7064,7 +7064,7 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
 # DASHBOARD
 # ==========================================================
 
-@st.cache_data(ttl=30, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def resumen_dashboard():
     con = conectar()
     try:
@@ -7093,7 +7093,7 @@ def resumen_operativo():
     }
 
 
-@st.cache_data(ttl=10, show_spinner=False, max_entries=10)
+@st.cache_data(ttl=30, show_spinner=False, max_entries=10)
 def obtener_alertas_stock(limit=5):
     con = conectar()
     try:

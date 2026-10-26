@@ -19,7 +19,7 @@ def conectar():
 # OBTENER INFORMACIÓN DE VENTAS
 # ==========================================================
 
-@st.cache_data(ttl=60, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def obtener_datos_ventas():
 
     conexion = conectar()
@@ -99,7 +99,7 @@ def productos_mas_vendidos(df=None):
 # PRODUCTOS CON STOCK BAJO
 # ==========================================================
 
-@st.cache_data(ttl=60, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def productos_stock_bajo():
 
     conexion = conectar()
@@ -308,7 +308,7 @@ def clasificar_producto(
     return "Movimiento bajo"
 
 
-@st.cache_data(ttl=60, show_spinner=False, max_entries=1)
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def analisis_productos():
 
     conexion = conectar()
