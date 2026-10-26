@@ -8540,10 +8540,6 @@ elif menu == "Ventas":
                         "Descontar esta venta histórica del stock actual",
                         value=False,
                         key="stock_historico_checkbox",
-                        help=(
-                            "Actívalo solo si esta venta todavía no se ha restado "
-                            "del inventario actual."
-                        ),
                     )
 
                 vender = st.form_submit_button(
