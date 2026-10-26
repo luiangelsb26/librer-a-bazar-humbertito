@@ -210,7 +210,7 @@ database.configurar_desde_streamlit()
 # ==========================================================
 
 if "tema_blanco" not in st.session_state:
-    st.session_state.tema_blanco = False
+    st.session_state.tema_blanco = True
 
 
 def alternar_tema():
@@ -4990,7 +4990,7 @@ usuario_actual = normalizar_usuario(st.session_state.get("usuario"))
 if usuario_actual is None:
     st.session_state.pop("usuario", None)
     st.session_state.pop("menu", None)
-    st.session_state.tema_blanco = False
+    st.session_state.tema_blanco = True
     pantalla_acceso()
     st.stop()
 
@@ -6861,7 +6861,7 @@ with st.sidebar:
     if st.button("Cerrar sesión", key="cerrar_sesion"):
         st.session_state.pop("usuario", None)
         st.session_state.pop("menu", None)
-        st.session_state.tema_blanco = False
+        st.session_state.tema_blanco = True
         st.rerun()
 
     st.divider()
@@ -7292,7 +7292,7 @@ elif menu == "Administrar usuarios":
                             )
                             st.session_state.pop("usuario", None)
                             st.session_state.pop("menu", None)
-                            st.session_state.tema_blanco = False
+                            st.session_state.tema_blanco = True
                             st.session_state.pop(
                                 "usuario_pendiente_eliminar_id",
                                 None,
