@@ -1,4 +1,5 @@
 import io
+import sys
 import streamlit as st
 import pandas as pd
 import importlib
@@ -211,8 +212,43 @@ def seleccionar_modulo(nombre):
 
 
 def invalidar_cache_operativa():
-    """Refresca las consultas después de cualquier escritura del negocio."""
-    st.cache_data.clear()
+    """Refresca solo lecturas del negocio, conservando cachés de plantillas."""
+    funciones_app = (
+        "contar_productos",
+        "obtener_stock",
+        "obtener_productos",
+        "obtener_ventas",
+        "obtener_compras",
+        "obtener_auditoria_compras",
+        "obtener_historial_importaciones_compras",
+        "resumen_dashboard",
+        "obtener_alertas_stock",
+    )
+    for nombre in funciones_app:
+        funcion = globals().get(nombre)
+        if callable(funcion) and hasattr(funcion, "clear"):
+            funcion.clear()
+
+    # Estos módulos se importan solo en las secciones que los necesitan.
+    invalidaciones_por_modulo = {
+        "analysis": (
+            "obtener_datos_ventas",
+            "productos_stock_bajo",
+            "analisis_productos",
+        ),
+        "prediction": (
+            "obtener_productos",
+            "estado_modelo",
+        ),
+    }
+    for nombre_modulo, nombres_funciones in invalidaciones_por_modulo.items():
+        modulo = sys.modules.get(nombre_modulo)
+        if modulo is None:
+            continue
+        for nombre in nombres_funciones:
+            funcion = getattr(modulo, nombre, None)
+            if callable(funcion) and hasattr(funcion, "clear"):
+                funcion.clear()
 
 
 st.markdown("""

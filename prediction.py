@@ -133,26 +133,20 @@ def obtener_productos():
 
 @st.cache_data(ttl=10, show_spinner=False, max_entries=1)
 def _obtener_ventas_diarias():
-    """Devuelve ventas agregadas por producto y fecha calendario."""
-    con = conectar()
-    try:
-        return pd.read_sql_query(
-            """
-            SELECT
-                dv.producto_id,
-                p.codigo AS codigo_producto,
-                substr(v.fecha, 1, 10) AS fecha,
-                SUM(dv.cantidad) AS unidades
-            FROM ventas v
-            JOIN detalle_ventas dv ON dv.venta_id = v.id
-            JOIN productos p ON p.id = dv.producto_id
-            GROUP BY dv.producto_id, p.codigo, substr(v.fecha, 1, 10)
-            ORDER BY fecha, p.codigo
-            """,
-            con,
+    """Reutiliza el historial agregado compartido con el módulo de análisis."""
+    import analysis
+
+    datos = analysis.obtener_datos_ventas()
+    if datos.empty:
+        return pd.DataFrame(
+            columns=["producto_id", "codigo_producto", "fecha", "unidades"]
         )
-    finally:
-        con.close()
+
+    return datos[
+        ["producto_id", "codigo", "fecha", "cantidad"]
+    ].rename(
+        columns={"codigo": "codigo_producto", "cantidad": "unidades"}
+    )
 
 
 def _series_diarias(df_ventas):
@@ -453,7 +447,8 @@ def entrenar_modelo():
     almacenamiento, error_guardado = _guardar_artefacto(artefacto, joblib)
     if almacenamiento is not None:
         _cargar_artefacto.clear()
-        st.cache_data.clear()
+        estado_modelo.clear()
+        _obtener_ventas_diarias.clear()
     if almacenamiento is None:
         return {
             "estado": "error_guardar_modelo",
