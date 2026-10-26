@@ -8349,35 +8349,59 @@ elif menu == "Ventas":
 
         with st.container(key="sales_form_panel", border=True):
             with st.form("form_venta"):
-    
-                indice = st.selectbox(
-                    "Seleccionar producto",
-                    range(len(opciones)),
-                    format_func=lambda i: opciones[i]
+                st.markdown(
+                    """
+                    <div class="sales-form-intro">
+                        <span>VENTA INDIVIDUAL</span>
+                        <p>Ingresa los datos tal como aparecen en la boleta.</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
                 )
-    
-                cantidad = st.number_input(
-                    "Cantidad",
-                    min_value=1,
-                    step=1,
-                    value=1
-                )
-    
-                precio_unitario = st.number_input(
-                    "Precio unitario de la boleta (S/)",
-                    min_value=0.01,
-                    value=float(productos[indice][5]),
-                    step=0.10
-                )
-                st.caption("Si el precio de la boleta antigua difiere del actual, ingresa el que figura en ella.")
-    
-                fecha_venta = st.date_input(
-                    "Fecha de la boleta",
-                    value=datetime.now().date(),
-                    max_value=datetime.now().date()
-                )
-                st.caption("Para boletas antiguas, selecciona la fecha impresa en el documento.")
-    
+
+                with st.container(key="sales_form_fields"):
+                    producto_column, boleta_column = st.columns(
+                        [1.1, 1],
+                        gap="large",
+                    )
+                    with producto_column:
+                        indice = st.selectbox(
+                            "Seleccionar producto",
+                            range(len(opciones)),
+                            format_func=lambda i: opciones[i],
+                            width="stretch",
+                        )
+
+                        cantidad = st.number_input(
+                            "Cantidad",
+                            min_value=1,
+                            step=1,
+                            value=1,
+                            width="stretch",
+                        )
+
+                    with boleta_column:
+                        precio_unitario = st.number_input(
+                            "Precio unitario de la boleta (S/)",
+                            min_value=0.01,
+                            value=float(productos[indice][5]),
+                            step=0.10,
+                            width="stretch",
+                        )
+                        st.caption(
+                            "Si la boleta antigua indica otro precio, ingresa ese valor."
+                        )
+
+                        fecha_venta = st.date_input(
+                            "Fecha de la boleta",
+                            value=datetime.now().date(),
+                            max_value=datetime.now().date(),
+                            width="stretch",
+                        )
+                        st.caption(
+                            "Para una venta anterior, selecciona la fecha impresa."
+                        )
+
                 with st.container(key="stock_historico_panel"):
                     descontar_stock_historico = st.checkbox(
                         "También descontar esta venta histórica del stock actual",
@@ -8385,16 +8409,18 @@ elif menu == "Ventas":
                         key="stock_historico_checkbox",
                     )
                     st.caption(
-                        "Márcalo solo si esta venta todavía debe restarse del stock actual. "
-                        "Déjalo desmarcado si el inventario ya refleja esa venta."
+                        "Márcalo solo si la venta aún debe restarse del stock. "
+                        "Déjalo desmarcado si el inventario ya la refleja."
                     )
-    
+
                 vender = st.form_submit_button(
-                    "Registrar venta"
+                    "Registrar venta",
+                    type="primary",
+                    icon=":material/point_of_sale:",
+                    width="content",
                 )
-    
+
                 if vender:
-    
                     ok, mensaje = registrar_venta(
                         productos[indice][0],
                         cantidad,
@@ -8405,13 +8431,13 @@ elif menu == "Ventas":
                             or descontar_stock_historico
                         )
                     )
-    
+
                     if ok:
                         notificar_exito(mensaje)
                         st.rerun()
                     else:
                         st.error(mensaje)
-    
+
         st.divider()
         st.subheader("Importar ventas desde Excel")
         st.caption(
@@ -11623,6 +11649,88 @@ body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] [data-testid="
 # Tarjetas de trabajo: ventas, compras y administración, en ambos temas.
 st.markdown("""
 <style>
+/* Formulario de venta: campos alineados, claros y adaptables a movil. */
+body:has(.hb-light-mode) .sales-form-intro {
+    border-bottom: 1px solid #dce7e9;
+}
+body:has(.hb-light-mode) .sales-form-intro span {
+    color: #238b7d;
+}
+body:has(.hb-light-mode) .sales-form-intro p {
+    color: #60747b;
+}
+body:not(:has(.hb-light-mode)) .sales-form-intro {
+    border-bottom: 1px solid #33434a;
+}
+body:not(:has(.hb-light-mode)) .sales-form-intro span {
+    color: #72c8bb;
+}
+body:not(:has(.hb-light-mode)) .sales-form-intro p {
+    color: #aab9bf;
+}
+.sales-form-intro {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 0 1.15rem;
+    padding: 0 0 .85rem;
+}
+.sales-form-intro span {
+    flex: 0 0 auto;
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .12em;
+}
+.sales-form-intro p {
+    margin: 0;
+    font-size: .9rem;
+    line-height: 1.45;
+    text-align: right;
+}
+.st-key-sales_form_fields [data-testid="stHorizontalBlock"] {
+    align-items: start;
+    gap: 1.35rem;
+}
+.st-key-sales_form_fields [data-testid="stCaptionContainer"] p {
+    margin-top: -.25rem;
+    margin-bottom: .75rem;
+    font-size: .82rem;
+    line-height: 1.45;
+}
+.st-key-sales_form_panel [data-testid="stFormSubmitButton"] {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: .2rem;
+}
+.st-key-sales_form_panel [data-testid="stFormSubmitButton"] button {
+    min-width: 11rem;
+    min-height: 2.75rem;
+    font-weight: 650;
+}
+@media (max-width: 640px) {
+    .sales-form-intro {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: .25rem;
+        margin-bottom: .9rem;
+    }
+    .sales-form-intro p {
+        text-align: left;
+    }
+    .st-key-sales_form_fields [data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+        gap: .25rem !important;
+    }
+    .st-key-sales_form_fields [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+    .st-key-sales_form_panel [data-testid="stFormSubmitButton"] button {
+        width: 100%;
+    }
+}
+
 body:has(.hb-light-mode) .st-key-sales_form_panel,
 body:has(.hb-light-mode) .st-key-purchase_form_panel,
 body:has(.hb-light-mode) .st-key-admin_create_panel,
