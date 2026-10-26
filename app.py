@@ -4398,7 +4398,7 @@ with st.sidebar:
     )
     st.divider()
 
-@st.cache_resource(ttl=15, show_spinner=False)
+@st.cache_resource(ttl=300, show_spinner=False)
 def preparar_tabla_usuarios():
     """Crea la tabla y consulta administradores activos con una conexión."""
     return auth.inicializar()
@@ -5209,12 +5209,6 @@ def pantalla_acceso():
                     "Iniciar sesión",
                     type="primary",
                     width="stretch",
-                )
-
-            if error_revision_admin:
-                st.info(
-                    "No se pudo comprobar si hay un administrador activo. "
-                    "Puedes intentar iniciar sesión; revisa la conexión si falla."
                 )
 
             if entrar:
