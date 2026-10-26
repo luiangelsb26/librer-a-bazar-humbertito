@@ -8513,8 +8513,8 @@ elif menu == "Ventas":
                         key="stock_historico_checkbox",
                     )
                     st.caption(
-                        "Actívalo solo si esta venta todavía no está reflejada "
-                        "en el inventario."
+                        "Solo actívalo si esta venta aún no se ha descontado "
+                        "del inventario."
                     )
 
                 vender = st.form_submit_button(
@@ -10119,16 +10119,16 @@ body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([dat
 body:has(.hb-light-mode) .st-key-stock_historico_panel {
     box-sizing: border-box !important;
     width: 100% !important;
-    min-height: 4.5rem !important;
+    min-height: 4.2rem !important;
     margin: 0.35rem 0 0.75rem !important;
-    padding: 0.75rem 1rem !important;
+    padding: 0.65rem 1rem 0.7rem !important;
     border: 1px solid #cbdde0 !important;
     border-radius: 12px !important;
     background: #f3f8f8 !important;
     overflow: visible !important;
 }
 body:has(.hb-light-mode) .st-key-stock_historico_panel [data-testid="stVerticalBlock"] {
-    gap: 0.65rem !important;
+    gap: 0.35rem !important;
 }
 body:has(.hb-light-mode) .st-key-stock_historico_checkbox label,
 body:has(.hb-light-mode) .st-key-stock_historico_checkbox label p {
@@ -10202,10 +10202,10 @@ body:has(.hb-light-mode) .st-key-stock_historico_checkbox [role="checkbox"][aria
 }
 body:has(.hb-light-mode) .st-key-stock_historico_panel [data-testid="stCaptionContainer"] p {
     box-sizing: border-box !important;
-    margin: 0.15rem 0 0 !important;
-    padding: 0 !important;
-    color: #354f57 !important;
-    font-size: 0.9rem !important;
+    margin: 0 !important;
+    padding: 0 0 0 1.7rem !important;
+    color: #526970 !important;
+    font-size: 0.84rem !important;
     line-height: 1.5 !important;
 }
 
