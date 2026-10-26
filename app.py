@@ -12018,5 +12018,48 @@ body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [data-selected="tru
 body:has(.hb-light-mode) [data-testid="stDateInputCalendar"] [data-outside-month="true"] {
     color: #9aa8ac !important;
 }
+/* Contorno fino y continuo del campo compuesto de fecha (Streamlit actual). */
+body:has(.hb-light-mode) [data-testid="stDateInputField"] {
+    box-sizing: border-box !important;
+    min-height: 2.5rem !important;
+    overflow: hidden !important;
+    border: 1px solid #b9cdd1 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    color: #263b42 !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInputField"]:focus-within {
+    border-color: #348f84 !important;
+    box-shadow: 0 0 0 2px rgba(52, 143, 132, .12) !important;
+}
+body:has(.hb-light-mode) [data-testid="stDateInputField"] [role="spinbutton"] {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #263b42 !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stDateInputField"] {
+    box-sizing: border-box !important;
+    min-height: 2.5rem !important;
+    overflow: hidden !important;
+    border: 1px solid #465761 !important;
+    border-radius: 10px !important;
+    background: #17232c !important;
+    color: #e2eaee !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stDateInputField"]:focus-within {
+    border-color: #55b8a9 !important;
+    box-shadow: 0 0 0 2px rgba(85, 184, 169, .14) !important;
+}
+body:not(:has(.hb-light-mode)) [data-testid="stDateInputField"] [role="spinbutton"] {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #e2eaee !important;
+    box-shadow: none !important;
+}
 </style>
 """, unsafe_allow_html=True)
