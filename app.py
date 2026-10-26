@@ -11731,6 +11731,48 @@ body:not(:has(.hb-light-mode)) .sales-form-intro p {
     }
 }
 
+/* Contorno continuo y fino para la fecha de la boleta. */
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stDateInput"] [data-baseweb="input"] {
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    border: 1px solid #b8c9cd !important;
+    border-radius: 9px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stDateInput"] [data-baseweb="input"]:focus-within {
+    border-color: #348f84 !important;
+    box-shadow: 0 0 0 2px rgba(52, 143, 132, .13) !important;
+}
+body:has(.hb-light-mode) .st-key-sales_form_panel [data-testid="stDateInput"] input {
+    box-sizing: border-box !important;
+    min-height: 2.5rem !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stDateInput"] [data-baseweb="input"] {
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    border: 1px solid #46545d !important;
+    border-radius: 9px !important;
+    background: #17232c !important;
+    box-shadow: none !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stDateInput"] [data-baseweb="input"]:focus-within {
+    border-color: #55b8a9 !important;
+    box-shadow: 0 0 0 2px rgba(85, 184, 169, .15) !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-sales_form_panel [data-testid="stDateInput"] input {
+    box-sizing: border-box !important;
+    min-height: 2.5rem !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
 body:has(.hb-light-mode) .st-key-sales_form_panel,
 body:has(.hb-light-mode) .st-key-purchase_form_panel,
 body:has(.hb-light-mode) .st-key-admin_create_panel,
