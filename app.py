@@ -4955,7 +4955,58 @@ def pantalla_acceso():
             background: #2a3941 !important;
             color: #f1f6f7 !important;
         }
-        </style>
+        /* El selector adopta el lenguaje visual del tema que está activo. */
+        body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button {
+            border: 1px solid #c7d8da !important;
+            background: linear-gradient(145deg, #ffffff, #f2f7f7) !important;
+            color: #356a6a !important;
+            box-shadow: 0 3px 10px rgba(28, 63, 70, .12), inset 0 1px 0 #ffffff !important;
+            transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease !important;
+        }
+        body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button:hover {
+            border-color: #88b8b0 !important;
+            background: linear-gradient(145deg, #ffffff, #eaf5f2) !important;
+            color: #205e58 !important;
+            box-shadow: 0 5px 13px rgba(28, 100, 91, .16), inset 0 1px 0 #ffffff !important;
+            transform: translateY(-1px) !important;
+        }
+        body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button:active {
+            transform: scale(.96) !important;
+            box-shadow: inset 0 1px 3px rgba(28, 63, 70, .16) !important;
+        }
+        body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button:focus-visible {
+            outline: 2px solid rgba(53, 125, 117, .42) !important;
+            outline-offset: 3px !important;
+        }
+        body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button {
+            border: 1px solid #40535c !important;
+            background: linear-gradient(145deg, #26343c, #1a252c) !important;
+            color: #e7d9a8 !important;
+            box-shadow: 0 3px 11px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.05) !important;
+            transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease !important;
+        }
+        body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:hover {
+            border-color: #687f84 !important;
+            background: linear-gradient(145deg, #30434a, #202d34) !important;
+            color: #fff0bf !important;
+            box-shadow: 0 5px 14px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255,255,255,.08) !important;
+            transform: translateY(-1px) !important;
+        }
+        body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:active {
+            transform: scale(.96) !important;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, .30) !important;
+        }
+        body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:focus-visible {
+            outline: 2px solid rgba(146, 177, 174, .48) !important;
+            outline-offset: 3px !important;
+        }
+        [class*="st-key-theme_toggle"] button svg {
+            color: inherit !important;
+            transition: color .18s ease, transform .18s ease !important;
+        }
+        [class*="st-key-theme_toggle"] button:hover svg {
+            transform: rotate(-8deg) !important;
+        }        </style>
     """, unsafe_allow_html=True)
 
     with st.container(key="theme_toggle"):
@@ -11342,5 +11393,56 @@ body:not(:has(.hb-light-mode)) [data-testid="stTextInput"] [data-baseweb="input"
     background: #2a3941 !important;
     color: #f1f6f7 !important;
 }
-</style>
+/* El selector adopta el lenguaje visual del tema que está activo. */
+body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button {
+    border: 1px solid #c7d8da !important;
+    background: linear-gradient(145deg, #ffffff, #f2f7f7) !important;
+    color: #356a6a !important;
+    box-shadow: 0 3px 10px rgba(28, 63, 70, .12), inset 0 1px 0 #ffffff !important;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button:hover {
+    border-color: #88b8b0 !important;
+    background: linear-gradient(145deg, #ffffff, #eaf5f2) !important;
+    color: #205e58 !important;
+    box-shadow: 0 5px 13px rgba(28, 100, 91, .16), inset 0 1px 0 #ffffff !important;
+    transform: translateY(-1px) !important;
+}
+body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button:active {
+    transform: scale(.96) !important;
+    box-shadow: inset 0 1px 3px rgba(28, 63, 70, .16) !important;
+}
+body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button:focus-visible {
+    outline: 2px solid rgba(53, 125, 117, .42) !important;
+    outline-offset: 3px !important;
+}
+body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button {
+    border: 1px solid #40535c !important;
+    background: linear-gradient(145deg, #26343c, #1a252c) !important;
+    color: #e7d9a8 !important;
+    box-shadow: 0 3px 11px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.05) !important;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:hover {
+    border-color: #687f84 !important;
+    background: linear-gradient(145deg, #30434a, #202d34) !important;
+    color: #fff0bf !important;
+    box-shadow: 0 5px 14px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255,255,255,.08) !important;
+    transform: translateY(-1px) !important;
+}
+body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:active {
+    transform: scale(.96) !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, .30) !important;
+}
+body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button:focus-visible {
+    outline: 2px solid rgba(146, 177, 174, .48) !important;
+    outline-offset: 3px !important;
+}
+[class*="st-key-theme_toggle"] button svg {
+    color: inherit !important;
+    transition: color .18s ease, transform .18s ease !important;
+}
+[class*="st-key-theme_toggle"] button:hover svg {
+    transform: rotate(-8deg) !important;
+}</style>
 """, unsafe_allow_html=True)
