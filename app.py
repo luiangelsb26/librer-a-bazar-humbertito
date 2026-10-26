@@ -193,6 +193,69 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
     )
 
 
+def estilizar_historial_ventas(marco):
+    """Aplica colores de alto contraste al historial según el tema elegido."""
+    tema_claro = bool(st.session_state.get("tema_blanco", False))
+    if tema_claro:
+        color_fondo = "#ffffff"
+        color_alterno = "#f6f9fa"
+        color_texto = "#26383e"
+        color_cabecera = "#eaf3f3"
+        color_borde = "#d8e4e6"
+    else:
+        color_fondo = "#18232c"
+        color_alterno = "#1e2a33"
+        color_texto = "#e1e9ed"
+        color_cabecera = "#25343d"
+        color_borde = "#3a4b55"
+
+    return (
+        marco.style
+        .set_properties(
+            **{
+                "background-color": color_fondo,
+                "color": color_texto,
+                "border-color": color_borde,
+                "text-align": "left",
+            }
+        )
+        .set_properties(
+            subset=["N.º", "Cantidad"],
+            **{"text-align": "center"},
+        )
+        .set_properties(
+            subset=["Total de boleta", "Precio unitario", "Subtotal de línea"],
+            **{"text-align": "right"},
+        )
+        .set_table_styles(
+            [
+                {
+                    "selector": "th",
+                    "props": [
+                        ("background-color", color_cabecera),
+                        ("color", color_texto),
+                        ("border-color", color_borde),
+                        ("font-weight", "700"),
+                        ("text-align", "left"),
+                    ],
+                },
+                {
+                    "selector": "td",
+                    "props": [("border-color", color_borde)],
+                },
+                {
+                    "selector": "tbody tr:nth-child(even) td",
+                    "props": [
+                        ("background-color", color_alterno),
+                        ("color", color_texto),
+                    ],
+                },
+            ],
+            overwrite=False,
+        )
+    )
+
+
 for mensaje_notificacion in st.session_state.pop(
     "_notificaciones_exito",
     [],
@@ -8438,16 +8501,22 @@ elif menu == "Ventas":
                             "Para una venta anterior, selecciona la fecha impresa."
                         )
 
-                with st.container(key="stock_historico_panel"):
-                    descontar_stock_historico = st.checkbox(
-                        "También descontar esta venta histórica del stock actual",
-                        value=False,
-                        key="stock_historico_checkbox",
+                with st.container(key="stock_historico_panel", border=True):
+                    stock_checkbox_column, stock_help_column = st.columns(
+                        [1.2, 1.8],
+                        vertical_alignment="center",
                     )
-                    st.caption(
-                        "Márcalo solo si la venta aún debe restarse del stock. "
-                        "Déjalo desmarcado si el inventario ya la refleja."
-                    )
+                    with stock_checkbox_column:
+                        descontar_stock_historico = st.checkbox(
+                            "Descontar del stock actual",
+                            value=False,
+                            key="stock_historico_checkbox",
+                        )
+                    with stock_help_column:
+                        st.caption(
+                            "Actívalo solo si esta venta todavía no está reflejada "
+                            "en el inventario."
+                        )
 
                 vender = st.form_submit_button(
                     "Registrar venta",
@@ -8601,60 +8670,102 @@ elif menu == "Ventas":
                     else:
                         st.error(mensaje)
 
-        st.subheader("Historial de ventas")
+        st.subheader("Historial de ventas", icon=":material/history:")
 
         ventas = obtener_ventas()
 
         if ventas:
+            total_por_venta = {
+                venta[0]: float(venta[2] or 0)
+                for venta in ventas
+            }
+            unidades_vendidas = sum(int(venta[4] or 0) for venta in ventas)
+            resumen_ventas = st.columns(3)
+            resumen_ventas[0].metric(
+                "Ventas registradas",
+                formatear_numero_es(len(total_por_venta)),
+            )
+            resumen_ventas[1].metric(
+                "Unidades vendidas",
+                formatear_numero_es(unidades_vendidas),
+            )
+            resumen_ventas[2].metric(
+                "Total vendido",
+                formatear_soles(sum(total_por_venta.values())),
+            )
 
             tabla = []
-
             for numero_fila, venta in enumerate(ventas, start=1):
                 tabla.append({
                     "N.º": numero_fila,
                     "Boleta": venta[8] or "",
                     "Fecha": venta[1],
-                    "Total": f"S/ {venta[2]:.2f}",
+                    "Total de boleta": f"S/ {venta[2]:.2f}",
                     "Producto": venta[3],
                     "Cantidad": venta[4],
                     "Precio unitario": f"S/ {venta[5]:.2f}",
-                    "Subtotal": f"S/ {venta[6]:.2f}"
+                    "Subtotal de línea": f"S/ {venta[6]:.2f}",
                 })
 
             st.caption(
-                "Numeración consecutiva desde 1, en el orden del historial. "
-                "Desliza hacia abajo dentro del recuadro para ver las demás filas."
+                "Cada fila corresponde a un producto. El total de boleta se repite "
+                "cuando una venta incluye varios productos."
             )
-            mostrar_tabla_centrada(
-                tabla,
+
+            filas_por_pagina = 50
+            total_paginas = (len(tabla) + filas_por_pagina - 1) // filas_por_pagina
+            if total_paginas > 1:
+                opciones_pagina = list(range(1, total_paginas + 1))
+                if st.session_state.get("historial_ventas_pagina", 1) not in opciones_pagina:
+                    st.session_state["historial_ventas_pagina"] = 1
+                pagina = st.selectbox(
+                    "Página del historial",
+                    options=opciones_pagina,
+                    format_func=lambda numero: f"Página {numero} de {total_paginas}",
+                    key="historial_ventas_pagina",
+                    width="content",
+                )
+            else:
+                pagina = 1
+
+            inicio = (pagina - 1) * filas_por_pagina
+            fin = min(inicio + filas_por_pagina, len(tabla))
+            st.caption(
+                f"Mostrando filas {formatear_numero_es(inicio + 1)}–"
+                f"{formatear_numero_es(fin)} de {formatear_numero_es(len(tabla))}."
+            )
+            tabla_pagina = pd.DataFrame(tabla[inicio:fin])
+            st.dataframe(
+                estilizar_historial_ventas(tabla_pagina),
                 width="stretch",
+                height=520,
                 hide_index=True,
-                height=600,
-                key="historial_ventas_id_asc",
+                key=f"historial_ventas_pagina_{pagina}",
+                lazy=False,
                 column_config={
                     "N.º": st.column_config.NumberColumn(
                         "N.º", width=65, alignment="center"
                     ),
                     "Boleta": st.column_config.TextColumn(
-                        "Boleta", width=205, alignment="center"
+                        "Boleta", width=205
                     ),
                     "Fecha": st.column_config.TextColumn(
-                        "Fecha", width=145, alignment="center"
+                        "Fecha", width=145
                     ),
-                    "Total": st.column_config.TextColumn(
-                        "Total", width=85, alignment="center"
+                    "Total de boleta": st.column_config.TextColumn(
+                        "Total de boleta", width=125, alignment="right"
                     ),
                     "Producto": st.column_config.TextColumn(
-                        "Producto", width=230, alignment="center"
+                        "Producto", width=230
                     ),
                     "Cantidad": st.column_config.NumberColumn(
                         "Cantidad", width=85, alignment="center"
                     ),
                     "Precio unitario": st.column_config.TextColumn(
-                        "Precio unitario", width=120, alignment="center"
+                        "Precio unitario", width=125, alignment="right"
                     ),
-                    "Subtotal": st.column_config.TextColumn(
-                        "Subtotal", width=90, alignment="center"
+                    "Subtotal de línea": st.column_config.TextColumn(
+                        "Subtotal de línea", width=135, alignment="right"
                     ),
                 },
             )
@@ -10037,9 +10148,9 @@ body:has(.hb-light-mode) [data-testid="stMain"] [data-testid="stAlert"]:has([dat
 body:has(.hb-light-mode) .st-key-stock_historico_panel {
     box-sizing: border-box !important;
     width: 100% !important;
-    min-height: 6rem !important;
+    min-height: 4.5rem !important;
     margin: 0.35rem 0 0.75rem !important;
-    padding: 0.9rem 1rem 1rem !important;
+    padding: 0.75rem 1rem !important;
     border: 1px solid #cbdde0 !important;
     border-radius: 12px !important;
     background: #f3f8f8 !important;
@@ -10121,7 +10232,7 @@ body:has(.hb-light-mode) .st-key-stock_historico_checkbox [role="checkbox"][aria
 body:has(.hb-light-mode) .st-key-stock_historico_panel [data-testid="stCaptionContainer"] p {
     box-sizing: border-box !important;
     margin: 0.15rem 0 0 !important;
-    padding: 0 0 0.25rem 1.7rem !important;
+    padding: 0 !important;
     color: #354f57 !important;
     font-size: 0.9rem !important;
     line-height: 1.5 !important;
