@@ -200,13 +200,15 @@ def estilizar_historial_ventas(marco):
         color_fondo = "#ffffff"
         color_alterno = "#f6f9fa"
         color_texto = "#26383e"
-        color_cabecera = "#eaf3f3"
+        color_cabecera = "#e7f3f1"
+        color_texto_cabecera = "#1e625b"
         color_borde = "#d8e4e6"
     else:
         color_fondo = "#18232c"
         color_alterno = "#1e2a33"
         color_texto = "#e1e9ed"
         color_cabecera = "#25343d"
+        color_texto_cabecera = "#b9e4dc"
         color_borde = "#3a4b55"
 
     return (
@@ -233,10 +235,10 @@ def estilizar_historial_ventas(marco):
                     "selector": "th, th.col_heading",
                     "props": [
                         ("background-color", color_cabecera),
-                        ("color", color_texto),
+                        ("color", color_texto_cabecera),
                         ("border-color", color_borde),
                         ("font-weight", "700"),
-                        ("text-align", "left"),
+                        ("text-align", "center"),
                         ("padding", "0.7rem 0.8rem"),
                         ("white-space", "nowrap"),
                     ],
@@ -8837,11 +8839,13 @@ elif menu == "Ventas":
             )
 
             with st.expander("Eliminar todas las ventas"):
-                st.warning(
-                    f"Se eliminarán permanentemente las {cantidad_ventas_total} "
-                    "ventas y sus detalles. Se restaurará el stock solo de las "
-                    "ventas que el sistema marcó como descontadas."
-                )
+                with st.container(key="delete_all_sales_warning"):
+                    st.warning(
+                        f"Se eliminarán permanentemente las {cantidad_ventas_total} "
+                        "ventas y sus detalles. Se restaurará el stock solo de las "
+                        "ventas que el sistema marcó como descontadas.",
+                        icon=":material/delete_forever:",
+                    )
                 if ventas_stock_desconocido:
                     st.info(
                         f"{ventas_stock_desconocido} ventas antiguas no tienen "
@@ -12817,3 +12821,54 @@ else:
     }
     </style>
     """, unsafe_allow_html=True)
+
+# Estilo centrado y específico para encabezados y aviso de eliminación de ventas.
+st.markdown("""
+<style>
+body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] {
+    box-sizing: border-box !important;
+    border: 1px solid #efc6c2 !important;
+    border-left: 5px solid #c5574f !important;
+    border-radius: 14px !important;
+    background: #fff1ef !important;
+    padding: 1rem 1.2rem !important;
+    box-shadow: 0 5px 14px rgba(140, 55, 48, .08) !important;
+    text-align: center !important;
+}
+body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] p {
+    width: 100% !important;
+    margin: 0 !important;
+    color: #713b37 !important;
+    font-weight: 650 !important;
+    line-height: 1.55 !important;
+    text-align: center !important;
+}
+body:has(.hb-light-mode) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] svg {
+    color: #b84842 !important;
+    fill: #b84842 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] {
+    box-sizing: border-box !important;
+    border: 1px solid #65403e !important;
+    border-left: 5px solid #d8756d !important;
+    border-radius: 14px !important;
+    background: #2d2021 !important;
+    padding: 1rem 1.2rem !important;
+    box-shadow: 0 5px 16px rgba(0, 0, 0, .18) !important;
+    text-align: center !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] p {
+    width: 100% !important;
+    margin: 0 !important;
+    color: #f0d6d3 !important;
+    font-weight: 650 !important;
+    line-height: 1.55 !important;
+    text-align: center !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-delete_all_sales_warning [data-testid="stAlertContainer"] svg {
+    color: #e58b83 !important;
+    fill: #e58b83 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
