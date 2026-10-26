@@ -7033,14 +7033,27 @@ def obtener_auditoria_compras():
 
 @st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_historial_importaciones_compras():
-    """Devuelve auditoría de cargas; NULL indica que la versión antigua no guardó el dato."""
+    """Devuelve cargas; sin la columna nueva, el estado del stock queda desconocido."""
     con = conectar()
     try:
-        return con.execute("""
-            SELECT nombre_archivo, fecha_importacion, filas_importadas, stock_actualizado
-            FROM importaciones_compras
-            ORDER BY fecha_importacion DESC
-        """).fetchall()
+        try:
+            return con.execute("""
+                SELECT nombre_archivo, fecha_importacion, filas_importadas, stock_actualizado
+                FROM importaciones_compras
+                ORDER BY fecha_importacion DESC
+            """).fetchall()
+        except Exception as error:
+            # La migración puede no haberse aplicado todavía en bases antiguas.
+            # Recupera el historial y marca esos estados como desconocidos.
+            if "stock_actualizado" not in str(error).lower():
+                raise
+            con.rollback()
+            return con.execute("""
+                SELECT nombre_archivo, fecha_importacion, filas_importadas,
+                       NULL AS stock_actualizado
+                FROM importaciones_compras
+                ORDER BY fecha_importacion DESC
+            """).fetchall()
     finally:
         con.close()
 
@@ -9125,10 +9138,8 @@ elif menu == "Compras":
                         width="stretch",
                         hide_index=True,
                     )
-        except Exception as error:
-            st.caption(
-                f"No se pudo cargar el historial de archivos importados. Detalle: {error}"
-            )
+        except Exception:
+            st.caption("No se pudo cargar el historial de archivos importados.")
 
 
 # ==========================================================
