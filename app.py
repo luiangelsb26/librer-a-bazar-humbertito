@@ -98,82 +98,6 @@ def formatear_soles(valor):
     return f"S/ {formatear_numero_es(valor, 2)}"
 
 
-def estilizar_tabla_por_tema(marco):
-    """Aplica una paleta completa y consistente a las tablas del tema actual."""
-    tema_claro = bool(st.session_state.get("tema_blanco", False))
-    if tema_claro:
-        color_fondo = "#ffffff"
-        color_fila_alterna = "#f7f9fa"
-        color_texto = "#34474e"
-        color_cabecera = "#eef3f4"
-        color_texto_cabecera = "#344b52"
-        color_borde = "#dce5e8"
-    else:
-        color_fondo = "#171f24"
-        color_fila_alterna = "#1b252b"
-        color_texto = "#dbe3e6"
-        color_cabecera = "#222d33"
-        color_texto_cabecera = "#e6eef0"
-        color_borde = "#303c43"
-
-    return marco.style.set_properties(
-        **{
-            "background-color": color_fondo,
-            "color": color_texto,
-        }
-    ).set_table_styles(
-        [
-            {
-                "selector": "table",
-                "props": [
-                    ("border-collapse", "separate"),
-                    ("border-spacing", "0"),
-                    ("border", f"1px solid {color_borde}"),
-                    ("border-radius", "12px"),
-                    ("overflow", "hidden"),
-                ],
-            },
-            {
-                "selector": "th, th.col_heading",
-                "props": [
-                    ("background-color", color_cabecera),
-                    ("color", color_texto_cabecera),
-                    ("border-bottom", f"1px solid {color_borde}"),
-                    ("font-weight", "650"),
-                    ("font-size", "0.76rem"),
-                    ("letter-spacing", "0.045em"),
-                    ("padding", "0.95rem 1.05rem"),
-                    ("white-space", "nowrap"),
-                    ("text-align", "left"),
-                ],
-            },
-            {
-                "selector": "tbody td",
-                "props": [
-                    ("border-bottom", f"1px solid {color_borde}"),
-                    ("padding", "1rem 1.05rem"),
-                    ("line-height", "1.5"),
-                    ("vertical-align", "middle"),
-                ],
-            },
-            {
-                "selector": "tbody tr:nth-child(even) td",
-                "props": [
-                    ("background-color", color_fila_alterna),
-                ],
-            },
-        ],
-        overwrite=False,
-    ).set_properties(
-        subset=marco.select_dtypes(include="number").columns.tolist(),
-        **{
-            "text-align": "right",
-            "font-variant-numeric": "tabular-nums",
-            "white-space": "nowrap",
-        },
-    )
-
-
 def mostrar_tabla_centrada(datos, *args, **kwargs):
     """Renderiza tablas compactas con estilo y virtualiza las tablas grandes."""
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
@@ -192,19 +116,73 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
         height = "content"
 
     if len(marco) >= 150:
+        # El marco fijo evita alargar demasiado la sección. La carga diferida
+        # envía historiales muy largos al navegador conforme el usuario los recorre.
         if height == "content":
             height = 560
         return st.dataframe(
-            estilizar_tabla_por_tema(marco),
+            marco,
             width=width,
             height=height,
             hide_index=hide_index,
-            row_height=48,
             key=key,
-            lazy=False,
+            lazy=len(marco) > 1000,
         )
 
-    marco_renderizado = estilizar_tabla_por_tema(marco)
+    # Las tablas cortas conservan la paleta clara u oscura personalizada.
+    tema_claro = bool(st.session_state.get("tema_blanco", False))
+    if tema_claro:
+        color_fondo = "#ffffff"
+        color_texto = "#26383e"
+        color_cabecera = "#eaf3f3"
+        color_fila_alterna = "#f4f8f9"
+        color_borde = "#d8e4e6"
+    else:
+        color_fondo = "#18232c"
+        color_texto = "#e1e9ed"
+        color_cabecera = "#25343d"
+        color_fila_alterna = "#1e2a33"
+        color_borde = "#3a4b55"
+
+    marco_renderizado = (
+        marco.style
+        .set_table_styles(
+            [
+                {
+                    "selector": "th, td",
+                    "props": [
+                        ("background-color", color_fondo),
+                        ("color", color_texto),
+                        ("border-color", color_borde),
+                        ("text-align", "center"),
+                    ],
+                    
+                },
+                {
+                    "selector": "th",
+                    "props": [
+                        ("background-color", color_cabecera),
+                        ("color", color_texto),
+                        ("border-color", color_borde),
+                        ("font-weight", "700"),
+                        ("text-align", "center"),
+                    ],
+                },
+                {
+                    "selector": "td",
+                    "props": [("border-color", color_borde)],
+                },
+                {
+                    "selector": "tbody tr:nth-child(even) td",
+                    "props": [
+                        ("background-color", color_fila_alterna),
+                        ("color", color_texto),
+                    ],
+                },
+            ],
+            overwrite=False,
+        )
+    )
 
     if hide_index:
         marco_renderizado = marco_renderizado.hide(axis="index")
@@ -218,11 +196,32 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
 
 
 def estilizar_historial_ventas(marco):
-    """Aplica alineación y estilo común al historial de ventas."""
+    """Aplica colores de alto contraste al historial según el tema elegido."""
+    tema_claro = bool(st.session_state.get("tema_blanco", False))
+    if tema_claro:
+        color_fondo = "#ffffff"
+        color_alterno = "#f6f9fa"
+        color_texto = "#26383e"
+        color_cabecera = "#e7f3f1"
+        color_texto_cabecera = "#1e625b"
+        color_borde = "#d8e4e6"
+    else:
+        color_fondo = "#18232c"
+        color_alterno = "#1e2a33"
+        color_texto = "#e1e9ed"
+        color_cabecera = "#25343d"
+        color_texto_cabecera = "#b9e4dc"
+        color_borde = "#3a4b55"
+
     return (
-        estilizar_tabla_por_tema(marco)
+        marco.style
         .set_properties(
-            **{"text-align": "left"}
+            **{
+                "background-color": color_fondo,
+                "color": color_texto,
+                "border-color": color_borde,
+                "text-align": "left",
+            }
         )
         .set_properties(
             subset=["N.º", "Cantidad"],
@@ -236,7 +235,29 @@ def estilizar_historial_ventas(marco):
             [
                 {
                     "selector": "th, th.col_heading",
-                    "props": [("text-align", "center")],
+                    "props": [
+                        ("background-color", color_cabecera),
+                        ("color", color_texto_cabecera),
+                        ("border-color", color_borde),
+                        ("font-weight", "700"),
+                        ("text-align", "center"),
+                        ("padding", "0.7rem 0.8rem"),
+                        ("white-space", "nowrap"),
+                    ],
+                },
+                {
+                    "selector": "td",
+                    "props": [
+                        ("border-color", color_borde),
+                        ("padding", "0.65rem 0.8rem"),
+                    ],
+                },
+                {
+                    "selector": "tbody tr:nth-child(even) td",
+                    "props": [
+                        ("background-color", color_alterno),
+                        ("color", color_texto),
+                    ],
                 },
             ],
             overwrite=False,
@@ -274,10 +295,6 @@ def seleccionar_modulo(nombre):
     st.session_state.menu = nombre
 
 
-def limpiar_confirmacion_borrado_importacion():
-    st.session_state["confirmar_borrar_importacion_compras"] = False
-
-
 def invalidar_cache_operativa():
     """Refresca solo lecturas del negocio, conservando cachés de plantillas."""
     funciones_app = (
@@ -285,12 +302,7 @@ def invalidar_cache_operativa():
         "obtener_stock",
         "obtener_productos",
         "obtener_ventas",
-        "resumen_historial_ventas",
         "obtener_compras",
-        "obtener_compras_pagina",
-        "obtener_auditoria_compras",
-        "contar_lineas_compras_historial",
-        "generar_excel_historial_compras",
         "obtener_auditoria_compras",
         "obtener_historial_importaciones_compras",
         "resumen_dashboard",
@@ -302,8 +314,6 @@ def invalidar_cache_operativa():
         funcion = globals().get(nombre)
         if callable(funcion) and hasattr(funcion, "clear"):
             funcion.clear()
-
-    st.session_state.pop("historial_compras_excel_bytes", None)
 
     # Estos módulos se importan solo en las secciones que los necesitan.
     invalidaciones_por_modulo = {
@@ -1213,6 +1223,7 @@ st.markdown("""
 
     </style>
 """, unsafe_allow_html=True)
+
 
 
 
@@ -3407,12 +3418,12 @@ st.markdown("""
 }
 
 /* ---------- AVISOS ---------- */
-[data-testid="stAppViewContainer"] [data-testid="stAlert"] {
+[data-testid="stMain"] [data-testid="stAlert"] {
     max-width:980px !important;
     margin:.7rem 0 !important;
     overflow:visible !important;
 }
-[data-testid="stAppViewContainer"] [data-testid="stAlertContainer"] {
+[data-testid="stMain"] [data-testid="stAlertContainer"] {
     display:flex !important;
     align-items:center !important;
     box-sizing:border-box !important;
@@ -5164,70 +5175,6 @@ def pantalla_acceso():
             letter-spacing: .11em;
         }
         body:not(:has(.hb-light-mode)) .login-setup-step { color: #8bb8b3; }
-        body:has(.hb-light-mode) .stApp,
-        body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
-            background: #f5f7f8 !important;
-        }
-        body:not(:has(.hb-light-mode)) .stApp,
-        body:not(:has(.hb-light-mode)) [data-testid="stAppViewContainer"] {
-            background: #11181d !important;
-        }
-        body:has(.hb-light-mode) .login-brand {
-            border-color: #e1e7ea !important;
-            border-radius: 16px !important;
-            background: #ffffff !important;
-            box-shadow: 0 2px 10px rgba(27, 46, 54, .045) !important;
-        }
-        body:not(:has(.hb-light-mode)) .login-brand {
-            border-color: #2c3940 !important;
-            border-radius: 16px !important;
-            background: #171f24 !important;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, .14) !important;
-        }
-        body:has(.hb-light-mode) .login-brand-head,
-        body:has(.hb-light-mode) .login-brand-feature {
-            border-color: #e1e7ea !important;
-        }
-        body:not(:has(.hb-light-mode)) .login-brand-head,
-        body:not(:has(.hb-light-mode)) .login-brand-feature {
-            border-color: #2c3940 !important;
-        }
-        body:has(.hb-light-mode) [data-testid="stForm"] {
-            border-color: #e1e7ea !important;
-            border-radius: 14px !important;
-            background: #ffffff !important;
-            box-shadow: 0 2px 10px rgba(27, 46, 54, .045) !important;
-        }
-        body:not(:has(.hb-light-mode)) [data-testid="stForm"] {
-            border-color: #2c3940 !important;
-            border-radius: 14px !important;
-            background: #171f24 !important;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, .14) !important;
-        }
-        body:not(:has(.hb-light-mode)) [data-testid="stForm"] input {
-            border-color: #3a484f !important;
-            border-radius: 8px !important;
-            background: #1c272d !important;
-            color: #e2e9ec !important;
-        }
-        body:has(.hb-light-mode) [data-testid="stForm"] input {
-            border-color: #ccd6da !important;
-            border-radius: 8px !important;
-            background: #ffffff !important;
-            color: #26363d !important;
-        }
-        body:has(.hb-light-mode) [class*="st-key-theme_toggle"] button {
-            border-color: #d7e1e4 !important;
-            background: #ffffff !important;
-            color: #397d74 !important;
-            box-shadow: 0 1px 3px rgba(27, 46, 54, .08) !important;
-        }
-        body:not(:has(.hb-light-mode)) [class*="st-key-theme_toggle"] button {
-            border-color: #34434a !important;
-            background: #1c272d !important;
-            color: #d8c99a !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, .18) !important;
-        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -6531,39 +6478,9 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
         con.close()
 
 @st.cache_data(ttl=120, show_spinner=False, max_entries=1)
-def resumen_historial_ventas():
+def obtener_ventas():
     con = conectar()
     try:
-        return con.execute("""
-            SELECT
-                COUNT(*),
-                COALESCE(SUM(unidades), 0),
-                COALESCE(SUM(total), 0),
-                COALESCE(SUM(stock_desconocido), 0),
-                COALESCE(SUM(lineas), 0)
-            FROM (
-                SELECT
-                    v.id,
-                    MAX(v.total) AS total,
-                    SUM(dv.cantidad) AS unidades,
-                    MAX(CASE WHEN v.stock_descontado IS NULL THEN 1 ELSE 0 END)
-                        AS stock_desconocido,
-                    COUNT(*) AS lineas
-                FROM ventas v
-                JOIN detalle_ventas dv ON v.id = dv.venta_id
-                JOIN productos p ON dv.producto_id = p.id
-                GROUP BY v.id
-            ) resumen
-        """).fetchone()
-    finally:
-        con.close()
-
-
-@st.cache_data(ttl=120, show_spinner=False, max_entries=10)
-def obtener_ventas(pagina=1, filas_por_pagina=50):
-    con = conectar()
-    try:
-        offset = (pagina - 1) * filas_por_pagina
         return con.execute("""
             SELECT v.id, v.fecha, v.total, p.nombre, dv.cantidad,
                    dv.precio_unitario, dv.subtotal, v.stock_descontado,
@@ -6572,8 +6489,7 @@ def obtener_ventas(pagina=1, filas_por_pagina=50):
             JOIN detalle_ventas dv ON v.id = dv.venta_id
             JOIN productos p ON dv.producto_id = p.id
             ORDER BY dv.id ASC
-            LIMIT ? OFFSET ?
-        """, (filas_por_pagina, offset)).fetchall()
+        """).fetchall()
     finally:
         con.close()
 
@@ -6803,18 +6719,9 @@ def obtener_compras():
                 ON dc.producto_id = p.id
             ORDER BY c.id DESC
         """).fetchall()
-    except Exception as error:
+    except Exception:
         # Permite consultar compras existentes si aún no se aplicó la migración
         # que añade el número de comprobante al esquema remoto.
-        es_columna_referencia_ausente = (
-            getattr(error, "sqlstate", None) == "42703"
-            or (
-                "no such column" in str(error).lower()
-                and "referencia" in str(error).lower()
-            )
-        )
-        if not es_columna_referencia_ausente:
-            raise
         con.close()
         con = conectar()
         return con.execute("""
@@ -6834,73 +6741,6 @@ def obtener_compras():
                 ON dc.producto_id = p.id
             ORDER BY c.id DESC
         """).fetchall()
-    finally:
-        con.close()
-
-
-@st.cache_data(ttl=120, show_spinner=False, max_entries=10)
-def obtener_compras_pagina(pagina=1, filas_por_pagina=50):
-    con = conectar()
-    offset = (pagina - 1) * filas_por_pagina
-    try:
-        return con.execute("""
-            SELECT
-                c.id,
-                c.fecha,
-                c.total,
-                c.referencia,
-                p.nombre,
-                dc.cantidad,
-                dc.precio_unitario,
-                dc.subtotal
-            FROM compras c
-            JOIN detalle_compras dc ON c.id = dc.compra_id
-            JOIN productos p ON dc.producto_id = p.id
-            ORDER BY c.id DESC, dc.id DESC
-            LIMIT ? OFFSET ?
-        """, (filas_por_pagina, offset)).fetchall()
-    except Exception as error:
-        es_columna_referencia_ausente = (
-            getattr(error, "sqlstate", None) == "42703"
-            or (
-                "no such column" in str(error).lower()
-                and "referencia" in str(error).lower()
-            )
-        )
-        if not es_columna_referencia_ausente:
-            raise
-        con.close()
-        con = conectar()
-        return con.execute("""
-            SELECT
-                c.id,
-                c.fecha,
-                c.total,
-                NULL,
-                p.nombre,
-                dc.cantidad,
-                dc.precio_unitario,
-                dc.subtotal
-            FROM compras c
-            JOIN detalle_compras dc ON c.id = dc.compra_id
-            JOIN productos p ON dc.producto_id = p.id
-            ORDER BY c.id DESC, dc.id DESC
-            LIMIT ? OFFSET ?
-        """, (filas_por_pagina, offset)).fetchall()
-    finally:
-        con.close()
-
-
-@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
-def contar_lineas_compras_historial():
-    con = conectar()
-    try:
-        return con.execute("""
-            SELECT COUNT(*)
-            FROM compras c
-            JOIN detalle_compras dc ON c.id = dc.compra_id
-            JOIN productos p ON dc.producto_id = p.id
-        """).fetchone()[0]
     finally:
         con.close()
 
@@ -6985,22 +6825,8 @@ def registrar_compra(producto_id, cantidad, precio_compra):
         con.close()
 
 
-@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
-def generar_excel_historial_compras():
-    compras = obtener_compras()
-    tabla = [
-        {
-            "Compra": compra[0],
-            "Fecha": compra[1],
-            "Total": formatear_soles(compra[2]),
-            "Comprobante": compra[3] or "",
-            "Producto": compra[4],
-            "Cantidad": compra[5],
-            "Precio unitario": formatear_soles(compra[6]),
-            "Subtotal": formatear_soles(compra[7]),
-        }
-        for compra in compras
-    ]
+@st.cache_data(ttl=60, show_spinner=False, max_entries=3)
+def generar_excel_historial_compras(tabla):
     salida = io.BytesIO()
     with pd.ExcelWriter(salida, engine="openpyxl") as escritor:
         pd.DataFrame(tabla).to_excel(
@@ -7009,7 +6835,6 @@ def generar_excel_historial_compras():
     return salida.getvalue()
 
 
-@st.cache_data(ttl=3600, show_spinner=False, max_entries=1)
 def crear_plantilla_compras_excel():
     """Crea una plantilla vacía y una hoja separada con filas de demostración."""
     archivo = io.BytesIO()
@@ -7285,125 +7110,27 @@ def obtener_auditoria_compras():
 
 @st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_historial_importaciones_compras():
-    """Devuelve importaciones y compras vinculadas cuando el esquema lo permite."""
-    con = conectar()
-
-    def consultar_historial(incluir_vinculos, incluir_estado_stock):
-        campo_stock = (
-            "i.stock_actualizado"
-            if incluir_estado_stock
-            else "NULL AS stock_actualizado"
-        )
-        campo_vinculos = (
-            "(SELECT COUNT(*) FROM compras c "
-            "WHERE c.hash_importacion = i.hash_archivo) AS compras_vinculadas"
-            if incluir_vinculos
-            else "0 AS compras_vinculadas"
-        )
-        return con.execute(f"""
-            SELECT
-                i.hash_archivo,
-                i.nombre_archivo,
-                i.fecha_importacion,
-                i.filas_importadas,
-                {campo_stock},
-                {campo_vinculos}
-            FROM importaciones_compras i
-            ORDER BY i.fecha_importacion DESC
-        """).fetchall()
-
-    try:
-        incluir_vinculos = True
-        incluir_estado_stock = True
-        while True:
-            try:
-                return consultar_historial(
-                    incluir_vinculos,
-                    incluir_estado_stock,
-                )
-            except Exception as error:
-                mensaje_error = str(error).lower()
-                columna_ausente = (
-                    "no such column" in mensaje_error
-                    or "does not exist" in mensaje_error
-                )
-                if (
-                    columna_ausente
-                    and "hash_importacion" in mensaje_error
-                    and incluir_vinculos
-                ):
-                    incluir_vinculos = False
-                elif (
-                    columna_ausente
-                    and "stock_actualizado" in mensaje_error
-                    and incluir_estado_stock
-                ):
-                    incluir_estado_stock = False
-                else:
-                    raise
-                con.rollback()
-    finally:
-        con.close()
-
-
-def eliminar_importacion_compras(hash_archivo):
-    """Elimina la auditoría y las compras vinculadas, sin modificar el stock."""
+    """Devuelve cargas; sin la columna nueva, el estado del stock queda desconocido."""
     con = conectar()
     try:
-        importacion = con.execute(
-            "SELECT 1 FROM importaciones_compras WHERE hash_archivo = ?",
-            (hash_archivo,),
-        ).fetchone()
-        if importacion is None:
-            return False, "La importación seleccionada ya no existe."
-
         try:
-            compras_vinculadas = con.execute(
-                "SELECT COUNT(*) FROM compras WHERE hash_importacion = ?",
-                (hash_archivo,),
-            ).fetchone()[0]
+            return con.execute("""
+                SELECT nombre_archivo, fecha_importacion, filas_importadas, stock_actualizado
+                FROM importaciones_compras
+                ORDER BY fecha_importacion DESC
+            """).fetchall()
         except Exception as error:
-            mensaje_error = str(error).lower()
-            if "hash_importacion" not in mensaje_error or not (
-                "no such column" in mensaje_error
-                or "does not exist" in mensaje_error
-            ):
+            # La migración puede no haberse aplicado todavía en bases antiguas.
+            # Recupera el historial y marca esos estados como desconocidos.
+            if "stock_actualizado" not in str(error).lower():
                 raise
             con.rollback()
-            compras_vinculadas = 0
-
-        if compras_vinculadas:
-            con.execute(
-                "DELETE FROM detalle_compras "
-                "WHERE compra_id IN ("
-                "SELECT id FROM compras WHERE hash_importacion = ?"
-                ")",
-                (hash_archivo,),
-            )
-            con.execute(
-                "DELETE FROM compras WHERE hash_importacion = ?",
-                (hash_archivo,),
-            )
-        con.execute(
-            "DELETE FROM importaciones_compras WHERE hash_archivo = ?",
-            (hash_archivo,),
-        )
-        con.commit()
-        invalidar_cache_operativa()
-
-        if compras_vinculadas:
-            return True, (
-                f"Se eliminó la auditoría y {compras_vinculadas} compra(s) vinculada(s). "
-                "El stock no se modificó."
-            )
-        return True, (
-            "Se eliminó el registro de auditoría. Las compras de esta importación "
-            "son anteriores al seguimiento de origen y se conservaron. El stock "
-            "no se modificó."
-        )
-    except Exception as error:
-        con.rollback()
-        return False, f"No se pudo eliminar la importación: {error}"
+            return con.execute("""
+                SELECT nombre_archivo, fecha_importacion, filas_importadas,
+                       NULL AS stock_actualizado
+                FROM importaciones_compras
+                ORDER BY fecha_importacion DESC
+            """).fetchall()
     finally:
         con.close()
 
@@ -7444,13 +7171,12 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
                     detalles_grupo[0]["fecha"],
                     round(sum(detalle["subtotal"] for detalle in detalles_grupo), 2),
                     referencia or None,
-                    hash_archivo,
                 )
                 for (_, referencia), detalles_grupo in lote
             ]
-            marcadores = ", ".join("(?, ?, ?, ?)" for _ in valores)
+            marcadores = ", ".join("(?, ?, ?)" for _ in valores)
             compras_insertadas = con.execute(
-                "INSERT INTO compras (fecha, total, referencia, hash_importacion) VALUES "
+                "INSERT INTO compras (fecha, total, referencia) VALUES "
                 f"{marcadores} RETURNING id, fecha, referencia",
                 tuple(valor for compra in valores for valor in compra),
             ).fetchall()
@@ -7520,12 +7246,6 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
         )
     except Exception as e:
         con.rollback()
-        if "hash_importacion" in str(e).lower():
-            return False, (
-                "No se pudo registrar el origen de las compras. Ejecuta primero "
-                "migracion_vincular_compras_importacion.sql en Supabase y vuelve "
-                "a importar el archivo."
-            )
         return False, f"No se pudo importar el archivo de compras: {e}"
     finally:
         con.close()
@@ -7895,31 +7615,22 @@ elif menu == "Administrar usuarios":
         st.subheader("Crear una cuenta")
     
         with st.form("crear_usuario"):
-            nombre = st.text_input(
-                "Nombre completo",
-                key="admin_create_name",
-            )
-            username = st.text_input(
-                "Nombre de usuario",
-                key="admin_create_username",
-            )
+            nombre = st.text_input("Nombre completo")
+            username = st.text_input("Nombre de usuario")
     
             password = st.text_input(
                 "Contraseña",
-                type="password",
-                key="admin_create_password",
+                type="password"
             )
     
             confirmar = st.text_input(
                 "Confirmar contraseña",
-                type="password",
-                key="admin_confirm_password",
+                type="password"
             )
     
             rol = st.selectbox(
                 "Rol del usuario",
                 ["empleado", "admin"],
-                key="admin_create_role",
                 format_func=lambda x: (
                     "Empleado" if x == "empleado"
                     else "Administrador"
@@ -8244,9 +7955,7 @@ elif menu == "Dashboard gerencial":
 
     datos_dia = datos_historicos.copy()
     top = pd.DataFrame()
-    selector_periodo, detalle_periodo = st.columns(
-        [1.2, 1.8], gap="large", vertical_alignment="bottom"
-    )
+    selector_periodo, detalle_periodo = st.columns([1, 2], vertical_alignment="bottom")
     with selector_periodo:
         periodo_grafico = st.segmented_control(
             "Periodo del gráfico",
@@ -9086,18 +8795,18 @@ elif menu == "Ventas":
 
         st.subheader("Historial de ventas", icon=":material/history:")
 
-        ventas_resumen = resumen_historial_ventas()
-        cantidad_ventas_total = int(ventas_resumen[0] or 0)
-        unidades_vendidas = int(ventas_resumen[1] or 0)
-        total_vendido = float(ventas_resumen[2] or 0)
-        ventas_stock_desconocido = int(ventas_resumen[3] or 0)
-        total_lineas_ventas = int(ventas_resumen[4] or 0)
+        ventas = obtener_ventas()
 
-        if total_lineas_ventas:
+        if ventas:
+            total_por_venta = {
+                venta[0]: float(venta[2] or 0)
+                for venta in ventas
+            }
+            unidades_vendidas = sum(int(venta[4] or 0) for venta in ventas)
             resumen_ventas = st.columns(3)
             resumen_ventas[0].metric(
                 "Ventas registradas",
-                formatear_numero_es(cantidad_ventas_total),
+                formatear_numero_es(len(total_por_venta)),
             )
             resumen_ventas[1].metric(
                 "Unidades vendidas",
@@ -9105,40 +8814,13 @@ elif menu == "Ventas":
             )
             resumen_ventas[2].metric(
                 "Total vendido",
-                formatear_soles(total_vendido),
+                formatear_soles(sum(total_por_venta.values())),
             )
 
-            st.caption(
-                "Cada fila corresponde a un producto. El total de boleta se repite "
-                "cuando una venta incluye varios productos."
-            )
-
-            filas_por_pagina = 50
-            total_paginas = (
-                total_lineas_ventas + filas_por_pagina - 1
-            ) // filas_por_pagina
-            if total_paginas > 1:
-                clave_pagina = "historial_ventas_pagina_db"
-                pagina_guardada = st.session_state.get(clave_pagina, 1)
-                if not 1 <= int(pagina_guardada) <= total_paginas:
-                    st.session_state[clave_pagina] = 1
-                pagina = st.number_input(
-                    "Página del historial",
-                    min_value=1,
-                    max_value=total_paginas,
-                    step=1,
-                    key=clave_pagina,
-                    help=f"Página actual de {total_paginas}.",
-                )
-            else:
-                pagina = 1
-
-            inicio = (pagina - 1) * filas_por_pagina
-            fin = min(inicio + filas_por_pagina, total_lineas_ventas)
-            ventas = obtener_ventas(pagina, filas_por_pagina)
-            tabla_pagina = [
-                {
-                    "N.º": inicio + indice + 1,
+            tabla = []
+            for numero_fila, venta in enumerate(ventas, start=1):
+                tabla.append({
+                    "N.º": numero_fila,
                     "Boleta": venta[8] or "",
                     "Fecha": venta[1],
                     "Total de boleta": f"S/ {venta[2]:.2f}",
@@ -9146,17 +8828,39 @@ elif menu == "Ventas":
                     "Cantidad": venta[4],
                     "Precio unitario": f"S/ {venta[5]:.2f}",
                     "Subtotal de línea": f"S/ {venta[6]:.2f}",
-                }
-                for indice, venta in enumerate(ventas)
-            ]
+                })
+
+            st.caption(
+                "Cada fila corresponde a un producto. El total de boleta se repite "
+                "cuando una venta incluye varios productos."
+            )
+
+            filas_por_pagina = 50
+            total_paginas = (len(tabla) + filas_por_pagina - 1) // filas_por_pagina
+            if total_paginas > 1:
+                opciones_pagina = list(range(1, total_paginas + 1))
+                if st.session_state.get("historial_ventas_pagina", 1) not in opciones_pagina:
+                    st.session_state["historial_ventas_pagina"] = 1
+                pagina = st.selectbox(
+                    "Página del historial",
+                    options=opciones_pagina,
+                    format_func=lambda numero: f"Página {numero} de {total_paginas}",
+                    key="historial_ventas_pagina",
+                    width=220,
+                )
+            else:
+                pagina = 1
+
+            inicio = (pagina - 1) * filas_por_pagina
+            fin = min(inicio + filas_por_pagina, len(tabla))
             st.caption(
                 f"Mostrando filas {formatear_numero_es(inicio + 1)}–"
-                f"{formatear_numero_es(fin)} de "
-                f"{formatear_numero_es(total_lineas_ventas)}."
+                f"{formatear_numero_es(fin)} de {formatear_numero_es(len(tabla))}."
             )
+            tabla_pagina = pd.DataFrame(tabla[inicio:fin])
             with st.container(key="sales_history_table"):
                 st.table(
-                    estilizar_historial_ventas(pd.DataFrame(tabla_pagina)),
+                    estilizar_historial_ventas(tabla_pagina),
                     width="stretch",
                     height=520,
                     hide_index=True,
@@ -9225,6 +8929,12 @@ elif menu == "Ventas":
                             st.rerun()
                         else:
                             st.error(mensaje)
+
+            cantidad_ventas_total = len({venta[0] for venta in ventas})
+            estados_stock_ventas = {venta[0]: venta[7] for venta in ventas}
+            ventas_stock_desconocido = sum(
+                estado is None for estado in estados_stock_ventas.values()
+            )
 
             with st.expander("Eliminar todas las ventas"):
                 with st.container(key="delete_all_sales_warning", border=True):
@@ -9459,6 +9169,7 @@ elif menu == "Compras":
                             st.error(mensaje)
 
         st.subheader("Historial de compras")
+
         try:
             auditoria = obtener_auditoria_compras()
             m1, m2, m3, m4 = st.columns(4)
@@ -9489,39 +9200,14 @@ elif menu == "Compras":
                 f"No se pudo mostrar la auditoría de compras. Detalle: {error}"
             )
 
-        total_lineas_compras = contar_lineas_compras_historial()
-        if total_lineas_compras:
-            filas_por_pagina = 50
-            total_paginas_compras = (
-                total_lineas_compras + filas_por_pagina - 1
-            ) // filas_por_pagina
-            clave_pagina_compras = "historial_compras_pagina_db"
-            if total_paginas_compras > 1:
-                pagina_guardada = st.session_state.get(clave_pagina_compras, 1)
-                if not 1 <= int(pagina_guardada) <= total_paginas_compras:
-                    st.session_state[clave_pagina_compras] = 1
-                pagina_compras = st.number_input(
-                    "Página del historial",
-                    min_value=1,
-                    max_value=total_paginas_compras,
-                    step=1,
-                    key=clave_pagina_compras,
-                    help=f"Página actual de {total_paginas_compras}.",
-                )
-            else:
-                pagina_compras = 1
+        compras = obtener_compras()
 
-            inicio_compras = (pagina_compras - 1) * filas_por_pagina
-            fin_compras = min(
-                inicio_compras + filas_por_pagina,
-                total_lineas_compras,
-            )
-            compras = obtener_compras_pagina(
-                pagina_compras,
-                filas_por_pagina,
-            )
-            tabla = [
-                {
+        if compras:
+
+            tabla = []
+
+            for compra in compras:
+                tabla.append({
                     "Compra": compra[0],
                     "Fecha": compra[1],
                     "Total": formatear_soles(compra[2]),
@@ -9529,15 +9215,9 @@ elif menu == "Compras":
                     "Producto": compra[4],
                     "Cantidad": compra[5],
                     "Precio unitario": formatear_soles(compra[6]),
-                    "Subtotal": formatear_soles(compra[7]),
-                }
-                for compra in compras
-            ]
-            st.caption(
-                f"Mostrando filas {formatear_numero_es(inicio_compras + 1)}–"
-                f"{formatear_numero_es(fin_compras)} de "
-                f"{formatear_numero_es(total_lineas_compras)}."
-            )
+                    "Subtotal": formatear_soles(compra[7])
+                })
+
             mostrar_tabla_centrada(
                 tabla,
                 width="stretch",
@@ -9545,33 +9225,16 @@ elif menu == "Compras":
                 height=420,
             )
 
-            if st.session_state.get("historial_compras_excel_bytes") is None:
-                st.caption(
-                    "El archivo incluye todas las compras, no solo la página visible."
-                )
-                if st.button(
-                    "Preparar historial completo en Excel",
-                    key="preparar_historial_compras_excel",
-                ):
-                    with st.spinner("Preparando historial completo..."):
-                        st.session_state["historial_compras_excel_bytes"] = (
-                            generar_excel_historial_compras()
-                        )
-            archivo_compras_excel = st.session_state.get(
-                "historial_compras_excel_bytes"
+            st.download_button(
+                "Descargar historial de compras en Excel",
+                data=generar_excel_historial_compras(tabla),
+                file_name="historial_compras_humbertito.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="descargar_historial_compras",
             )
-            if archivo_compras_excel is not None:
-                st.download_button(
-                    "Descargar historial de compras en Excel",
-                    data=archivo_compras_excel,
-                    file_name="historial_compras_humbertito.xlsx",
-                    mime=(
-                        "application/vnd.openxmlformats-officedocument."
-                        "spreadsheetml.sheet"
-                    ),
-                    key="descargar_historial_compras",
-                )
+
         else:
+
             st.info("Todavía no hay compras registradas.")
 
         try:
@@ -9579,115 +9242,24 @@ elif menu == "Compras":
             if historial_importaciones:
                 with st.expander("Auditoría de archivos importados"):
                     filas_importaciones = []
-                    importaciones_por_hash = {}
-                    for (
-                        hash_archivo,
-                        nombre,
-                        fecha,
-                        filas,
-                        stock_actualizado,
-                        compras_vinculadas,
-                    ) in historial_importaciones:
+                    for nombre, fecha, filas, stock_actualizado in historial_importaciones:
                         if stock_actualizado is None:
                             estado_stock = "No registrado en esa versión"
                         else:
                             estado_stock = "Sí" if stock_actualizado else "No"
-                        estado_compras = (
-                            f"{compras_vinculadas} compra(s)"
-                            if compras_vinculadas
-                            else "Anterior · sin vínculo"
-                        )
                         filas_importaciones.append({
                             "Archivo": nombre,
                             "Fecha de importación": fecha,
                             "Filas": filas,
                             "Sumó al stock": estado_stock,
-                            "Compras identificadas": estado_compras,
                         })
-                        importaciones_por_hash[hash_archivo] = (
-                            nombre,
-                            fecha,
-                            compras_vinculadas,
-                            stock_actualizado,
-                        )
                     mostrar_tabla_centrada(
                         filas_importaciones,
                         width="stretch",
                         hide_index=True,
                     )
-
-                    hash_seleccionado = st.selectbox(
-                        "Selecciona la importación que deseas borrar",
-                        options=list(importaciones_por_hash),
-                        format_func=lambda hash_archivo: (
-                            f"{importaciones_por_hash[hash_archivo][0]} · "
-                            f"{importaciones_por_hash[hash_archivo][1]}"
-                        ),
-                        key="seleccionar_importacion_compras_borrar",
-                        on_change=limpiar_confirmacion_borrado_importacion,
-                    )
-                    (
-                        nombre_seleccionado,
-                        _,
-                        compras_seleccionadas,
-                        stock_actualizado_seleccionado,
-                    ) = importaciones_por_hash[hash_seleccionado]
-                    es_importacion_anterior = compras_seleccionadas == 0
-                    if es_importacion_anterior:
-                        st.info(
-                            "Esta importación es anterior al seguimiento por archivo. "
-                            "Solo se borrará su registro de auditoría; las compras "
-                            "existentes se conservarán."
-                        )
-                    else:
-                        st.warning(
-                            f"Se borrarán la auditoría y {compras_seleccionadas} "
-                            "compra(s) vinculada(s). El stock no se modificará."
-                        )
-                    if stock_actualizado_seleccionado:
-                        st.caption(
-                            "La importación indicó que sumó unidades al stock. "
-                            "El borrado no resta esas unidades."
-                        )
-
-                    with st.form(key="form_borrar_importacion_compras"):
-                        confirmado = st.checkbox(
-                            (
-                                f"Confirmo borrar solo la auditoría de "
-                                f"{nombre_seleccionado}"
-                                if es_importacion_anterior
-                                else (
-                                    f"Confirmo borrar la auditoría y las compras "
-                                    f"de {nombre_seleccionado}; el stock quedará "
-                                    "sin cambios"
-                                )
-                            ),
-                            key="confirmar_borrar_importacion_compras",
-                        )
-                        borrar_importacion = st.form_submit_button(
-                            "Borrar importación seleccionada",
-                            type="secondary",
-                            icon=":material/delete:",
-                        )
-
-                    if borrar_importacion:
-                        if not confirmado:
-                            st.error(
-                                "Confirma el borrado antes de continuar."
-                            )
-                        else:
-                            ok, mensaje = eliminar_importacion_compras(
-                                hash_seleccionado
-                            )
-                            if ok:
-                                notificar_exito(mensaje)
-                                st.rerun()
-                            else:
-                                st.error(mensaje)
-        except Exception as error:
-            st.error(
-                f"No se pudo cargar el historial de archivos importados: {error}"
-            )
+        except Exception:
+            st.caption("No se pudo cargar el historial de archivos importados.")
 
 
 # ==========================================================
@@ -9891,18 +9463,11 @@ elif menu == "Predicción de demanda":
                 }
             )
             st.subheader("Evaluación por periodo")
-            with st.container(key="prediction_evaluation_table"):
-                st.table(
-                    estilizar_tabla_por_tema(detalle_cortes).hide(axis="index"),
-                    width="stretch",
-                )
-                st.download_button(
-                    "Descargar evaluación por periodo (CSV)",
-                    data=detalle_cortes.to_csv(index=False).encode("utf-8-sig"),
-                    file_name="evaluacion_por_periodo.csv",
-                    mime="text/csv",
-                    key="descargar_evaluacion_por_periodo",
-                )
+            st.dataframe(
+                detalle_cortes,
+                width="stretch",
+                hide_index=True,
+            )
 
         precision = evaluacion.get("precision_por_producto", [])
         if not precision:
@@ -9918,45 +9483,12 @@ elif menu == "Predicción de demanda":
             }
         )
         st.subheader("Precisión por producto")
-        filas_por_pagina = 50
-        total_paginas = (len(detalle) + filas_por_pagina - 1) // filas_por_pagina
-        clave_pagina = "precision_producto_pagina"
-        if total_paginas > 1:
-            pagina_guardada = st.session_state.get(clave_pagina, 1)
-            if not 1 <= int(pagina_guardada) <= total_paginas:
-                st.session_state[clave_pagina] = 1
-            pagina = st.number_input(
-                "Página de precisión",
-                min_value=1,
-                max_value=total_paginas,
-                step=1,
-                key=clave_pagina,
-                help=f"Página actual de {total_paginas}.",
-            )
-        else:
-            pagina = 1
-        inicio = (pagina - 1) * filas_por_pagina
-        fin = min(inicio + filas_por_pagina, len(detalle))
-        st.caption(
-            f"Mostrando productos {formatear_numero_es(inicio + 1)}–"
-            f"{formatear_numero_es(fin)} de "
-            f"{formatear_numero_es(len(detalle))}."
+        st.dataframe(
+            detalle,
+            width="stretch",
+            height=360,
+            hide_index=True,
         )
-        with st.container(key="prediction_precision_table"):
-            st.table(
-                estilizar_tabla_por_tema(
-                    detalle.iloc[inicio:fin].reset_index(drop=True)
-                ).hide(axis="index"),
-                width="stretch",
-                height=360,
-            )
-            st.download_button(
-                "Descargar precisión por producto (CSV)",
-                data=detalle.to_csv(index=False).encode("utf-8-sig"),
-                file_name="precision_por_producto.csv",
-                mime="text/csv",
-                key="descargar_precision_por_producto",
-            )
 
     st.warning(
         "Los días sin ventas registradas se interpretan como cero ventas. "
@@ -9997,39 +9529,11 @@ elif menu == "Predicción de demanda":
         st.info(estado_actual.get("mensaje", "Entrene el modelo para habilitar predicciones."))
 
     if st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
-        st.session_state.pop("_resultado_entrenamiento_demanda", None)
-        with st.status(
-            "Iniciando el entrenamiento y la evaluación...",
-            expanded=True,
-        ) as estado_entrenamiento:
-            def actualizar_estado_entrenamiento(mensaje):
-                estado_entrenamiento.update(
-                    label=mensaje,
-                    state="running",
-                    expanded=True,
-                )
-
-            resultado_entrenamiento = prediction.entrenar_modelo(
-                progreso=actualizar_estado_entrenamiento,
-            )
-            estado_entrenamiento.update(
-                label="Entrenamiento y evaluación finalizados.",
-                state="complete",
-                expanded=True,
-            )
-        st.session_state["_resultado_entrenamiento_demanda"] = (
-            resultado_entrenamiento
-        )
-
-    resultado_entrenamiento = st.session_state.get(
-        "_resultado_entrenamiento_demanda"
-    )
-    if resultado_entrenamiento is not None:
+        with st.spinner("Preparando el historial y evaluando el pronóstico..."):
+            resultado_entrenamiento = prediction.entrenar_modelo()
         evaluacion = resultado_entrenamiento.get("evaluacion")
         if resultado_entrenamiento["estado"] in ("ok", "ok_local"):
             st.success(resultado_entrenamiento["mensaje"])
-        elif resultado_entrenamiento["estado"] == "error_guardar_modelo":
-            st.error(resultado_entrenamiento["mensaje"])
         elif resultado_entrenamiento["estado"] == "no_supera_baseline":
             st.warning(resultado_entrenamiento["mensaje"])
         else:
@@ -10992,43 +10496,36 @@ body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlert"]:ha
 
 /* Acabado final uniforme para superficies de datos en tema oscuro. */
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] {
-    border: 1px solid #303d44 !important;
+    border: 1px solid #303b44 !important;
     border-radius: 12px !important;
-    background: #171f24 !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, .14) !important;
+    background: #141c24 !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .16) !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] table {
     border-collapse: separate !important;
     border-spacing: 0 !important;
-    background: #171f24 !important;
+    background: #141c24 !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] th {
-    padding: .8rem .9rem !important;
-    background: #222d33 !important;
+    background: #202b34 !important;
     color: #edf3f5 !important;
-    border-color: #303d44 !important;
-    font-size: .78rem !important;
-    font-weight: 650 !important;
-    letter-spacing: .025em !important;
+    border-color: #303b44 !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] td {
-    padding: .78rem .9rem !important;
-    background: #171f24 !important;
-    color: #dce4e7 !important;
-    border-color: #303d44 !important;
-    vertical-align: middle !important;
+    background: #151e26 !important;
+    color: #dce5e9 !important;
+    border-color: #2b3740 !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: #1b252b !important;
+    background: #1a252e !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] tbody tr:hover td {
-    background: #222f37 !important;
+    background: #202d36 !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stDataFrame"] {
-    border: 1px solid #303d44 !important;
+    border: 1px solid #303b44 !important;
     border-radius: 12px !important;
-    background: #171f24 !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, .14) !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .16) !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stVerticalBlockBorderWrapper"],
 body:not(:has(.hb-light-mode)) [data-testid="stForm"],
@@ -12124,10 +11621,10 @@ body:has(.hb-light-mode) [data-testid="stTabs"] button[role="tab"][aria-selected
 body:has(.hb-light-mode) [data-testid="stTable"] {
     padding: 0 !important;
     border: 1px solid var(--hb-light-border-strong) !important;
-    border-radius: 12px !important;
+    border-radius: 11px !important;
     background: #fff !important;
     overflow: auto !important;
-    box-shadow: 0 3px 12px rgba(24,55,65,.055) !important;
+    box-shadow: 0 2px 8px rgba(24,55,65,.04) !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] table {
     border-collapse: separate !important;
@@ -12136,33 +11633,30 @@ body:has(.hb-light-mode) [data-testid="stTable"] table {
     background: #fff !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] th {
-    padding: .8rem .9rem !important;
-    border-bottom: 1px solid #dfe7e9 !important;
-    background: #eaf1f2 !important;
-    color: #344f56 !important;
-    font-size: .78rem !important;
-    font-weight: 650 !important;
-    letter-spacing: .025em !important;
+    border-bottom: 1px solid #c8d8dc !important;
+    background: #eef4f5 !important;
+    color: #30464e !important;
+    font-size: .74rem !important;
+    font-weight: 750 !important;
+    letter-spacing: .035em !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] td {
-    padding: .78rem .9rem !important;
-    border-bottom: 1px solid #dfe7e9 !important;
+    border-bottom: 1px solid #e4ebed !important;
     background: #fff !important;
-    color: #31444b !important;
-    vertical-align: middle !important;
+    color: #30434b !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: #f5f8f9 !important;
+    background: #f8fafb !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:hover td {
-    background: #edf5f3 !important;
+    background: #eff7f5 !important;
 }
 body:has(.hb-light-mode) [data-testid="stDataFrame"] {
     border: 1px solid var(--hb-light-border-strong) !important;
-    border-radius: 12px !important;
+    border-radius: 11px !important;
     background: #fff !important;
     overflow: hidden !important;
-    box-shadow: 0 3px 12px rgba(24,55,65,.055) !important;
+    box-shadow: 0 2px 8px rgba(24,55,65,.04) !important;
 }
 body:has(.hb-light-mode) [data-testid="stAlert"] {
     border: 1px solid var(--hb-light-border) !important;
@@ -13596,29 +13090,15 @@ body:has(.hb-light-mode) {
     --hb-ui-surface-soft: #f5f8f9;
     --hb-ui-shadow: 0 8px 24px rgba(34, 52, 61, .055);
     --hb-ui-focus: rgba(47, 143, 131, .24);
-    --hb-ui-table-head: #eef3f4;
-    --hb-ui-table-head-text: #344b52;
-    --hb-ui-table-row: #ffffff;
-    --hb-ui-table-row-alt: #f7f9fa;
-    --hb-ui-table-text: #34474e;
-    --hb-ui-table-border: #dce5e8;
-    --hb-ui-table-hover: #eef5f4;
 }
 body:not(:has(.hb-light-mode)) {
     --hb-ui-text: #e5ecef;
     --hb-ui-muted: #aab9bf;
     --hb-ui-border: #34434b;
-    --hb-ui-surface: #131d24;
-    --hb-ui-surface-soft: #1a2931;
+    --hb-ui-surface: #19242b;
+    --hb-ui-surface-soft: #202c33;
     --hb-ui-shadow: 0 8px 24px rgba(0, 0, 0, .16);
     --hb-ui-focus: rgba(102, 190, 177, .28);
-    --hb-ui-table-head: #222d33;
-    --hb-ui-table-head-text: #e6eef0;
-    --hb-ui-table-row: #171f24;
-    --hb-ui-table-row-alt: #1b252b;
-    --hb-ui-table-text: #dbe3e6;
-    --hb-ui-table-border: #303c43;
-    --hb-ui-table-hover: #222e34;
 }
 
 #root [data-testid="stTooltipIcon"],
@@ -13699,91 +13179,12 @@ body:not(:has(.hb-light-mode)) {
     border-color: var(--hb-ui-border) !important;
     box-shadow: var(--hb-ui-shadow);
 }
-[data-testid="stAppViewContainer"] [data-testid="stAlert"] {
+[data-testid="stMain"] [data-testid="stAlert"] {
     border-radius: 12px !important;
 }
 [data-testid="stMain"] [data-testid="stTable"] table {
     border-radius: 12px !important;
-    border: 1px solid var(--hb-ui-table-border) !important;
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-    overflow: hidden !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] th {
-    background: var(--hb-ui-table-head) !important;
-    color: var(--hb-ui-table-head-text) !important;
-    border-color: var(--hb-ui-table-border) !important;
-    font-weight: 750 !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] tbody td {
-    background: var(--hb-ui-table-row) !important;
-    color: var(--hb-ui-table-text) !important;
-    border-color: var(--hb-ui-table-border) !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: var(--hb-ui-table-row-alt) !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
-    background: var(--hb-ui-table-hover) !important;
-}
-[data-testid="stMain"] [data-testid="stDataFrame"] {
-    border: 1px solid var(--hb-ui-table-border) !important;
-    border-radius: 12px !important;
-    background: var(--hb-ui-surface) !important;
-    color: var(--hb-ui-table-text) !important;
-    box-shadow: var(--hb-ui-shadow) !important;
-}
-[data-testid="stMain"] [data-testid="stMetric"] {
-    background: linear-gradient(
-        145deg,
-        var(--hb-ui-surface),
-        var(--hb-ui-surface-soft)
-    ) !important;
-}
-[data-testid="stMain"] [data-testid="stForm"],
-[data-testid="stMain"] [data-testid="stExpander"],
-[data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"] {
-    background: var(--hb-ui-surface) !important;
-}
-[data-testid="stMain"] [data-testid="stTextInput"] input,
-[data-testid="stMain"] [data-testid="stNumberInput"] input,
-[data-testid="stMain"] [data-testid="stTextArea"] textarea,
-[data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"] {
-    background: var(--hb-ui-surface) !important;
-    color: var(--hb-ui-text) !important;
     border-color: var(--hb-ui-border) !important;
-}
-body:has(.hb-light-mode) .st-key-prediction_evaluation_table [data-testid="stTable"] th,
-body:has(.hb-light-mode) .st-key-prediction_precision_table [data-testid="stTable"] th {
-    background: #dceeea !important;
-    color: #185b52 !important;
-    border-color: #cbdedb !important;
-}
-body:has(.hb-light-mode) .st-key-prediction_evaluation_table [data-testid="stTable"] td,
-body:has(.hb-light-mode) .st-key-prediction_precision_table [data-testid="stTable"] td {
-    background: #ffffff !important;
-    color: #24383e !important;
-    border-color: #cbdedb !important;
-}
-body:has(.hb-light-mode) .st-key-prediction_evaluation_table [data-testid="stTable"] tbody tr:nth-child(even) td,
-body:has(.hb-light-mode) .st-key-prediction_precision_table [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: #f0f6f5 !important;
-}
-body:not(:has(.hb-light-mode)) .st-key-prediction_evaluation_table [data-testid="stTable"] th,
-body:not(:has(.hb-light-mode)) .st-key-prediction_precision_table [data-testid="stTable"] th {
-    background: #193b3c !important;
-    color: #a9e3d8 !important;
-    border-color: #30454b !important;
-}
-body:not(:has(.hb-light-mode)) .st-key-prediction_evaluation_table [data-testid="stTable"] td,
-body:not(:has(.hb-light-mode)) .st-key-prediction_precision_table [data-testid="stTable"] td {
-    background: #131d24 !important;
-    color: #e3edf0 !important;
-    border-color: #30454b !important;
-}
-body:not(:has(.hb-light-mode)) .st-key-prediction_evaluation_table [data-testid="stTable"] tbody tr:nth-child(even) td,
-body:not(:has(.hb-light-mode)) .st-key-prediction_precision_table [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: #1a2931 !important;
 }
 [data-testid="stSidebar"] {
     border-right-color: var(--hb-ui-border) !important;
@@ -13815,1904 +13216,6 @@ body:not(:has(.hb-light-mode)) .st-key-prediction_precision_table [data-testid="
     [data-testid="stMain"] [data-testid="stFormSubmitButton"] > button {
         transition: none !important;
         transform: none !important;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-    <style>
-    body:has(.hb-light-mode) {
-        --hb-final-page: #f4f6f7;
-        --hb-final-surface: #ffffff;
-        --hb-final-surface-soft: #f8fafb;
-        --hb-final-surface-hover: #f0f5f4;
-        --hb-final-border: #dfe5e7;
-        --hb-final-border-strong: #cfd9dc;
-        --hb-final-text: #29373d;
-        --hb-final-muted: #6b797f;
-        --hb-final-accent: #397d74;
-        --hb-final-accent-soft: #e8f2f0;
-        --hb-final-table-head: #f0f4f5;
-        --hb-final-table-row: #ffffff;
-        --hb-final-table-alt: #f8fafb;
-        --hb-final-table-border: #e1e7e9;
-        --hb-final-shadow: 0 2px 8px rgba(27, 46, 54, .035);
-    }
-    body:not(:has(.hb-light-mode)) {
-        --hb-final-page: #11181d;
-        --hb-final-surface: #171f24;
-        --hb-final-surface-soft: #1b252b;
-        --hb-final-surface-hover: #202c31;
-        --hb-final-border: #2b373d;
-        --hb-final-border-strong: #39474e;
-        --hb-final-text: #e1e8eb;
-        --hb-final-muted: #9aa8ae;
-        --hb-final-accent: #72a99f;
-        --hb-final-accent-soft: #20322f;
-        --hb-final-table-head: #202a30;
-        --hb-final-table-row: #171f24;
-        --hb-final-table-alt: #1b252b;
-        --hb-final-table-border: #2b373d;
-        --hb-final-shadow: 0 2px 10px rgba(0, 0, 0, .10);
-    }
-
-    [data-testid="stAppViewContainer"] {
-        background: var(--hb-final-page) !important;
-    }
-    [data-testid="stMain"] {
-        color: var(--hb-final-text) !important;
-    }
-    [data-testid="stMain"] h1,
-    [data-testid="stMain"] h2,
-    [data-testid="stMain"] h3,
-    [data-testid="stMain"] h4 {
-        color: var(--hb-final-text) !important;
-        font-weight: 650 !important;
-        letter-spacing: -.018em !important;
-    }
-    [data-testid="stMain"] h2 {
-        margin-top: 1.35rem !important;
-    }
-    [data-testid="stMain"] [data-testid="stCaptionContainer"],
-    [data-testid="stMain"] [data-testid="stCaptionContainer"] p {
-        color: var(--hb-final-muted) !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetric"],
-    [data-testid="stMain"] [data-testid="stForm"],
-    [data-testid="stMain"] [data-testid="stExpander"],
-    [data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"] {
-        border-color: var(--hb-final-border) !important;
-        border-radius: 12px !important;
-        box-shadow: var(--hb-final-shadow) !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetric"],
-    [data-testid="stMain"] [data-testid="stForm"],
-    [data-testid="stMain"] [data-testid="stExpander"],
-    [data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"] {
-        background: var(--hb-final-surface) !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetric"] {
-        min-height: 6.8rem !important;
-        padding: 1rem 1.1rem !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetric"]:hover {
-        transform: none !important;
-        box-shadow: var(--hb-final-shadow) !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetricLabel"],
-    [data-testid="stMain"] [data-testid="stWidgetLabel"] p {
-        color: var(--hb-final-muted) !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetricValue"] {
-        color: var(--hb-final-text) !important;
-    }
-    [data-testid="stMain"] input,
-    [data-testid="stMain"] textarea,
-    [data-testid="stMain"] [role="combobox"],
-    [data-testid="stMain"] [data-testid="stDateInputField"] {
-        border-color: var(--hb-final-border-strong) !important;
-        border-radius: 8px !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] button,
-    [data-testid="stSidebar"] button {
-        box-shadow: none !important;
-        transform: none !important;
-    }
-    [data-testid="stMain"] button:not([kind="primary"]):not([kind="primaryFormSubmit"]),
-    [data-testid="stMain"] [data-testid="stDownloadButton"] button {
-        border-color: var(--hb-final-border-strong) !important;
-        border-radius: 8px !important;
-    }
-    [data-testid="stMain"] button:not([kind="primary"]):not([kind="primaryFormSubmit"]):hover,
-    [data-testid="stMain"] [data-testid="stDownloadButton"] button:hover {
-        background: var(--hb-final-surface-hover) !important;
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlertContainer"] {
-        border: 1px solid var(--hb-final-border) !important;
-        border-left-width: 3px !important;
-        border-radius: 9px !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] {
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] table {
-        border: 1px solid var(--hb-final-table-border) !important;
-        border-radius: 9px !important;
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        background: var(--hb-final-surface) !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] th {
-        background: var(--hb-final-table-head) !important;
-        color: var(--hb-final-text) !important;
-        border-color: var(--hb-final-table-border) !important;
-        font-size: .76rem !important;
-        font-weight: 650 !important;
-        letter-spacing: 0 !important;
-        text-transform: none !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] tbody td {
-        background: var(--hb-final-table-row) !important;
-        color: var(--hb-final-text) !important;
-        border-color: var(--hb-final-table-border) !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
-        background: var(--hb-final-table-alt) !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
-        background: var(--hb-final-surface-hover) !important;
-    }
-
-    /* La lista de cuentas usa un solo borde, sin marco duplicado ni halo. */
-    [data-testid="stMain"] .st-key-registered_users_table_shared {
-        padding: .35rem !important;
-        border: 1px solid var(--hb-final-border) !important;
-        border-radius: 10px !important;
-        background: var(--hb-final-surface) !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] table {
-        border: 0 !important;
-        border-radius: 7px !important;
-    }
-    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] th,
-    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] td {
-        padding: .68rem .78rem !important;
-        border-right: 1px solid var(--hb-final-table-border) !important;
-        border-bottom: 1px solid var(--hb-final-table-border) !important;
-    }
-    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] th:last-child,
-    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] td:last-child {
-        border-right: 0 !important;
-    }
-    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] tbody tr:last-child td {
-        border-bottom: 0 !important;
-    }
-    [data-testid="stMain"] .st-key-user_transfer_panel,
-    [data-testid="stMain"] .st-key-user_delete_panel {
-        padding: 1rem !important;
-        border: 1px solid var(--hb-final-border) !important;
-        border-radius: 11px !important;
-        background: var(--hb-final-surface) !important;
-        box-shadow: none !important;
-        transition: border-color 140ms ease !important;
-    }
-    [data-testid="stMain"] .st-key-user_transfer_panel:hover,
-    [data-testid="stMain"] .st-key-user_delete_panel:hover {
-        border-color: var(--hb-final-border-strong) !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
-    [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
-        border: 1px solid var(--hb-final-border) !important;
-        border-left-width: 2px !important;
-        border-radius: 8px !important;
-        background: var(--hb-final-surface-soft) !important;
-        color: var(--hb-final-text) !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
-    [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
-        color: var(--hb-final-text) !important;
-    }
-    [data-testid="stMain"] .quick-card {
-        border-color: var(--hb-final-border) !important;
-        border-radius: 11px !important;
-        background: var(--hb-final-surface) !important;
-        box-shadow: var(--hb-final-shadow) !important;
-    }
-    [data-testid="stMain"] .quick-card strong {
-        color: var(--hb-final-text) !important;
-    }
-    [data-testid="stMain"] .quick-card p {
-        color: var(--hb-final-muted) !important;
-    }
-    [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
-        border: 1px solid transparent !important;
-        border-radius: 8px !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
-        box-shadow: none !important;
-    }
-    [data-testid="stSidebar"] {
-        border-right-color: var(--hb-final-border) !important;
-    }
-
-    body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
-        background:
-            radial-gradient(ellipse at 92% 0%, rgba(57, 125, 116, .045), transparent 28rem),
-            var(--hb-final-page) !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stMain"] input,
-    body:has(.hb-light-mode) [data-testid="stMain"] textarea,
-    body:has(.hb-light-mode) [data-testid="stMain"] [role="combobox"] {
-        background: var(--hb-final-surface) !important;
-        color: var(--hb-final-text) !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"],
-    body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
-        background: #397d74 !important;
-        border-color: #397d74 !important;
-        color: #ffffff !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
-        color: #596970 !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
-        background: #eef3f3 !important;
-        color: #354c52 !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
-        border-color: #d5e2e0 !important;
-        background: #e8f0ef !important;
-        color: #315a54 !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
-    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
-        border-color: #dfe5e7 !important;
-        border-left-color: #aab9bd !important;
-        background: #f7f9fa !important;
-        color: #44545a !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
-    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
-        color: #44545a !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] input,
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] textarea,
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] [role="combobox"] {
-        background: var(--hb-final-surface-soft) !important;
-        color: var(--hb-final-text) !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] button[kind="primary"],
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
-        background: #397d74 !important;
-        border-color: #397d74 !important;
-        color: #ffffff !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
-        color: #aab7bc !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
-        background: #202a30 !important;
-        color: #e1e8eb !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
-        border-color: #33423f !important;
-        background: #24312f !important;
-        color: #c4ddd7 !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
-        border-color: #344149 !important;
-        border-left-color: #70837f !important;
-        background: #1c272d !important;
-        color: #d2dcdf !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
-        color: #d2dcdf !important;
-    }
-
-    @media (max-width: 640px) {
-        [data-testid="stMain"] .st-key-user_transfer_panel,
-        [data-testid="stMain"] .st-key-user_delete_panel {
-            padding: .8rem !important;
-        }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        [data-testid="stMain"] .st-key-user_transfer_panel,
-        [data-testid="stMain"] .st-key-user_delete_panel {
-            transition: none !important;
-        }
-    }
-    :root {
-        --hb-ui-radius: 12px;
-        --hb-ui-radius-sm: 8px;
-    }
-    body:has(.hb-light-mode) {
-        --hb-ui-page: #f4f6f7;
-        --hb-ui-surface: #ffffff;
-        --hb-ui-surface-soft: #f8fafb;
-        --hb-ui-border: #dfe5e7;
-        --hb-ui-border-strong: #cbd5d8;
-        --hb-ui-text: #29373d;
-        --hb-ui-muted: #718087;
-        --hb-ui-accent: #397d74;
-        --hb-ui-accent-soft: #e8f0ef;
-        --hb-ui-shadow: 0 1px 2px rgba(24, 39, 45, .035), 0 8px 24px rgba(24, 39, 45, .025);
-        --hb-alert-info-bg: #f3f7fa;
-        --hb-alert-info-icon: #527b99;
-        --hb-alert-warning-bg: #faf7ef;
-        --hb-alert-warning-icon: #9a7734;
-        --hb-alert-success-bg: #f1f7f3;
-        --hb-alert-success-icon: #4b8061;
-        --hb-alert-error-bg: #faf2f2;
-        --hb-alert-error-icon: #a45f62;
-    }
-    body:not(:has(.hb-light-mode)) {
-        --hb-ui-page: #11181d;
-        --hb-ui-surface: #171f24;
-        --hb-ui-surface-soft: #1c272d;
-        --hb-ui-border: #2b373d;
-        --hb-ui-border-strong: #3a484f;
-        --hb-ui-text: #e1e8eb;
-        --hb-ui-muted: #9aa9ae;
-        --hb-ui-accent: #4c9387;
-        --hb-ui-accent-soft: #24312f;
-        --hb-ui-shadow: 0 1px 2px rgba(0, 0, 0, .14), 0 8px 24px rgba(0, 0, 0, .08);
-        --hb-alert-info-bg: #1b272e;
-        --hb-alert-info-icon: #8aaec5;
-        --hb-alert-warning-bg: #29261e;
-        --hb-alert-warning-icon: #c6a665;
-        --hb-alert-success-bg: #1d2924;
-        --hb-alert-success-icon: #83b092;
-        --hb-alert-error-bg: #2d2225;
-        --hb-alert-error-icon: #d09598;
-    }
-    [data-testid="stAppViewContainer"] {
-        background: var(--hb-ui-page) !important;
-        color: var(--hb-ui-text) !important;
-    }
-    [data-testid="stMain"] {
-        background: transparent !important;
-    }
-    [data-testid="stMainBlockContainer"] {
-        max-width: 1480px !important;
-        padding: 1.75rem clamp(1.25rem, 3vw, 2.75rem) 3rem !important;
-    }
-    [data-testid="stMain"] h1,
-    [data-testid="stMain"] h2,
-    [data-testid="stMain"] h3,
-    [data-testid="stMain"] h4 {
-        color: var(--hb-ui-text) !important;
-        letter-spacing: -.025em !important;
-    }
-    [data-testid="stMain"] h1 {
-        font-size: clamp(1.7rem, 2.8vw, 2.15rem) !important;
-        font-weight: 650 !important;
-        line-height: 1.2 !important;
-        margin-bottom: .45rem !important;
-    }
-    [data-testid="stMain"] h2 {
-        font-size: 1.35rem !important;
-        font-weight: 620 !important;
-        line-height: 1.3 !important;
-    }
-    [data-testid="stMain"] h3 {
-        font-size: 1.08rem !important;
-        font-weight: 600 !important;
-        line-height: 1.35 !important;
-    }
-    [data-testid="stMain"] p,
-    [data-testid="stMain"] label,
-    [data-testid="stMain"] [data-testid="stCaptionContainer"] {
-        color: var(--hb-ui-text);
-    }
-    [data-testid="stMain"] [data-testid="stCaptionContainer"],
-    [data-testid="stMain"] small {
-        color: var(--hb-ui-muted) !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetric"] {
-        min-height: 118px;
-        padding: 1.05rem 1.15rem !important;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: var(--hb-ui-radius) !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: var(--hb-ui-shadow) !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetricLabel"] {
-        color: var(--hb-ui-muted) !important;
-        font-size: .82rem !important;
-        font-weight: 550 !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetricValue"] {
-        color: var(--hb-ui-text) !important;
-        font-size: clamp(1.35rem, 2vw, 1.8rem) !important;
-        font-weight: 650 !important;
-        letter-spacing: -.035em !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetricDelta"] {
-        font-size: .78rem !important;
-    }
-    [data-testid="stMain"] [data-testid="stAlert"] {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: .45rem 0 !important;
-        overflow: visible !important;
-    }
-    [data-testid="stMain"] [data-testid="stAlertContainer"] {
-        display: flex !important;
-        align-items: center !important;
-        gap: .7rem !important;
-        min-height: 0 !important;
-        padding: .8rem 1rem !important;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-left-width: 1px !important;
-        border-radius: 10px !important;
-        background: var(--hb-ui-surface) !important;
-        color: var(--hb-ui-text) !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"] svg {
-        display: block !important;
-        flex: 0 0 1.1rem !important;
-        width: 1.1rem !important;
-        height: 1.1rem !important;
-        color: var(--hb-ui-muted) !important;
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"] p {
-        margin: 0 !important;
-        color: var(--hb-ui-text) !important;
-        font-size: .875rem !important;
-        line-height: 1.5 !important;
-        overflow-wrap: anywhere !important;
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) {
-        --hb-alert-current-bg: var(--hb-alert-info-bg);
-        --hb-alert-current-icon: var(--hb-alert-info-icon);
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) {
-        --hb-alert-current-bg: var(--hb-alert-warning-bg);
-        --hb-alert-current-icon: var(--hb-alert-warning-icon);
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) {
-        --hb-alert-current-bg: var(--hb-alert-success-bg);
-        --hb-alert-current-icon: var(--hb-alert-success-icon);
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) {
-        --hb-alert-current-bg: var(--hb-alert-error-bg);
-        --hb-alert-current-icon: var(--hb-alert-error-icon);
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"],
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"],
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"],
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
-        background: var(--hb-alert-current-bg) !important;
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) svg,
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) svg,
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) svg,
-    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) svg {
-        color: var(--hb-alert-current-icon) !important;
-    }
-    [data-testid="stMain"] [data-testid="stForm"] {
-        padding: 1.15rem !important;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: var(--hb-ui-radius) !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: var(--hb-ui-shadow) !important;
-    }
-    [data-testid="stMain"] [data-testid="stExpander"] {
-        overflow: hidden;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: var(--hb-ui-radius-sm) !important;
-        background: var(--hb-ui-surface) !important;
-    }
-    [data-testid="stMain"] [data-testid="stExpander"] summary {
-        min-height: 2.8rem;
-        color: var(--hb-ui-text) !important;
-    }
-    [data-testid="stMain"] [data-testid="stTabs"] [role="tablist"] {
-        gap: .3rem;
-        border-bottom: 1px solid var(--hb-ui-border) !important;
-    }
-    [data-testid="stMain"] [data-testid="stTabs"] button[role="tab"] {
-        color: var(--hb-ui-muted) !important;
-        font-weight: 550 !important;
-    }
-    [data-testid="stMain"] [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-        color: var(--hb-ui-accent) !important;
-    }
-    [data-testid="stMain"] [data-testid="stTabs"] [data-testid="stTabBorder"],
-    [data-testid="stMain"] [data-testid="stTabs"] [data-testid="stTabHighlight"] {
-        background: var(--hb-ui-accent) !important;
-    }
-    [data-testid="stMain"] input,
-    [data-testid="stMain"] textarea,
-    [data-testid="stMain"] [data-baseweb="select"] > div,
-    [data-testid="stMain"] [data-baseweb="input"] > div {
-        border-color: var(--hb-ui-border-strong) !important;
-        border-radius: var(--hb-ui-radius-sm) !important;
-        color: var(--hb-ui-text) !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] input:focus,
-    [data-testid="stMain"] textarea:focus,
-    [data-testid="stMain"] [data-baseweb="select"]:focus-within > div,
-    [data-testid="stMain"] [data-baseweb="input"]:focus-within > div {
-        border-color: var(--hb-ui-accent) !important;
-        box-shadow: 0 0 0 2px color-mix(in srgb, var(--hb-ui-accent) 15%, transparent) !important;
-    }
-    [data-testid="stMain"] button[kind="primary"],
-    [data-testid="stMain"] button[kind="primaryFormSubmit"] {
-        min-height: 2.55rem;
-        border: 1px solid var(--hb-ui-accent) !important;
-        border-radius: var(--hb-ui-radius-sm) !important;
-        background: var(--hb-ui-accent) !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        box-shadow: none !important;
-        transition: filter 140ms ease, transform 140ms ease !important;
-    }
-    [data-testid="stMain"] button[kind="primary"]:hover,
-    [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
-        filter: brightness(1.06);
-        transform: translateY(-1px);
-    }
-    body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"],
-    body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
-        border-color: #397d74 !important;
-        background: #397d74 !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] button[kind="primary"],
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
-        border-color: #4c9387 !important;
-        background: #4c9387 !important;
-    }
-    [data-testid="stMain"] button[kind="secondary"],
-    [data-testid="stMain"] button[kind="secondaryFormSubmit"] {
-        min-height: 2.45rem;
-        border: 1px solid var(--hb-ui-border-strong) !important;
-        border-radius: var(--hb-ui-radius-sm) !important;
-        background: var(--hb-ui-surface) !important;
-        color: var(--hb-ui-text) !important;
-        font-weight: 550 !important;
-        box-shadow: none !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"],
-    [data-testid="stMain"] [data-testid="stDataFrame"] {
-        overflow: hidden;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: var(--hb-ui-radius) !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: var(--hb-ui-shadow) !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] table {
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        color: var(--hb-ui-text) !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] thead th {
-        padding: .8rem .9rem !important;
-        border-bottom: 1px solid var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface-soft) !important;
-        color: var(--hb-ui-muted) !important;
-        font-size: .76rem !important;
-        font-weight: 650 !important;
-        letter-spacing: .025em !important;
-        text-transform: uppercase;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] tbody td {
-        padding: .75rem .9rem !important;
-        border-bottom: 1px solid var(--hb-ui-border) !important;
-        color: var(--hb-ui-text) !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] tbody tr:last-child td {
-        border-bottom: 0 !important;
-    }
-    [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
-        background: var(--hb-ui-surface-soft) !important;
-    }
-    [data-testid="stSidebar"] {
-        border-right: 1px solid var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface) !important;
-    }
-    [data-testid="stSidebar"] > div:first-child {
-        background: var(--hb-ui-surface) !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
-        color: var(--hb-ui-muted);
-    }
-    [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
-        min-height: 2.55rem;
-        padding-inline: .75rem !important;
-        text-align: left !important;
-        font-weight: 520 !important;
-        transition: background 120ms ease, color 120ms ease !important;
-    }
-    [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
-        border-color: var(--hb-ui-accent-soft) !important;
-        background: var(--hb-ui-accent-soft) !important;
-        color: var(--hb-ui-accent) !important;
-        font-weight: 620 !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
-        border-color: #d5e2e0 !important;
-        background: #e8f0ef !important;
-        color: #315a54 !important;
-    }
-    body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
-        border-color: #33423f !important;
-        background: #24312f !important;
-        color: #c4ddd7 !important;
-    }
-    [data-testid="stMain"] .quick-card {
-        min-height: 126px;
-        padding: 1.15rem !important;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: var(--hb-ui-radius) !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: var(--hb-ui-shadow) !important;
-        transition: border-color 140ms ease, transform 140ms ease !important;
-    }
-    [data-testid="stMain"] .quick-card:hover {
-        border-color: var(--hb-ui-border-strong) !important;
-        transform: translateY(-2px);
-    }
-    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-registered_users_table_shared,
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-registered_users_table_shared {
-        border-color: var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: var(--hb-ui-shadow) !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-registered_users_table_shared table th,
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-registered_users_table_shared table th {
-        border-color: var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface-soft) !important;
-        color: var(--hb-ui-muted) !important;
-    }
-    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-registered_users_table_shared table td,
-    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-registered_users_table_shared table td {
-        border-color: var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface) !important;
-        color: var(--hb-ui-text) !important;
-    }
-    [data-testid="stMain"] hr {
-        border-color: var(--hb-ui-border) !important;
-        opacity: .8;
-    }
-    @media (max-width: 760px) {
-        [data-testid="stMainBlockContainer"] {
-            padding: 1.1rem 1rem 2rem !important;
-        }
-        [data-testid="stMain"] [data-testid="stMetric"] {
-            min-height: 100px;
-            padding: .85rem !important;
-        }
-        [data-testid="stMain"] [data-testid="stForm"] {
-            padding: .85rem !important;
-        }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        [data-testid="stMain"] button,
-        [data-testid="stMain"] .quick-card {
-            transition: none !important;
-        }
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared {
-        padding: .35rem !important;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: var(--hb-ui-radius) !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] {
-        overflow: hidden !important;
-        border: 0 !important;
-        border-radius: 9px !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] table {
-        border: 0 !important;
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        border-radius: 9px !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] th {
-        padding: .78rem .9rem !important;
-        border: 0 !important;
-        border-bottom: 1px solid var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface-soft) !important;
-        color: var(--hb-ui-muted) !important;
-        font-size: .73rem !important;
-        font-weight: 650 !important;
-        letter-spacing: .045em !important;
-        text-transform: uppercase !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] td {
-        padding: .82rem .9rem !important;
-        border: 0 !important;
-        border-bottom: 1px solid var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface) !important;
-        color: var(--hb-ui-text) !important;
-        font-size: .86rem !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] tbody tr:last-child td {
-        border-bottom: 0 !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel,
-    #root [data-testid="stMain"] .st-key-user_delete_panel,
-    #root [data-testid="stMain"] .st-key-admin_create_panel {
-        padding: 1.15rem !important;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: var(--hb-ui-radius) !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: var(--hb-ui-shadow) !important;
-        transition: border-color 140ms ease !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel:hover,
-    #root [data-testid="stMain"] .st-key-user_delete_panel:hover,
-    #root [data-testid="stMain"] .st-key-admin_create_panel:hover {
-        border-color: var(--hb-ui-border-strong) !important;
-        box-shadow: var(--hb-ui-shadow) !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel h3,
-    #root [data-testid="stMain"] .st-key-user_delete_panel h3,
-    #root [data-testid="stMain"] .st-key-admin_create_panel h3 {
-        margin-top: .2rem !important;
-        font-size: 1.03rem !important;
-        font-weight: 620 !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stCaptionContainer"],
-    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stCaptionContainer"] {
-        color: var(--hb-ui-muted) !important;
-        font-size: .83rem !important;
-        line-height: 1.55 !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
-    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: 8px !important;
-        background: var(--hb-ui-surface-soft) !important;
-        color: var(--hb-ui-text) !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
-    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
-        color: var(--hb-ui-text) !important;
-        font-size: .84rem !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stForm"] {
-        padding: 0 !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"],
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-baseweb="select"] > div {
-        overflow: hidden !important;
-        border: 1px solid #d5dfe2 !important;
-        border-radius: 8px !important;
-        background: #ffffff !important;
-        background-image: none !important;
-        color: #29373d !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] div,
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] input,
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] button,
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-baseweb="select"] > div * {
-        background-color: #ffffff !important;
-        color: #29373d !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] input {
-        border: 0 !important;
-        color-scheme: light !important;
-        caret-color: #397d74 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] input::placeholder {
-        color: #7a898e !important;
-        opacity: 1 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] button {
-        align-self: stretch !important;
-        min-width: 2.5rem !important;
-        margin: 0 !important;
-        border: 0 !important;
-        border-left: 1px solid #e1e7e9 !important;
-        border-radius: 0 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:focus-within,
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-baseweb="select"]:focus-within > div {
-        border-color: #78a69f !important;
-        box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stWidgetLabel"] p {
-        color: var(--hb-ui-text) !important;
-        font-size: .83rem !important;
-        font-weight: 550 !important;
-    }
-    @media (max-width: 760px) {
-        #root [data-testid="stMain"] .st-key-user_transfer_panel,
-        #root [data-testid="stMain"] .st-key-user_delete_panel,
-        #root [data-testid="stMain"] .st-key-admin_create_panel {
-            padding: .85rem !important;
-        }
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared {
-        padding: .25rem !important;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: 12px !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"],
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared table {
-        overflow: hidden !important;
-        border: 0 !important;
-        border-radius: 10px !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared table th {
-        padding: .8rem 1rem !important;
-        border: 0 !important;
-        border-bottom: 1px solid var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface-soft) !important;
-        color: var(--hb-ui-muted) !important;
-        font-size: .72rem !important;
-        font-weight: 650 !important;
-        letter-spacing: .055em !important;
-        text-transform: uppercase !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared table td {
-        padding: .85rem 1rem !important;
-        border: 0 !important;
-        border-bottom: 1px solid var(--hb-ui-border) !important;
-        background: var(--hb-ui-surface) !important;
-        color: var(--hb-ui-text) !important;
-        font-size: .86rem !important;
-    }
-    #root [data-testid="stMain"] .st-key-registered_users_table_shared table tbody tr:last-child td {
-        border-bottom: 0 !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel,
-    #root [data-testid="stMain"] .st-key-user_delete_panel {
-        min-height: 100%;
-        border-color: var(--hb-ui-border) !important;
-        border-radius: 12px !important;
-        background: var(--hb-ui-surface) !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlert"],
-    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlert"] {
-        margin: .55rem 0 0 !important;
-        border: 0 !important;
-        border-radius: 8px !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
-    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
-        min-height: 3rem !important;
-        padding: .8rem .9rem !important;
-        border: 1px solid var(--hb-ui-border) !important;
-        border-radius: 8px !important;
-        background: var(--hb-ui-surface-soft) !important;
-        color: var(--hb-ui-text) !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
-    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
-        color: var(--hb-ui-text) !important;
-        font-size: .83rem !important;
-        line-height: 1.5 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name [data-baseweb="input"],
-    #root [data-testid="stMain"] .st-key-admin_create_username [data-baseweb="input"],
-    #root [data-testid="stMain"] .st-key-admin_create_password [data-baseweb="input"],
-    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-baseweb="input"],
-    #root [data-testid="stMain"] .st-key-admin_create_role [data-baseweb="select"] > div {
-        overflow: hidden !important;
-        border: 1px solid #d5dfe2 !important;
-        border-radius: 8px !important;
-        background: #ffffff !important;
-        background-image: none !important;
-        color: #29373d !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name [data-baseweb="input"] *,
-    #root [data-testid="stMain"] .st-key-admin_create_username [data-baseweb="input"] *,
-    #root [data-testid="stMain"] .st-key-admin_create_password [data-baseweb="input"] *,
-    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-baseweb="input"] *,
-    #root [data-testid="stMain"] .st-key-admin_create_role [data-baseweb="select"] > div * {
-        background-color: #ffffff !important;
-        color: #29373d !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name input,
-    #root [data-testid="stMain"] .st-key-admin_create_username input,
-    #root [data-testid="stMain"] .st-key-admin_create_password input,
-    #root [data-testid="stMain"] .st-key-admin_confirm_password input {
-        border: 0 !important;
-        color-scheme: light !important;
-        color: #29373d !important;
-        caret-color: #397d74 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name input::placeholder,
-    #root [data-testid="stMain"] .st-key-admin_create_username input::placeholder,
-    #root [data-testid="stMain"] .st-key-admin_create_password input::placeholder,
-    #root [data-testid="stMain"] .st-key-admin_confirm_password input::placeholder {
-        color: #7a898e !important;
-        opacity: 1 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_password button,
-    #root [data-testid="stMain"] .st-key-admin_confirm_password button {
-        align-self: stretch !important;
-        min-width: 2.5rem !important;
-        margin: 0 !important;
-        border: 0 !important;
-        border-left: 1px solid #e1e7e9 !important;
-        border-radius: 0 !important;
-        background: #f7f9fa !important;
-        color: #526a72 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name [data-baseweb="input"]:focus-within,
-    #root [data-testid="stMain"] .st-key-admin_create_username [data-baseweb="input"]:focus-within,
-    #root [data-testid="stMain"] .st-key-admin_create_password [data-baseweb="input"]:focus-within,
-    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-baseweb="input"]:focus-within,
-    #root [data-testid="stMain"] .st-key-admin_create_role [data-baseweb="select"]:focus-within > div {
-        border-color: #78a69f !important;
-        box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
-    }
-    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
-        overflow: hidden !important;
-        border: 1px solid #d5dfe2 !important;
-        border-radius: 8px !important;
-        background: #ffffff !important;
-        background-color: #ffffff !important;
-        color: #29373d !important;
-        box-shadow: none !important;
-    }
-    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) *,
-    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
-        background: #ffffff !important;
-        background-color: #ffffff !important;
-        color: #29373d !important;
-        box-shadow: none !important;
-    }
-    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
-        border: 0 !important;
-        color-scheme: light !important;
-        caret-color: #397d74 !important;
-    }
-    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
-        border: 0 !important;
-        border-left: 1px solid #e1e7e9 !important;
-        border-radius: 0 !important;
-        background: #f7f9fa !important;
-        color: #526a72 !important;
-    }
-    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
-        border-color: #78a69f !important;
-        box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
-    }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"],
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"] {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: .45rem 0 !important;
-        border: 0 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlertContainer"],
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlertContainer"] {
-        min-height: 0 !important;
-        padding: .8rem 1rem !important;
-        border: 1px solid transparent !important;
-        border-left-width: 1px !important;
-        border-radius: 9px !important;
-        box-shadow: none !important;
-    }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"] p,
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"] p {
-        margin: 0 !important;
-        font-size: .86rem !important;
-        line-height: 1.5 !important;
-    }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
-        border-color: #d7e3eb !important;
-        background: #f3f7fa !important;
-        color: #405a6b !important;
-    }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) p { color: #405a6b !important; }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) svg { color: #607f97 !important; }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
-        border-color: #ece2c9 !important;
-        background: #faf7ef !important;
-        color: #655637 !important;
-    }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) p { color: #655637 !important; }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) svg { color: #967637 !important; }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
-        border-color: #d6e6db !important;
-        background: #f1f7f3 !important;
-        color: #3e5e49 !important;
-    }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) p { color: #3e5e49 !important; }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) svg { color: #4b8061 !important; }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
-        border-color: #efdada !important;
-        background: #faf2f2 !important;
-        color: #75494c !important;
-    }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) p { color: #75494c !important; }
-    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) svg { color: #a45f62 !important; }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
-        border-color: #34444d !important;
-        background: #1b272e !important;
-        color: #d8e3e8 !important;
-    }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) p { color: #d8e3e8 !important; }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) svg { color: #8aaec5 !important; }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
-        border-color: #4a412e !important;
-        background: #29261e !important;
-        color: #e5dfce !important;
-    }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) p { color: #e5dfce !important; }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) svg { color: #c6a665 !important; }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
-        border-color: #35483c !important;
-        background: #1d2924 !important;
-        color: #d8e6dc !important;
-    }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) p { color: #d8e6dc !important; }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) svg { color: #83b092 !important; }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
-        border-color: #50363a !important;
-        background: #2d2225 !important;
-        color: #eadbdd !important;
-    }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) p { color: #eadbdd !important; }
-    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) svg { color: #d09598 !important; }
-    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputRootElement"],
-    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputRootElement"],
-    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputRootElement"],
-    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputRootElement"] {
-        overflow: hidden !important;
-        border: 1px solid #d5dfe2 !important;
-        border-radius: 8px !important;
-        background: #ffffff !important;
-        background-image: none !important;
-        color: #29373d !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputRootElement"] *,
-    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputRootElement"] *,
-    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputRootElement"] *,
-    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputRootElement"] * {
-        background-color: #ffffff !important;
-        color: #29373d !important;
-        box-shadow: none !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputField"],
-    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputField"],
-    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputField"],
-    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputField"] {
-        border: 0 !important;
-        color: #29373d !important;
-        color-scheme: light !important;
-        caret-color: #397d74 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputRootElement"] button,
-    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputRootElement"] button,
-    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputRootElement"] button,
-    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputRootElement"] button {
-        border: 0 !important;
-        border-left: 1px solid #e1e7e9 !important;
-        border-radius: 0 !important;
-        background: #f7f9fa !important;
-        color: #526a72 !important;
-    }
-    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputRootElement"]:focus-within,
-    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputRootElement"]:focus-within,
-    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputRootElement"]:focus-within,
-    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputRootElement"]:focus-within {
-        border-color: #78a69f !important;
-        box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] {
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    border: 1px solid #dce5e8 !important;
-    border-radius: 12px !important;
-    background: #ffffff !important;
-    box-shadow: 0 3px 12px rgba(30, 55, 64, .055) !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] table {
-    width: 100% !important;
-    border: 0 !important;
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-    background: #ffffff !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] thead th {
-    padding: .8rem .9rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid #dce5e8 !important;
-    background: #eef3f4 !important;
-    color: #52666d !important;
-    font-size: .75rem !important;
-    font-weight: 650 !important;
-    letter-spacing: .035em !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] tbody td {
-    padding: .78rem .9rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid #e8edef !important;
-    background: #ffffff !important;
-    color: #34474e !important;
-    vertical-align: middle !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: #f7f9fa !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
-    background: #eef5f4 !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:last-child td {
-    border-bottom: 0 !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] {
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    border: 1px solid #303c43 !important;
-    border-radius: 12px !important;
-    background: #171f24 !important;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, .16) !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] table {
-    width: 100% !important;
-    border: 0 !important;
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-    background: #171f24 !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] thead th {
-    padding: .8rem .9rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid #303c43 !important;
-    background: #222d33 !important;
-    color: #bdcbd0 !important;
-    font-size: .75rem !important;
-    font-weight: 650 !important;
-    letter-spacing: .035em !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] tbody td {
-    padding: .78rem .9rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid #29363d !important;
-    background: #171f24 !important;
-    color: #dbe3e6 !important;
-    vertical-align: middle !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: #1b252b !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
-    background: #222e34 !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:last-child td {
-    border-bottom: 0 !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stDataFrame"] {
-    overflow: hidden !important;
-    border: 1px solid #dce5e8 !important;
-    border-radius: 12px !important;
-    background: #ffffff !important;
-    box-shadow: 0 3px 12px rgba(30, 55, 64, .055) !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stDataFrame"] {
-    overflow: hidden !important;
-    border: 1px solid #303c43 !important;
-    border-radius: 12px !important;
-    background: #171f24 !important;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, .16) !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button {
-    border: 1px solid #e8c9c5 !important;
-    background: #fff6f5 !important;
-    color: #943f37 !important;
-}
-body:has(.hb-light-mode) #root [data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button:hover {
-    border-color: #d7aaa4 !important;
-    background: #fcebe9 !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button {
-    border: 1px solid #563b39 !important;
-    background: #2b2021 !important;
-    color: #f0c4bd !important;
-}
-body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button:hover {
-    border-color: #76504c !important;
-    background: #352627 !important;
-}
-@media (max-width: 640px) {
-    #root [data-testid="stMain"] [data-testid="stTable"] th,
-    #root [data-testid="stMain"] [data-testid="stTable"] td {
-        padding: .62rem .68rem !important;
-        font-size: .78rem !important;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-body:has(.hb-light-mode) {
-    --hb-pro-page: #f5f7f8;
-    --hb-pro-surface: #ffffff;
-    --hb-pro-surface-soft: #f8fafb;
-    --hb-pro-surface-hover: #f0f5f4;
-    --hb-pro-border: #e1e7ea;
-    --hb-pro-border-strong: #ccd6da;
-    --hb-pro-text: #26363d;
-    --hb-pro-muted: #65777e;
-    --hb-pro-accent: #397d74;
-    --hb-pro-accent-hover: #2e6d65;
-    --hb-pro-accent-soft: #eaf3f1;
-    --hb-pro-danger: #a64b46;
-    --hb-pro-shadow: 0 1px 2px rgba(27, 46, 54, .035), 0 6px 18px rgba(27, 46, 54, .035);
-    --hb-pro-table-head: #f1f5f6;
-    --hb-pro-table-row: #ffffff;
-    --hb-pro-table-alt: #f8fafb;
-    --hb-pro-table-border: #e1e8ea;
-}
-body:not(:has(.hb-light-mode)) {
-    --hb-pro-page: #11181d;
-    --hb-pro-surface: #171f24;
-    --hb-pro-surface-soft: #1c272d;
-    --hb-pro-surface-hover: #222f35;
-    --hb-pro-border: #2c3940;
-    --hb-pro-border-strong: #3a484f;
-    --hb-pro-text: #e2e9ec;
-    --hb-pro-muted: #a0adb3;
-    --hb-pro-accent: #67a99e;
-    --hb-pro-accent-hover: #79b9ae;
-    --hb-pro-accent-soft: #223330;
-    --hb-pro-danger: #e09890;
-    --hb-pro-shadow: 0 1px 2px rgba(0, 0, 0, .14), 0 8px 20px rgba(0, 0, 0, .09);
-    --hb-pro-table-head: #202a30;
-    --hb-pro-table-row: #171f24;
-    --hb-pro-table-alt: #1b252b;
-    --hb-pro-table-border: #2c3940;
-}
-
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"] {
-    background: var(--hb-pro-page) !important;
-    color: var(--hb-pro-text) !important;
-}
-[data-testid="stMainBlockContainer"] {
-    width: 100% !important;
-    max-width: 1540px !important;
-    padding: 1.65rem clamp(1rem, 3vw, 2.5rem) 3rem !important;
-}
-[data-testid="stMain"] h1,
-[data-testid="stMain"] h2,
-[data-testid="stMain"] h3,
-[data-testid="stMain"] h4 {
-    color: var(--hb-pro-text) !important;
-    letter-spacing: -.025em !important;
-    text-wrap: pretty;
-}
-[data-testid="stMain"] h1 {
-    margin-bottom: .5rem !important;
-    font-size: clamp(1.7rem, 2.5vw, 2.15rem) !important;
-    font-weight: 680 !important;
-    line-height: 1.2 !important;
-}
-[data-testid="stMain"] h2 {
-    margin-top: 1.35rem !important;
-    font-size: 1.3rem !important;
-    font-weight: 640 !important;
-    line-height: 1.3 !important;
-}
-[data-testid="stMain"] h3 {
-    font-size: 1.03rem !important;
-    font-weight: 620 !important;
-}
-[data-testid="stMain"] p,
-[data-testid="stMain"] label,
-[data-testid="stMain"] [data-testid="stWidgetLabel"] p {
-    color: var(--hb-pro-text);
-}
-[data-testid="stMain"] [data-testid="stCaptionContainer"],
-[data-testid="stMain"] [data-testid="stCaptionContainer"] p,
-[data-testid="stMain"] small {
-    color: var(--hb-pro-muted) !important;
-}
-[data-testid="stMain"] hr {
-    margin: 1.25rem 0 !important;
-    border-color: var(--hb-pro-border) !important;
-    opacity: .9;
-}
-
-[data-testid="stSidebar"] {
-    border-right: 1px solid var(--hb-pro-border) !important;
-    background: var(--hb-pro-surface) !important;
-}
-[data-testid="stSidebar"] > div:first-child,
-[data-testid="stSidebar"] [data-testid="stSidebarContent"] {
-    background: var(--hb-pro-surface) !important;
-}
-[data-testid="stSidebar"] .sidebar-brand {
-    border-color: var(--hb-pro-border) !important;
-    background: var(--hb-pro-surface) !important;
-}
-[data-testid="stSidebar"] .sidebar-brand-kicker {
-    color: var(--hb-pro-accent) !important;
-}
-[data-testid="stSidebar"] .sidebar-brand-title,
-[data-testid="stSidebar"] .sidebar-brand-name {
-    color: var(--hb-pro-text) !important;
-}
-[data-testid="stSidebar"] .sidebar-brand-subtitle,
-[data-testid="stSidebar"] .user-role,
-[data-testid="stSidebar"] .user-status-text,
-[data-testid="stSidebar"] .sidebar-section-title {
-    color: var(--hb-pro-muted) !important;
-}
-[data-testid="stSidebar"] .user-card {
-    border: 1px solid var(--hb-pro-border) !important;
-    border-radius: 11px !important;
-    background: var(--hb-pro-surface-soft) !important;
-}
-[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_"] button {
-    min-height: 2.5rem !important;
-    margin: .12rem 0 !important;
-    padding: .55rem .75rem !important;
-    border: 1px solid transparent !important;
-    border-radius: 8px !important;
-    background: transparent !important;
-    color: var(--hb-pro-muted) !important;
-    font-size: .88rem !important;
-    font-weight: 540 !important;
-    text-align: left !important;
-    box-shadow: none !important;
-    transform: none !important;
-}
-[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_"] button:hover {
-    border-color: var(--hb-pro-border) !important;
-    background: var(--hb-pro-surface-soft) !important;
-    color: var(--hb-pro-text) !important;
-}
-[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button,
-[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-menu_active"] button:hover {
-    border-color: var(--hb-pro-border) !important;
-    border-left: 2px solid var(--hb-pro-accent) !important;
-    background: var(--hb-pro-accent-soft) !important;
-    color: var(--hb-pro-accent) !important;
-    font-weight: 650 !important;
-}
-[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-cerrar_sesion"] button {
-    border: 1px solid var(--hb-pro-border) !important;
-    border-radius: 8px !important;
-    background: var(--hb-pro-surface) !important;
-    color: var(--hb-pro-muted) !important;
-}
-[data-testid="stSidebar"] [data-testid="stElementContainer"][class*="st-key-cerrar_sesion"] button:hover {
-    border-color: var(--hb-pro-border-strong) !important;
-    background: var(--hb-pro-surface-soft) !important;
-    color: var(--hb-pro-text) !important;
-}
-
-[data-testid="stMain"] [data-testid="stMetric"],
-[data-testid="stMain"] [data-testid="stForm"],
-[data-testid="stMain"] [data-testid="stExpander"],
-[data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"],
-[data-testid="stMain"] [data-testid="stPopover"] {
-    border-color: var(--hb-pro-border) !important;
-    border-radius: 12px !important;
-    background: var(--hb-pro-surface) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-}
-[data-testid="stMain"] [data-testid="stMetric"] {
-    min-height: 6.4rem !important;
-    padding: 1rem 1.05rem !important;
-}
-[data-testid="stMain"] [data-testid="stMetricLabel"] {
-    color: var(--hb-pro-muted) !important;
-    font-size: .8rem !important;
-    font-weight: 540 !important;
-}
-[data-testid="stMain"] [data-testid="stMetricValue"] {
-    color: var(--hb-pro-text) !important;
-    font-size: clamp(1.3rem, 1.9vw, 1.75rem) !important;
-    font-weight: 660 !important;
-    letter-spacing: -.035em !important;
-}
-[data-testid="stMain"] [data-testid="stMetric"]:hover {
-    transform: none !important;
-}
-[data-testid="stMain"] .quick-card {
-    min-height: 8.5rem !important;
-    padding: 1rem !important;
-    border-color: var(--hb-pro-border) !important;
-    border-radius: 11px !important;
-    background: var(--hb-pro-surface) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-    transition: border-color 140ms ease, transform 140ms ease !important;
-}
-[data-testid="stMain"] .quick-card:hover {
-    border-color: var(--hb-pro-border-strong) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-    transform: translateY(-1px) !important;
-}
-[data-testid="stMain"] .quick-card strong {
-    color: var(--hb-pro-text) !important;
-    font-weight: 640 !important;
-}
-[data-testid="stMain"] .quick-card p {
-    color: var(--hb-pro-muted) !important;
-}
-
-[data-testid="stMain"] [data-testid="stTable"] {
-    overflow-x: auto !important;
-    margin: .45rem 0 1.15rem !important;
-    border: 1px solid var(--hb-pro-table-border) !important;
-    border-radius: 11px !important;
-    background: var(--hb-pro-surface) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] table {
-    width: 100% !important;
-    border: 0 !important;
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-    border-radius: 10px !important;
-    background: var(--hb-pro-table-row) !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] thead th {
-    padding: .88rem 1rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--hb-pro-table-border) !important;
-    background: var(--hb-pro-table-head) !important;
-    color: var(--hb-pro-muted) !important;
-    font-size: .73rem !important;
-    font-weight: 650 !important;
-    letter-spacing: .035em !important;
-    line-height: 1.35 !important;
-    text-transform: none !important;
-    white-space: nowrap !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] tbody td {
-    padding: .9rem 1rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--hb-pro-table-border) !important;
-    background: var(--hb-pro-table-row) !important;
-    color: var(--hb-pro-text) !important;
-    line-height: 1.5 !important;
-    vertical-align: middle !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: var(--hb-pro-table-alt) !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
-    background: var(--hb-pro-surface-hover) !important;
-}
-[data-testid="stMain"] [data-testid="stTable"] tbody tr:last-child td {
-    border-bottom: 0 !important;
-}
-[data-testid="stMain"] [data-testid="stDataFrame"] {
-    overflow: hidden !important;
-    margin: .45rem 0 1.15rem !important;
-    border: 1px solid var(--hb-pro-table-border) !important;
-    border-radius: 11px !important;
-    background: var(--hb-pro-surface) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-}
-
-[data-testid="stMain"] [data-testid="stForm"] {
-    padding: 1.1rem !important;
-}
-[data-testid="stMain"] [data-testid="stExpander"] {
-    overflow: hidden !important;
-    box-shadow: none !important;
-}
-[data-testid="stMain"] [data-testid="stExpander"] summary {
-    min-height: 2.85rem !important;
-    background: var(--hb-pro-surface) !important;
-    color: var(--hb-pro-text) !important;
-}
-[data-testid="stMain"] [data-testid="stTabs"] [role="tablist"] {
-    gap: .65rem !important;
-    margin-bottom: 1rem !important;
-    padding: .25rem 0 .45rem !important;
-    border-bottom: 0 !important;
-    overflow-x: auto !important;
-    scrollbar-width: thin;
-}
-[data-testid="stMain"] [data-testid="stTabs"] button[role="tab"] {
-    flex: 0 0 auto !important;
-    min-height: 2.9rem !important;
-    padding: .7rem 1rem !important;
-    border: 1px solid var(--hb-pro-border) !important;
-    border-radius: 9px !important;
-    background: var(--hb-pro-surface-soft) !important;
-    color: var(--hb-pro-muted) !important;
-    font-weight: 550 !important;
-    white-space: nowrap !important;
-    transition: background-color 140ms ease, border-color 140ms ease,
-        color 140ms ease !important;
-}
-[data-testid="stMain"] [data-testid="stTabs"] button[role="tab"]:hover {
-    border-color: var(--hb-pro-border-strong) !important;
-    background: var(--hb-pro-surface-hover) !important;
-    color: var(--hb-pro-text) !important;
-}
-[data-testid="stMain"] [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-    border-color: color-mix(in srgb, var(--hb-pro-accent) 42%, var(--hb-pro-border)) !important;
-    background: var(--hb-pro-accent-soft) !important;
-    color: var(--hb-pro-accent) !important;
-    font-weight: 650 !important;
-}
-
-[data-testid="stMain"] input:not([type="checkbox"]):not([type="radio"]),
-[data-testid="stMain"] textarea,
-[data-testid="stMain"] [data-baseweb="select"] > div,
-[data-testid="stMain"] [data-baseweb="input"] > div {
-    border-color: var(--hb-pro-border-strong) !important;
-    border-radius: 8px !important;
-    background-color: var(--hb-pro-surface) !important;
-    color: var(--hb-pro-text) !important;
-    box-shadow: none !important;
-}
-[data-testid="stMain"] input::placeholder,
-[data-testid="stMain"] textarea::placeholder {
-    color: var(--hb-pro-muted) !important;
-    opacity: .8 !important;
-}
-[data-testid="stMain"] input:focus,
-[data-testid="stMain"] textarea:focus,
-[data-testid="stMain"] [data-baseweb="select"]:focus-within > div,
-[data-testid="stMain"] [data-baseweb="input"]:focus-within > div {
-    border-color: var(--hb-pro-accent) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--hb-pro-accent) 16%, transparent) !important;
-}
-[data-testid="stMain"] input[type="checkbox"],
-[data-testid="stMain"] input[type="radio"] {
-    accent-color: var(--hb-pro-accent) !important;
-}
-[data-testid="stMain"] button,
-[data-testid="stSidebar"] button {
-    box-shadow: none !important;
-    transform: none !important;
-}
-[data-testid="stMain"] .stButton > button,
-[data-testid="stMain"] .stDownloadButton > button,
-[data-testid="stMain"] [data-testid="stFormSubmitButton"] > button {
-    min-height: 2.45rem;
-    border-radius: 8px !important;
-    font-weight: 570 !important;
-    transition: background-color 140ms ease, border-color 140ms ease,
-        color 140ms ease, transform 140ms ease !important;
-}
-[data-testid="stMain"] button[kind="primary"],
-[data-testid="stMain"] button[kind="primaryFormSubmit"] {
-    border: 1px solid var(--hb-pro-accent) !important;
-    background: var(--hb-pro-accent) !important;
-    color: #ffffff !important;
-    font-weight: 630 !important;
-}
-[data-testid="stMain"] button[kind="primary"]:hover,
-[data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
-    border-color: var(--hb-pro-accent-hover) !important;
-    background: var(--hb-pro-accent-hover) !important;
-}
-[data-testid="stMain"] button:not([kind="primary"]):not([kind="primaryFormSubmit"]) {
-    border-color: var(--hb-pro-border-strong) !important;
-    background: var(--hb-pro-surface) !important;
-    color: var(--hb-pro-text) !important;
-}
-[data-testid="stMain"] button:not([kind="primary"]):not([kind="primaryFormSubmit"]):hover,
-[data-testid="stMain"] .stDownloadButton > button:hover {
-    background: var(--hb-pro-surface-hover) !important;
-}
-[data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button {
-    border-color: color-mix(in srgb, var(--hb-pro-danger) 36%, var(--hb-pro-border)) !important;
-    background: color-mix(in srgb, var(--hb-pro-danger) 7%, var(--hb-pro-surface)) !important;
-    color: var(--hb-pro-danger) !important;
-}
-[data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button:hover {
-    background: color-mix(in srgb, var(--hb-pro-danger) 12%, var(--hb-pro-surface)) !important;
-}
-[data-testid="stMain"] button:focus-visible,
-[data-testid="stSidebar"] button:focus-visible,
-[data-testid="stMain"] a:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--hb-pro-accent) 60%, transparent) !important;
-    outline-offset: 2px !important;
-}
-
-[data-testid="stAppViewContainer"] [data-testid="stAlertContainer"] {
-    border: 1px solid var(--hb-pro-border) !important;
-    border-left-width: 3px !important;
-    border-radius: 9px !important;
-    box-shadow: none !important;
-}
-[data-testid="stMain"] [data-testid="stFileUploaderDropzone"] {
-    border: 1px dashed var(--hb-pro-border-strong) !important;
-    border-radius: 10px !important;
-    background: var(--hb-pro-surface-soft) !important;
-}
-[data-testid="stMain"] [data-testid="stFileUploaderDropzone"]:hover {
-    border-color: var(--hb-pro-accent) !important;
-}
-[data-testid="stMain"] [data-testid="stPlotlyChart"] {
-    border-radius: 12px !important;
-}
-
-.hb-hero {
-    min-height: 11rem !important;
-    margin-bottom: 1.3rem !important;
-    padding: clamp(1.25rem, 2.5vw, 2rem) !important;
-    border: 1px solid var(--hb-pro-border) !important;
-    border-radius: 14px !important;
-    background: var(--hb-pro-surface) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-}
-.hb-hero::after {
-    display: none !important;
-}
-.hb-hero-eyebrow {
-    color: var(--hb-pro-accent) !important;
-    font-size: .68rem !important;
-    font-weight: 650 !important;
-    letter-spacing: .1em !important;
-}
-.hb-hero-eyebrow::before {
-    background: var(--hb-pro-accent) !important;
-    box-shadow: none !important;
-}
-.hb-hero h1 {
-    color: var(--hb-pro-text) !important;
-    font-size: clamp(1.8rem, 3vw, 2.4rem) !important;
-    font-weight: 680 !important;
-}
-.hb-hero p {
-    color: var(--hb-pro-muted) !important;
-}
-.hb-hero-date {
-    border-color: var(--hb-pro-border) !important;
-    border-radius: 8px !important;
-    background: var(--hb-pro-surface-soft) !important;
-    color: var(--hb-pro-muted) !important;
-}
-
-body:has(.login-brand) [data-testid="stAppViewContainer"] {
-    background: var(--hb-pro-page) !important;
-}
-body:has(.login-brand) .login-brand {
-    border: 1px solid var(--hb-pro-border) !important;
-    border-radius: 16px !important;
-    background: var(--hb-pro-surface) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-}
-body:has(.login-brand) .login-brand-head {
-    border-bottom-color: var(--hb-pro-border) !important;
-}
-body:has(.login-brand) .login-brand-mark {
-    border-color: var(--hb-pro-border) !important;
-    border-radius: 12px !important;
-    background: var(--hb-pro-accent-soft) !important;
-    box-shadow: none !important;
-}
-body:has(.login-brand) .login-brand-mark svg {
-    stroke: var(--hb-pro-accent) !important;
-}
-body:has(.login-brand) .login-brand-kicker {
-    color: var(--hb-pro-accent) !important;
-}
-body:has(.login-brand) .login-brand-name,
-body:has(.login-brand) .login-brand-name-strong,
-body:has(.login-brand) .login-brand-title,
-body:has(.login-brand) .login-form-intro h2 {
-    color: var(--hb-pro-text) !important;
-}
-body:has(.login-brand) .login-brand-subtitle,
-body:has(.login-brand) .login-brand-feature,
-body:has(.login-brand) .login-form-intro p {
-    color: var(--hb-pro-muted) !important;
-}
-body:has(.login-brand) .login-brand-feature {
-    border-top-color: var(--hb-pro-border) !important;
-}
-body:has(.login-brand) .login-brand-feature::before {
-    background: var(--hb-pro-accent) !important;
-    box-shadow: none !important;
-}
-body:has(.login-brand) [data-testid="stForm"] {
-    border-color: var(--hb-pro-border) !important;
-    border-radius: 14px !important;
-    background: var(--hb-pro-surface) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-}
-body:has(.login-brand) [data-testid="stForm"] label {
-    color: var(--hb-pro-text) !important;
-}
-body:has(.login-brand) [data-testid="stForm"] input {
-    border-color: var(--hb-pro-border-strong) !important;
-    border-radius: 8px !important;
-    background: var(--hb-pro-surface-soft) !important;
-    color: var(--hb-pro-text) !important;
-}
-
-#root [data-testid="stMain"] [data-testid="stTable"] {
-    margin: .65rem 0 1.4rem !important;
-    overflow-x: auto !important;
-    border: 1px solid var(--hb-pro-table-border) !important;
-    border-radius: 12px !important;
-    background: var(--hb-pro-table-row) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-    scrollbar-color: var(--hb-pro-border-strong) transparent;
-    scrollbar-width: thin;
-}
-#root [data-testid="stMain"] [data-testid="stTable"] table {
-    min-width: 100% !important;
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-    border-radius: 11px !important;
-}
-#root [data-testid="stMain"] [data-testid="stTable"] thead th {
-    padding: .95rem 1.05rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--hb-pro-table-border) !important;
-    background: var(--hb-pro-table-head) !important;
-    color: var(--hb-pro-muted) !important;
-    font-size: .73rem !important;
-    font-weight: 680 !important;
-    letter-spacing: .045em !important;
-    line-height: 1.4 !important;
-    vertical-align: middle !important;
-    white-space: nowrap !important;
-}
-#root [data-testid="stMain"] [data-testid="stTable"] tbody td {
-    padding: 1rem 1.05rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--hb-pro-table-border) !important;
-    background: var(--hb-pro-table-row) !important;
-    color: var(--hb-pro-text) !important;
-    font-size: .88rem !important;
-    line-height: 1.55 !important;
-    vertical-align: middle !important;
-}
-#root [data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: var(--hb-pro-table-alt) !important;
-}
-#root [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
-    background: var(--hb-pro-surface-hover) !important;
-}
-#root [data-testid="stMain"] [data-testid="stTable"] tbody tr:last-child td {
-    border-bottom: 0 !important;
-}
-#root [data-testid="stMain"] [data-testid="stDataFrame"] {
-    margin: .65rem 0 1.4rem !important;
-    border: 1px solid var(--hb-pro-table-border) !important;
-    border-radius: 12px !important;
-    background: var(--hb-pro-table-row) !important;
-    box-shadow: var(--hb-pro-shadow) !important;
-}
-#root [data-testid="stMain"] .st-key-registered_users_table [data-testid="stTable"],
-#root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] {
-    margin: 0 !important;
-    border: 0 !important;
-    border-radius: 10px !important;
-    background: var(--hb-pro-table-row) !important;
-    box-shadow: none !important;
-}
-#root [data-testid="stMain"] .st-key-registered_users_table [data-testid="stTable"] th,
-#root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] th {
-    padding: .9rem 1rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--hb-pro-table-border) !important;
-    background: var(--hb-pro-table-head) !important;
-    color: var(--hb-pro-muted) !important;
-    font-size: .73rem !important;
-    letter-spacing: .045em !important;
-}
-#root [data-testid="stMain"] .st-key-registered_users_table [data-testid="stTable"] td,
-#root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] td {
-    padding: .95rem 1rem !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--hb-pro-table-border) !important;
-    background: var(--hb-pro-table-row) !important;
-    color: var(--hb-pro-text) !important;
-    font-size: .86rem !important;
-}
-#root [data-testid="stMain"] .st-key-registered_users_table [data-testid="stTable"] tbody tr:nth-child(even) td,
-#root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: var(--hb-pro-table-alt) !important;
-}
-#root [data-testid="stMain"] .st-key-registered_users_table [data-testid="stTable"] tbody tr:hover td,
-#root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] tbody tr:hover td {
-    background: var(--hb-pro-surface-hover) !important;
-}
-.st-key-dashboard_periodo_ventas [data-baseweb="button-group"],
-.st-key-dashboard_periodo_ventas [role="radiogroup"] {
-    display: flex !important;
-    gap: .45rem !important;
-    padding: .2rem !important;
-    background: transparent !important;
-}
-.st-key-dashboard_periodo_ventas [data-baseweb="button-group"] button,
-.st-key-dashboard_periodo_ventas [role="radiogroup"] [role="radio"] {
-    border-radius: 9px !important;
-}
-#root [data-testid="stMain"] .st-key-prediction_training_progress {
-    margin: .85rem 0 1.25rem !important;
-    padding: .85rem 1rem !important;
-    border: 1px solid var(--hb-pro-border) !important;
-    border-radius: 10px !important;
-    background: var(--hb-pro-surface-soft) !important;
-}
-
-@media (max-width: 760px) {
-    [data-testid="stMainBlockContainer"] {
-        padding: 1rem .85rem 2rem !important;
-    }
-    [data-testid="stMain"] [data-testid="stMetric"] {
-        min-height: 5.6rem !important;
-        padding: .8rem !important;
-    }
-    #root [data-testid="stMain"] [data-testid="stTable"] th {
-        padding: .78rem .75rem !important;
-        font-size: .7rem !important;
-    }
-    #root [data-testid="stMain"] [data-testid="stTable"] td {
-        padding: .82rem .75rem !important;
-        font-size: .82rem !important;
-    }
-    [data-testid="stMain"] [data-testid="stTabs"] [role="tablist"] {
-        gap: .45rem !important;
-    }
-    [data-testid="stMain"] [data-testid="stTabs"] button[role="tab"] {
-        min-height: 2.7rem !important;
-        padding: .62rem .8rem !important;
-        font-size: .84rem !important;
-    }
-    .hb-hero {
-        align-items: flex-start !important;
-        flex-direction: column !important;
-        min-height: 0 !important;
-        gap: .9rem !important;
-    }
-}
-@media (prefers-reduced-motion: reduce) {
-    [data-testid="stMain"] *,
-    [data-testid="stSidebar"] * {
-        scroll-behavior: auto !important;
-        transition-duration: .01ms !important;
-        animation-duration: .01ms !important;
     }
 }
 </style>
