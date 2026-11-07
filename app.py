@@ -9997,12 +9997,39 @@ elif menu == "Predicción de demanda":
         st.info(estado_actual.get("mensaje", "Entrene el modelo para habilitar predicciones."))
 
     if st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
-        with st.container(key="prediction_training_progress"):
-            with st.spinner("Entrenando y validando el modelo..."):
-                resultado_entrenamiento = prediction.entrenar_modelo()
+        st.session_state.pop("_resultado_entrenamiento_demanda", None)
+        with st.status(
+            "Iniciando el entrenamiento y la evaluación...",
+            expanded=True,
+        ) as estado_entrenamiento:
+            def actualizar_estado_entrenamiento(mensaje):
+                estado_entrenamiento.update(
+                    label=mensaje,
+                    state="running",
+                    expanded=True,
+                )
+
+            resultado_entrenamiento = prediction.entrenar_modelo(
+                progreso=actualizar_estado_entrenamiento,
+            )
+            estado_entrenamiento.update(
+                label="Entrenamiento y evaluación finalizados.",
+                state="complete",
+                expanded=True,
+            )
+        st.session_state["_resultado_entrenamiento_demanda"] = (
+            resultado_entrenamiento
+        )
+
+    resultado_entrenamiento = st.session_state.get(
+        "_resultado_entrenamiento_demanda"
+    )
+    if resultado_entrenamiento is not None:
         evaluacion = resultado_entrenamiento.get("evaluacion")
         if resultado_entrenamiento["estado"] in ("ok", "ok_local"):
             st.success(resultado_entrenamiento["mensaje"])
+        elif resultado_entrenamiento["estado"] == "error_guardar_modelo":
+            st.error(resultado_entrenamiento["mensaje"])
         elif resultado_entrenamiento["estado"] == "no_supera_baseline":
             st.warning(resultado_entrenamiento["mensaje"])
         else:

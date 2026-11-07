@@ -1,5 +1,6 @@
 """Entrenamiento y prediccion de demanda con seleccion temporal de modelos."""
 
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 import hashlib
 import io
@@ -338,8 +339,13 @@ def _firma_historial(df_ventas, fecha_fin_exclusiva):
     return hashlib.sha256(contenido.encode("utf-8")).hexdigest()
 
 
-def entrenar_modelo():
+def entrenar_modelo(progreso: Callable[[str], None] | None = None):
     """Compara modelos con cortes cronologicos y exige superar el baseline."""
+    def informar(mensaje: str) -> None:
+        if progreso is not None:
+            progreso(mensaje)
+
+    informar("Cargando las dependencias del modelo...")
     try:
         from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
         import joblib
@@ -349,6 +355,7 @@ def entrenar_modelo():
             "mensaje": "Instale las dependencias del proyecto con pip install -r requirements.txt.",
         }
 
+    informar("Consultando el historial de ventas...")
     df_ventas = _obtener_ventas_diarias()
     if df_ventas.empty:
         return {
@@ -356,7 +363,9 @@ def entrenar_modelo():
             "mensaje": "No hay ventas registradas para entrenar el modelo.",
         }
 
+    informar("Preparando las series diarias por producto...")
     series, _ = _series_diarias(df_ventas)
+    informar(f"Construyendo variables para {len(series)} productos...")
     product_codes, X, y, fechas = _crear_dataset(series)
     fechas_unicas = sorted(set(fechas))
 
@@ -423,7 +432,7 @@ def entrenar_modelo():
         ),
     }
     resultados_modelos = {}
-    for nombre, candidato in modelos.items():
+    for indice_modelo, (nombre, candidato) in enumerate(modelos.items(), start=1):
         reales_modelo = []
         predicciones_modelo = []
         baseline_modelo = []
@@ -432,7 +441,14 @@ def entrenar_modelo():
         cortes_modelo = []
         ventanas_modelo = 0
 
-        for corte, mascara_entrenamiento in zip(cortes, mascaras_entrenamiento):
+        for indice_corte, (corte, mascara_entrenamiento) in enumerate(
+            zip(cortes, mascaras_entrenamiento),
+            start=1,
+        ):
+            informar(
+                f"Evaluando modelo {indice_modelo}/{len(modelos)}: {nombre}; "
+                f"periodo {indice_corte}/{len(cortes)}..."
+            )
             candidato.fit(X[mascara_entrenamiento], y[mascara_entrenamiento])
             (
                 reales,
@@ -586,6 +602,7 @@ def entrenar_modelo():
     }
 
     if not evaluacion["supera_baseline"]:
+        informar("Evaluación completa; el modelo no superó la referencia.")
         return {
             "estado": "no_supera_baseline",
             "mensaje": (
@@ -598,6 +615,7 @@ def entrenar_modelo():
 
     # La validacion se calcula con el tramo reservado. Una vez aceptado el
     # algoritmo, se reajusta con todo el historial disponible para produccion.
+    informar(f"Entrenando el modelo seleccionado ({algoritmo}) con todo el historial...")
     modelo.fit(X, y)
     fecha_fin_historial = pd.to_datetime(df_ventas["fecha"]).max().date()
     fecha_firma_exclusiva = (fecha_fin_historial + timedelta(days=1)).isoformat()
@@ -616,6 +634,7 @@ def entrenar_modelo():
         "evaluacion": evaluacion,
         "algoritmo": algoritmo,
     }
+    informar("Guardando el modelo y los resultados de la evaluación...")
     almacenamiento, error_guardado = _guardar_artefacto(artefacto, joblib)
     if almacenamiento is not None:
         _cargar_artefacto.clear()
