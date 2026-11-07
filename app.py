@@ -13833,5 +13833,302 @@ st.markdown("""
             transition: none !important;
         }
     }
+    :root {
+        --hb-ui-radius: 12px;
+        --hb-ui-radius-sm: 8px;
+    }
+    body:has(.hb-light-mode) {
+        --hb-ui-page: #f4f6f7;
+        --hb-ui-surface: #ffffff;
+        --hb-ui-surface-soft: #f8fafb;
+        --hb-ui-border: #dfe5e7;
+        --hb-ui-border-strong: #cbd5d8;
+        --hb-ui-text: #29373d;
+        --hb-ui-muted: #718087;
+        --hb-ui-accent: #397d74;
+        --hb-ui-accent-soft: #e8f0ef;
+        --hb-ui-shadow: 0 1px 2px rgba(24, 39, 45, .035), 0 8px 24px rgba(24, 39, 45, .025);
+    }
+    body:not(:has(.hb-light-mode)) {
+        --hb-ui-page: #11181d;
+        --hb-ui-surface: #171f24;
+        --hb-ui-surface-soft: #1c272d;
+        --hb-ui-border: #2b373d;
+        --hb-ui-border-strong: #3a484f;
+        --hb-ui-text: #e1e8eb;
+        --hb-ui-muted: #9aa9ae;
+        --hb-ui-accent: #4c9387;
+        --hb-ui-accent-soft: #24312f;
+        --hb-ui-shadow: 0 1px 2px rgba(0, 0, 0, .14), 0 8px 24px rgba(0, 0, 0, .08);
+    }
+    [data-testid="stAppViewContainer"] {
+        background: var(--hb-ui-page) !important;
+        color: var(--hb-ui-text) !important;
+    }
+    [data-testid="stMain"] {
+        background: transparent !important;
+    }
+    [data-testid="stMainBlockContainer"] {
+        max-width: 1480px !important;
+        padding: 1.75rem clamp(1.25rem, 3vw, 2.75rem) 3rem !important;
+    }
+    [data-testid="stMain"] h1,
+    [data-testid="stMain"] h2,
+    [data-testid="stMain"] h3,
+    [data-testid="stMain"] h4 {
+        color: var(--hb-ui-text) !important;
+        letter-spacing: -.025em !important;
+    }
+    [data-testid="stMain"] h1 {
+        font-size: clamp(1.7rem, 2.8vw, 2.15rem) !important;
+        font-weight: 650 !important;
+        line-height: 1.2 !important;
+        margin-bottom: .45rem !important;
+    }
+    [data-testid="stMain"] h2 {
+        font-size: 1.35rem !important;
+        font-weight: 620 !important;
+        line-height: 1.3 !important;
+    }
+    [data-testid="stMain"] h3 {
+        font-size: 1.08rem !important;
+        font-weight: 600 !important;
+        line-height: 1.35 !important;
+    }
+    [data-testid="stMain"] p,
+    [data-testid="stMain"] label,
+    [data-testid="stMain"] [data-testid="stCaptionContainer"] {
+        color: var(--hb-ui-text);
+    }
+    [data-testid="stMain"] [data-testid="stCaptionContainer"],
+    [data-testid="stMain"] small {
+        color: var(--hb-ui-muted) !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetric"] {
+        min-height: 118px;
+        padding: 1.05rem 1.15rem !important;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: var(--hb-ui-radius) !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: var(--hb-ui-shadow) !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetricLabel"] {
+        color: var(--hb-ui-muted) !important;
+        font-size: .82rem !important;
+        font-weight: 550 !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetricValue"] {
+        color: var(--hb-ui-text) !important;
+        font-size: clamp(1.35rem, 2vw, 1.8rem) !important;
+        font-weight: 650 !important;
+        letter-spacing: -.035em !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetricDelta"] {
+        font-size: .78rem !important;
+    }
+    [data-testid="stMain"] [data-testid="stForm"] {
+        padding: 1.15rem !important;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: var(--hb-ui-radius) !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: var(--hb-ui-shadow) !important;
+    }
+    [data-testid="stMain"] [data-testid="stExpander"] {
+        overflow: hidden;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: var(--hb-ui-radius-sm) !important;
+        background: var(--hb-ui-surface) !important;
+    }
+    [data-testid="stMain"] [data-testid="stExpander"] summary {
+        min-height: 2.8rem;
+        color: var(--hb-ui-text) !important;
+    }
+    [data-testid="stMain"] [data-testid="stTabs"] [role="tablist"] {
+        gap: .3rem;
+        border-bottom: 1px solid var(--hb-ui-border) !important;
+    }
+    [data-testid="stMain"] [data-testid="stTabs"] button[role="tab"] {
+        color: var(--hb-ui-muted) !important;
+        font-weight: 550 !important;
+    }
+    [data-testid="stMain"] [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+        color: var(--hb-ui-accent) !important;
+    }
+    [data-testid="stMain"] [data-testid="stTabs"] [data-testid="stTabBorder"],
+    [data-testid="stMain"] [data-testid="stTabs"] [data-testid="stTabHighlight"] {
+        background: var(--hb-ui-accent) !important;
+    }
+    [data-testid="stMain"] input,
+    [data-testid="stMain"] textarea,
+    [data-testid="stMain"] [data-baseweb="select"] > div,
+    [data-testid="stMain"] [data-baseweb="input"] > div {
+        border-color: var(--hb-ui-border-strong) !important;
+        border-radius: var(--hb-ui-radius-sm) !important;
+        color: var(--hb-ui-text) !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] input:focus,
+    [data-testid="stMain"] textarea:focus,
+    [data-testid="stMain"] [data-baseweb="select"]:focus-within > div,
+    [data-testid="stMain"] [data-baseweb="input"]:focus-within > div {
+        border-color: var(--hb-ui-accent) !important;
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--hb-ui-accent) 15%, transparent) !important;
+    }
+    [data-testid="stMain"] button[kind="primary"],
+    [data-testid="stMain"] button[kind="primaryFormSubmit"] {
+        min-height: 2.55rem;
+        border: 1px solid var(--hb-ui-accent) !important;
+        border-radius: var(--hb-ui-radius-sm) !important;
+        background: var(--hb-ui-accent) !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        box-shadow: none !important;
+        transition: filter 140ms ease, transform 140ms ease !important;
+    }
+    [data-testid="stMain"] button[kind="primary"]:hover,
+    [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {
+        filter: brightness(1.06);
+        transform: translateY(-1px);
+    }
+    body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"],
+    body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
+        border-color: #397d74 !important;
+        background: #397d74 !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] button[kind="primary"],
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
+        border-color: #4c9387 !important;
+        background: #4c9387 !important;
+    }
+    [data-testid="stMain"] button[kind="secondary"],
+    [data-testid="stMain"] button[kind="secondaryFormSubmit"] {
+        min-height: 2.45rem;
+        border: 1px solid var(--hb-ui-border-strong) !important;
+        border-radius: var(--hb-ui-radius-sm) !important;
+        background: var(--hb-ui-surface) !important;
+        color: var(--hb-ui-text) !important;
+        font-weight: 550 !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"],
+    [data-testid="stMain"] [data-testid="stDataFrame"] {
+        overflow: hidden;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: var(--hb-ui-radius) !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: var(--hb-ui-shadow) !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        color: var(--hb-ui-text) !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] thead th {
+        padding: .8rem .9rem !important;
+        border-bottom: 1px solid var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface-soft) !important;
+        color: var(--hb-ui-muted) !important;
+        font-size: .76rem !important;
+        font-weight: 650 !important;
+        letter-spacing: .025em !important;
+        text-transform: uppercase;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] tbody td {
+        padding: .75rem .9rem !important;
+        border-bottom: 1px solid var(--hb-ui-border) !important;
+        color: var(--hb-ui-text) !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] tbody tr:last-child td {
+        border-bottom: 0 !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
+        background: var(--hb-ui-surface-soft) !important;
+    }
+    [data-testid="stSidebar"] {
+        border-right: 1px solid var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface) !important;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        background: var(--hb-ui-surface) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        color: var(--hb-ui-muted);
+    }
+    [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
+        min-height: 2.55rem;
+        padding-inline: .75rem !important;
+        text-align: left !important;
+        font-weight: 520 !important;
+        transition: background 120ms ease, color 120ms ease !important;
+    }
+    [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+        border-color: var(--hb-ui-accent-soft) !important;
+        background: var(--hb-ui-accent-soft) !important;
+        color: var(--hb-ui-accent) !important;
+        font-weight: 620 !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+        border-color: #d5e2e0 !important;
+        background: #e8f0ef !important;
+        color: #315a54 !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+        border-color: #33423f !important;
+        background: #24312f !important;
+        color: #c4ddd7 !important;
+    }
+    [data-testid="stMain"] .quick-card {
+        min-height: 126px;
+        padding: 1.15rem !important;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: var(--hb-ui-radius) !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: var(--hb-ui-shadow) !important;
+        transition: border-color 140ms ease, transform 140ms ease !important;
+    }
+    [data-testid="stMain"] .quick-card:hover {
+        border-color: var(--hb-ui-border-strong) !important;
+        transform: translateY(-2px);
+    }
+    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-registered_users_table_shared,
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-registered_users_table_shared {
+        border-color: var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: var(--hb-ui-shadow) !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-registered_users_table_shared table th,
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-registered_users_table_shared table th {
+        border-color: var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface-soft) !important;
+        color: var(--hb-ui-muted) !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-registered_users_table_shared table td,
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-registered_users_table_shared table td {
+        border-color: var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface) !important;
+        color: var(--hb-ui-text) !important;
+    }
+    [data-testid="stMain"] hr {
+        border-color: var(--hb-ui-border) !important;
+        opacity: .8;
+    }
+    @media (max-width: 760px) {
+        [data-testid="stMainBlockContainer"] {
+            padding: 1.1rem 1rem 2rem !important;
+        }
+        [data-testid="stMain"] [data-testid="stMetric"] {
+            min-height: 100px;
+            padding: .85rem !important;
+        }
+        [data-testid="stMain"] [data-testid="stForm"] {
+            padding: .85rem !important;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        [data-testid="stMain"] button,
+        [data-testid="stMain"] .quick-card {
+            transition: none !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
