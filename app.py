@@ -9629,12 +9629,18 @@ elif menu == "Predicción de demanda":
                 }
             )
             st.subheader("Evaluación por periodo")
-            st.dataframe(
-                estilizar_tabla_por_tema(detalle_cortes),
-                width="stretch",
-                hide_index=True,
-                lazy=False,
-            )
+            with st.container(key="prediction_evaluation_table"):
+                st.table(
+                    estilizar_tabla_por_tema(detalle_cortes).hide(axis="index"),
+                    width="stretch",
+                )
+                st.download_button(
+                    "Descargar evaluación por periodo (CSV)",
+                    data=detalle_cortes.to_csv(index=False).encode("utf-8-sig"),
+                    file_name="evaluacion_por_periodo.csv",
+                    mime="text/csv",
+                    key="descargar_evaluacion_por_periodo",
+                )
 
         precision = evaluacion.get("precision_por_producto", [])
         if not precision:
@@ -9650,13 +9656,45 @@ elif menu == "Predicción de demanda":
             }
         )
         st.subheader("Precisión por producto")
-        st.dataframe(
-            estilizar_tabla_por_tema(detalle),
-            width="stretch",
-            height=360,
-            hide_index=True,
-            lazy=False,
+        filas_por_pagina = 50
+        total_paginas = (len(detalle) + filas_por_pagina - 1) // filas_por_pagina
+        clave_pagina = "precision_producto_pagina"
+        if total_paginas > 1:
+            pagina_guardada = st.session_state.get(clave_pagina, 1)
+            if not 1 <= int(pagina_guardada) <= total_paginas:
+                st.session_state[clave_pagina] = 1
+            pagina = st.number_input(
+                "Página de precisión",
+                min_value=1,
+                max_value=total_paginas,
+                step=1,
+                key=clave_pagina,
+                help=f"Página actual de {total_paginas}.",
+            )
+        else:
+            pagina = 1
+        inicio = (pagina - 1) * filas_por_pagina
+        fin = min(inicio + filas_por_pagina, len(detalle))
+        st.caption(
+            f"Mostrando productos {formatear_numero_es(inicio + 1)}–"
+            f"{formatear_numero_es(fin)} de "
+            f"{formatear_numero_es(len(detalle))}."
         )
+        with st.container(key="prediction_precision_table"):
+            st.table(
+                estilizar_tabla_por_tema(
+                    detalle.iloc[inicio:fin].reset_index(drop=True)
+                ).hide(axis="index"),
+                width="stretch",
+                height=360,
+            )
+            st.download_button(
+                "Descargar precisión por producto (CSV)",
+                data=detalle.to_csv(index=False).encode("utf-8-sig"),
+                file_name="precision_por_producto.csv",
+                mime="text/csv",
+                key="descargar_precision_por_producto",
+            )
 
     st.warning(
         "Los días sin ventas registradas se interpretan como cero ventas. "
@@ -13414,6 +13452,38 @@ body:not(:has(.hb-light-mode)) {
     background: var(--hb-ui-surface) !important;
     color: var(--hb-ui-text) !important;
     border-color: var(--hb-ui-border) !important;
+}
+body:has(.hb-light-mode) .st-key-prediction_evaluation_table [data-testid="stTable"] th,
+body:has(.hb-light-mode) .st-key-prediction_precision_table [data-testid="stTable"] th {
+    background: #dceeea !important;
+    color: #185b52 !important;
+    border-color: #cbdedb !important;
+}
+body:has(.hb-light-mode) .st-key-prediction_evaluation_table [data-testid="stTable"] td,
+body:has(.hb-light-mode) .st-key-prediction_precision_table [data-testid="stTable"] td {
+    background: #ffffff !important;
+    color: #24383e !important;
+    border-color: #cbdedb !important;
+}
+body:has(.hb-light-mode) .st-key-prediction_evaluation_table [data-testid="stTable"] tbody tr:nth-child(even) td,
+body:has(.hb-light-mode) .st-key-prediction_precision_table [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: #f0f6f5 !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-prediction_evaluation_table [data-testid="stTable"] th,
+body:not(:has(.hb-light-mode)) .st-key-prediction_precision_table [data-testid="stTable"] th {
+    background: #193b3c !important;
+    color: #a9e3d8 !important;
+    border-color: #30454b !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-prediction_evaluation_table [data-testid="stTable"] td,
+body:not(:has(.hb-light-mode)) .st-key-prediction_precision_table [data-testid="stTable"] td {
+    background: #131d24 !important;
+    color: #e3edf0 !important;
+    border-color: #30454b !important;
+}
+body:not(:has(.hb-light-mode)) .st-key-prediction_evaluation_table [data-testid="stTable"] tbody tr:nth-child(even) td,
+body:not(:has(.hb-light-mode)) .st-key-prediction_precision_table [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: #1a2931 !important;
 }
 [data-testid="stSidebar"] {
     border-right-color: var(--hb-ui-border) !important;
