@@ -14207,5 +14207,149 @@ st.markdown("""
             transition: none !important;
         }
     }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared {
+        padding: .35rem !important;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: var(--hb-ui-radius) !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] {
+        overflow: hidden !important;
+        border: 0 !important;
+        border-radius: 9px !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] table {
+        border: 0 !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        border-radius: 9px !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] th {
+        padding: .78rem .9rem !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface-soft) !important;
+        color: var(--hb-ui-muted) !important;
+        font-size: .73rem !important;
+        font-weight: 650 !important;
+        letter-spacing: .045em !important;
+        text-transform: uppercase !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] td {
+        padding: .82rem .9rem !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface) !important;
+        color: var(--hb-ui-text) !important;
+        font-size: .86rem !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] tbody tr:last-child td {
+        border-bottom: 0 !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel,
+    #root [data-testid="stMain"] .st-key-user_delete_panel,
+    #root [data-testid="stMain"] .st-key-admin_create_panel {
+        padding: 1.15rem !important;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: var(--hb-ui-radius) !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: var(--hb-ui-shadow) !important;
+        transition: border-color 140ms ease !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel:hover,
+    #root [data-testid="stMain"] .st-key-user_delete_panel:hover,
+    #root [data-testid="stMain"] .st-key-admin_create_panel:hover {
+        border-color: var(--hb-ui-border-strong) !important;
+        box-shadow: var(--hb-ui-shadow) !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel h3,
+    #root [data-testid="stMain"] .st-key-user_delete_panel h3,
+    #root [data-testid="stMain"] .st-key-admin_create_panel h3 {
+        margin-top: .2rem !important;
+        font-size: 1.03rem !important;
+        font-weight: 620 !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stCaptionContainer"],
+    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stCaptionContainer"] {
+        color: var(--hb-ui-muted) !important;
+        font-size: .83rem !important;
+        line-height: 1.55 !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
+    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: 8px !important;
+        background: var(--hb-ui-surface-soft) !important;
+        color: var(--hb-ui-text) !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
+    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
+        color: var(--hb-ui-text) !important;
+        font-size: .84rem !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stForm"] {
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"],
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-baseweb="select"] > div {
+        overflow: hidden !important;
+        border: 1px solid #d5dfe2 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        background-image: none !important;
+        color: #29373d !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] div,
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] input,
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] button,
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-baseweb="select"] > div * {
+        background-color: #ffffff !important;
+        color: #29373d !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] input {
+        border: 0 !important;
+        color-scheme: light !important;
+        caret-color: #397d74 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] input::placeholder {
+        color: #7a898e !important;
+        opacity: 1 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"] button {
+        align-self: stretch !important;
+        min-width: 2.5rem !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-left: 1px solid #e1e7e9 !important;
+        border-radius: 0 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stTextInput"] [data-baseweb="input"]:focus-within,
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-baseweb="select"]:focus-within > div {
+        border-color: #78a69f !important;
+        box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_panel [data-testid="stWidgetLabel"] p {
+        color: var(--hb-ui-text) !important;
+        font-size: .83rem !important;
+        font-weight: 550 !important;
+    }
+    @media (max-width: 760px) {
+        #root [data-testid="stMain"] .st-key-user_transfer_panel,
+        #root [data-testid="stMain"] .st-key-user_delete_panel,
+        #root [data-testid="stMain"] .st-key-admin_create_panel {
+            padding: .85rem !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
