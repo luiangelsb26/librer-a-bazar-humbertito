@@ -98,6 +98,53 @@ def formatear_soles(valor):
     return f"S/ {formatear_numero_es(valor, 2)}"
 
 
+def estilizar_tabla_por_tema(marco):
+    """Aplica una paleta completa y consistente a las tablas del tema actual."""
+    tema_claro = bool(st.session_state.get("tema_blanco", False))
+    if tema_claro:
+        color_fondo = "#ffffff"
+        color_fila_alterna = "#f0f6f5"
+        color_texto = "#24383e"
+        color_cabecera = "#dceeea"
+        color_texto_cabecera = "#185b52"
+        color_borde = "#cbdedb"
+    else:
+        color_fondo = "#131d24"
+        color_fila_alterna = "#1a2931"
+        color_texto = "#e3edf0"
+        color_cabecera = "#193b3c"
+        color_texto_cabecera = "#a9e3d8"
+        color_borde = "#30454b"
+
+    return marco.style.set_properties(
+        **{
+            "background-color": color_fondo,
+            "color": color_texto,
+            "border-color": color_borde,
+        }
+    ).set_table_styles(
+        [
+            {
+                "selector": "th",
+                "props": [
+                    ("background-color", color_cabecera),
+                    ("color", color_texto_cabecera),
+                    ("border-color", color_borde),
+                    ("font-weight", "700"),
+                ],
+            },
+            {
+                "selector": "tbody tr:nth-child(even) td",
+                "props": [
+                    ("background-color", color_fila_alterna),
+                    ("color", color_texto),
+                ],
+            },
+        ],
+        overwrite=False,
+    )
+
+
 def mostrar_tabla_centrada(datos, *args, **kwargs):
     """Renderiza tablas compactas con estilo y virtualiza las tablas grandes."""
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
@@ -116,72 +163,18 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
         height = "content"
 
     if len(marco) >= 150:
-        # El marco fijo evita alargar demasiado la sección. La carga diferida
-        # envía historiales muy largos al navegador conforme el usuario los recorre.
         if height == "content":
             height = 560
         return st.dataframe(
-            marco,
+            estilizar_tabla_por_tema(marco),
             width=width,
             height=height,
             hide_index=hide_index,
             key=key,
-            lazy=len(marco) > 1000,
+            lazy=False,
         )
 
-    # Las tablas cortas conservan la paleta clara u oscura personalizada.
-    tema_claro = bool(st.session_state.get("tema_blanco", False))
-    if tema_claro:
-        color_fondo = "#ffffff"
-        color_texto = "#26383e"
-        color_cabecera = "#eaf3f3"
-        color_fila_alterna = "#f4f8f9"
-        color_borde = "#d8e4e6"
-    else:
-        color_fondo = "#18232c"
-        color_texto = "#e1e9ed"
-        color_cabecera = "#25343d"
-        color_fila_alterna = "#1e2a33"
-        color_borde = "#3a4b55"
-
-    marco_renderizado = (
-        marco.style
-        .set_table_styles(
-            [
-                {
-                    "selector": "th, td",
-                    "props": [
-                        ("background-color", color_fondo),
-                        ("color", color_texto),
-                        ("border-color", color_borde),
-                        ("text-align", "center"),
-                    ],
-                },
-                {
-                    "selector": "th",
-                    "props": [
-                        ("background-color", color_cabecera),
-                        ("color", color_texto),
-                        ("border-color", color_borde),
-                        ("font-weight", "700"),
-                        ("text-align", "center"),
-                    ],
-                },
-                {
-                    "selector": "td",
-                    "props": [("border-color", color_borde)],
-                },
-                {
-                    "selector": "tbody tr:nth-child(even) td",
-                    "props": [
-                        ("background-color", color_fila_alterna),
-                        ("color", color_texto),
-                    ],
-                },
-            ],
-            overwrite=False,
-        )
-    )
+    marco_renderizado = estilizar_tabla_por_tema(marco)
 
     if hide_index:
         marco_renderizado = marco_renderizado.hide(axis="index")
@@ -199,18 +192,18 @@ def estilizar_historial_ventas(marco):
     tema_claro = bool(st.session_state.get("tema_blanco", False))
     if tema_claro:
         color_fondo = "#ffffff"
-        color_alterno = "#f6f9fa"
-        color_texto = "#26383e"
-        color_cabecera = "#e7f3f1"
-        color_texto_cabecera = "#1e625b"
-        color_borde = "#d8e4e6"
+        color_alterno = "#f0f6f5"
+        color_texto = "#24383e"
+        color_cabecera = "#dceeea"
+        color_texto_cabecera = "#185b52"
+        color_borde = "#cbdedb"
     else:
-        color_fondo = "#18232c"
-        color_alterno = "#1e2a33"
-        color_texto = "#e1e9ed"
-        color_cabecera = "#25343d"
-        color_texto_cabecera = "#b9e4dc"
-        color_borde = "#3a4b55"
+        color_fondo = "#131d24"
+        color_alterno = "#1a2931"
+        color_texto = "#e3edf0"
+        color_cabecera = "#193b3c"
+        color_texto_cabecera = "#a9e3d8"
+        color_borde = "#30454b"
 
     return (
         marco.style
@@ -9637,9 +9630,10 @@ elif menu == "Predicción de demanda":
             )
             st.subheader("Evaluación por periodo")
             st.dataframe(
-                detalle_cortes,
+                estilizar_tabla_por_tema(detalle_cortes),
                 width="stretch",
                 hide_index=True,
+                lazy=False,
             )
 
         precision = evaluacion.get("precision_por_producto", [])
@@ -9657,10 +9651,11 @@ elif menu == "Predicción de demanda":
         )
         st.subheader("Precisión por producto")
         st.dataframe(
-            detalle,
+            estilizar_tabla_por_tema(detalle),
             width="stretch",
             height=360,
             hide_index=True,
+            lazy=False,
         )
 
     st.warning(
@@ -13263,15 +13258,29 @@ body:has(.hb-light-mode) {
     --hb-ui-surface-soft: #f5f8f9;
     --hb-ui-shadow: 0 8px 24px rgba(34, 52, 61, .055);
     --hb-ui-focus: rgba(47, 143, 131, .24);
+    --hb-ui-table-head: #dceeea;
+    --hb-ui-table-head-text: #185b52;
+    --hb-ui-table-row: #ffffff;
+    --hb-ui-table-row-alt: #f0f6f5;
+    --hb-ui-table-text: #24383e;
+    --hb-ui-table-border: #cbdedb;
+    --hb-ui-table-hover: #e2f2ef;
 }
 body:not(:has(.hb-light-mode)) {
     --hb-ui-text: #e5ecef;
     --hb-ui-muted: #aab9bf;
     --hb-ui-border: #34434b;
-    --hb-ui-surface: #19242b;
-    --hb-ui-surface-soft: #202c33;
+    --hb-ui-surface: #131d24;
+    --hb-ui-surface-soft: #1a2931;
     --hb-ui-shadow: 0 8px 24px rgba(0, 0, 0, .16);
     --hb-ui-focus: rgba(102, 190, 177, .28);
+    --hb-ui-table-head: #193b3c;
+    --hb-ui-table-head-text: #a9e3d8;
+    --hb-ui-table-row: #131d24;
+    --hb-ui-table-row-alt: #1a2931;
+    --hb-ui-table-text: #e3edf0;
+    --hb-ui-table-border: #30454b;
+    --hb-ui-table-hover: #25413f;
 }
 
 #root [data-testid="stTooltipIcon"],
@@ -13357,6 +13366,53 @@ body:not(:has(.hb-light-mode)) {
 }
 [data-testid="stMain"] [data-testid="stTable"] table {
     border-radius: 12px !important;
+    border: 1px solid var(--hb-ui-table-border) !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    overflow: hidden !important;
+}
+[data-testid="stMain"] [data-testid="stTable"] th {
+    background: var(--hb-ui-table-head) !important;
+    color: var(--hb-ui-table-head-text) !important;
+    border-color: var(--hb-ui-table-border) !important;
+    font-weight: 750 !important;
+}
+[data-testid="stMain"] [data-testid="stTable"] tbody td {
+    background: var(--hb-ui-table-row) !important;
+    color: var(--hb-ui-table-text) !important;
+    border-color: var(--hb-ui-table-border) !important;
+}
+[data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: var(--hb-ui-table-row-alt) !important;
+}
+[data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
+    background: var(--hb-ui-table-hover) !important;
+}
+[data-testid="stMain"] [data-testid="stDataFrame"] {
+    border: 1px solid var(--hb-ui-table-border) !important;
+    border-radius: 12px !important;
+    background: var(--hb-ui-surface) !important;
+    color: var(--hb-ui-table-text) !important;
+    box-shadow: var(--hb-ui-shadow) !important;
+}
+[data-testid="stMain"] [data-testid="stMetric"] {
+    background: linear-gradient(
+        145deg,
+        var(--hb-ui-surface),
+        var(--hb-ui-surface-soft)
+    ) !important;
+}
+[data-testid="stMain"] [data-testid="stForm"],
+[data-testid="stMain"] [data-testid="stExpander"],
+[data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"] {
+    background: var(--hb-ui-surface) !important;
+}
+[data-testid="stMain"] [data-testid="stTextInput"] input,
+[data-testid="stMain"] [data-testid="stNumberInput"] input,
+[data-testid="stMain"] [data-testid="stTextArea"] textarea,
+[data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"] {
+    background: var(--hb-ui-surface) !important;
+    color: var(--hb-ui-text) !important;
     border-color: var(--hb-ui-border) !important;
 }
 [data-testid="stSidebar"] {
