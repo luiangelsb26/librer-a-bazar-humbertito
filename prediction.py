@@ -740,7 +740,7 @@ def predecir_demanda(producto_id, dias_futuro=7):
             "estado": "producto_no_encontrado",
             "mensaje": "El producto seleccionado ya no existe en la base de datos.",
         }
-    dias_entrega = int(producto.iloc[0]["dias_entrega"] or 0)
+    dias_entrega = int(producto.iloc[0].get("dias_entrega", 0) or 0)
     dias_futuro = max(dias_futuro, dias_entrega)
     codigo_producto = str(producto.iloc[0]["codigo"])
     product_codes = artefacto["producto_codigos"]

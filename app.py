@@ -9584,7 +9584,7 @@ elif menu == "Predicción de demanda":
         producto_seleccionado = productos[
             productos["id"] == producto_id
         ].iloc[0]
-        dias_entrega = int(producto_seleccionado["dias_entrega"] or 0)
+        dias_entrega = int(producto_seleccionado.get("dias_entrega", 0) or 0)
         dias = st.number_input(
             "Días de cobertura",
             min_value=max(1, dias_entrega),
