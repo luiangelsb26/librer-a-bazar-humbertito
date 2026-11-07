@@ -2,13 +2,13 @@
   "include": [
     "auth.py",
     "database.py",
+    "analysis.py",
     "pdf_report.py",
     "migrate_to_supabase.py"
   ],
   "exclude": [
     "**/__pycache__",
     "app.py",
-    "analysis.py",
     "prediction.py",
     "app_backup.py",
     "prueba_historial.py"

@@ -65,7 +65,7 @@ def obtener_datos_ventas():
 # PRODUCTOS MÁS VENDIDOS
 # ==========================================================
 
-def productos_mas_vendidos(df=None):
+def productos_mas_vendidos(df: pd.DataFrame | None = None) -> pd.DataFrame:
 
     if df is None:
         df = obtener_datos_ventas()
@@ -73,24 +73,14 @@ def productos_mas_vendidos(df=None):
     if df.empty:
         return pd.DataFrame()
 
-    resultado = (
+    resultado = pd.DataFrame(
         df.groupby(
             ["producto_id", "codigo", "nombre", "categoria"],
-            as_index=False
-        )["cantidad"]
-        .sum()
-        .sort_values(
-            "cantidad",
-            ascending=False
-        )
+            as_index=False,
+        ).agg({"cantidad": "sum"})
     )
-
-    resultado.rename(
-        columns={
-            "cantidad": "unidades_vendidas"
-        },
-        inplace=True
-    )
+    resultado = resultado.sort_values(by="cantidad", ascending=False)
+    resultado = resultado.rename(columns={"cantidad": "unidades_vendidas"})
 
     return resultado
 
