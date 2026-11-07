@@ -251,7 +251,7 @@ def _evaluar_horizonte(
     referencias = []
     fechas_evaluadas = []
     productos_evaluados = []
-    ventanas = 0
+    tareas = []
 
     for codigo_producto in product_codes:
         inicio = series[codigo_producto]["inicio"]
@@ -266,37 +266,61 @@ def _evaluar_horizonte(
             len(valores) - horizonte + 1,
             horizonte,
         ):
-            historial = list(valores[:origen])
-            baseline = valores[origen - horizonte:origen]
-            prediccion_ventana = []
-            for paso in range(horizonte):
-                fecha_objetivo = inicio + timedelta(days=origen + paso)
-                vector = _crear_vector(
-                    historial, fecha_objetivo, codigo_producto, product_codes
-                )
-                estimacion = max(0.0, float(modelo.predict([vector])[0]))
-                prediccion_ventana.append(estimacion)
-                historial.append(estimacion)
-
-            reales.extend(float(v) for v in valores[origen:origen + horizonte])
-            predichos.extend(prediccion_ventana)
-            referencias.extend(float(v) for v in baseline)
-            fechas_evaluadas.extend(
-                inicio + timedelta(days=origen + paso)
-                for paso in range(horizonte)
+            tareas.append(
+                {
+                    "codigo": codigo_producto,
+                    "inicio": inicio,
+                    "valores": valores,
+                    "origen": origen,
+                    "historial": list(valores[:origen]),
+                    "predicciones": [],
+                }
             )
-            productos_evaluados.extend([codigo_producto] * horizonte)
-            ventanas += 1
             ventanas_producto += 1
             if max_ventanas is not None and ventanas_producto >= max_ventanas:
                 break
+
+    if not tareas:
+        return reales, predichos, referencias, fechas_evaluadas, 0, productos_evaluados
+
+    for paso in range(horizonte):
+        vectores = [
+            _crear_vector(
+                tarea["historial"],
+                tarea["inicio"] + timedelta(days=tarea["origen"] + paso),
+                tarea["codigo"],
+                product_codes,
+            )
+            for tarea in tareas
+        ]
+        estimaciones = modelo.predict(np.asarray(vectores, dtype=float))
+        for tarea, estimacion in zip(tareas, estimaciones):
+            estimacion = max(0.0, float(estimacion))
+            tarea["predicciones"].append(estimacion)
+            tarea["historial"].append(estimacion)
+
+    for tarea in tareas:
+        inicio = tarea["inicio"]
+        valores = tarea["valores"]
+        origen = tarea["origen"]
+        codigo_producto = tarea["codigo"]
+        reales.extend(float(v) for v in valores[origen:origen + horizonte])
+        predichos.extend(tarea["predicciones"])
+        referencias.extend(
+            float(v) for v in valores[origen - horizonte:origen]
+        )
+        fechas_evaluadas.extend(
+            inicio + timedelta(days=origen + paso)
+            for paso in range(horizonte)
+        )
+        productos_evaluados.extend([codigo_producto] * horizonte)
 
     return (
         reales,
         predichos,
         referencias,
         fechas_evaluadas,
-        ventanas,
+        len(tareas),
         productos_evaluados,
     )
 
@@ -382,7 +406,7 @@ def entrenar_modelo():
 
     modelos = {
         "RandomForestRegressor": RandomForestRegressor(
-            n_estimators=300,
+            n_estimators=100,
             max_depth=12,
             min_samples_leaf=2,
             max_features=0.8,
@@ -390,7 +414,7 @@ def entrenar_modelo():
             n_jobs=-1,
         ),
         "ExtraTreesRegressor": ExtraTreesRegressor(
-            n_estimators=300,
+            n_estimators=100,
             max_depth=12,
             min_samples_leaf=2,
             max_features=0.8,

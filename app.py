@@ -8244,7 +8244,9 @@ elif menu == "Dashboard gerencial":
 
     datos_dia = datos_historicos.copy()
     top = pd.DataFrame()
-    selector_periodo, detalle_periodo = st.columns([1, 2], vertical_alignment="bottom")
+    selector_periodo, detalle_periodo = st.columns(
+        [1.2, 1.8], gap="large", vertical_alignment="bottom"
+    )
     with selector_periodo:
         periodo_grafico = st.segmented_control(
             "Periodo del gráfico",
@@ -9995,8 +9997,9 @@ elif menu == "Predicción de demanda":
         st.info(estado_actual.get("mensaje", "Entrene el modelo para habilitar predicciones."))
 
     if st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
-        with st.spinner("Preparando el historial y evaluando el pronóstico..."):
-            resultado_entrenamiento = prediction.entrenar_modelo()
+        with st.container(key="prediction_training_progress"):
+            with st.spinner("Entrenando y validando el modelo..."):
+                resultado_entrenamiento = prediction.entrenar_modelo()
         evaluacion = resultado_entrenamiento.get("evaluacion")
         if resultado_entrenamiento["estado"] in ("ok", "ok_local"):
             st.success(resultado_entrenamiento["mensaje"])
@@ -15626,6 +15629,24 @@ body:has(.login-brand) [data-testid="stForm"] input {
 #root [data-testid="stMain"] .st-key-registered_users_table [data-testid="stTable"] tbody tr:hover td,
 #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] tbody tr:hover td {
     background: var(--hb-pro-surface-hover) !important;
+}
+.st-key-dashboard_periodo_ventas [data-baseweb="button-group"],
+.st-key-dashboard_periodo_ventas [role="radiogroup"] {
+    display: flex !important;
+    gap: .45rem !important;
+    padding: .2rem !important;
+    background: transparent !important;
+}
+.st-key-dashboard_periodo_ventas [data-baseweb="button-group"] button,
+.st-key-dashboard_periodo_ventas [role="radiogroup"] [role="radio"] {
+    border-radius: 9px !important;
+}
+#root [data-testid="stMain"] .st-key-prediction_training_progress {
+    margin: .85rem 0 1.25rem !important;
+    padding: .85rem 1rem !important;
+    border: 1px solid var(--hb-pro-border) !important;
+    border-radius: 10px !important;
+    background: var(--hb-pro-surface-soft) !important;
 }
 
 @media (max-width: 760px) {
