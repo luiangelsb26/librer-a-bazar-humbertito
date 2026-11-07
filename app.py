@@ -7734,22 +7734,31 @@ elif menu == "Administrar usuarios":
         st.subheader("Crear una cuenta")
     
         with st.form("crear_usuario"):
-            nombre = st.text_input("Nombre completo")
-            username = st.text_input("Nombre de usuario")
+            nombre = st.text_input(
+                "Nombre completo",
+                key="admin_create_name",
+            )
+            username = st.text_input(
+                "Nombre de usuario",
+                key="admin_create_username",
+            )
     
             password = st.text_input(
                 "Contraseña",
-                type="password"
+                type="password",
+                key="admin_create_password",
             )
     
             confirmar = st.text_input(
                 "Confirmar contraseña",
-                type="password"
+                type="password",
+                key="admin_confirm_password",
             )
     
             rol = st.selectbox(
                 "Rol del usuario",
                 ["empleado", "admin"],
+                key="admin_create_role",
                 format_func=lambda x: (
                     "Empleado" if x == "empleado"
                     else "Administrador"
@@ -14350,6 +14359,132 @@ st.markdown("""
         #root [data-testid="stMain"] .st-key-admin_create_panel {
             padding: .85rem !important;
         }
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared {
+        padding: .25rem !important;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: 12px !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"],
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared table {
+        overflow: hidden !important;
+        border: 0 !important;
+        border-radius: 10px !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared table th {
+        padding: .8rem 1rem !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface-soft) !important;
+        color: var(--hb-ui-muted) !important;
+        font-size: .72rem !important;
+        font-weight: 650 !important;
+        letter-spacing: .055em !important;
+        text-transform: uppercase !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared table td {
+        padding: .85rem 1rem !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--hb-ui-border) !important;
+        background: var(--hb-ui-surface) !important;
+        color: var(--hb-ui-text) !important;
+        font-size: .86rem !important;
+    }
+    #root [data-testid="stMain"] .st-key-registered_users_table_shared table tbody tr:last-child td {
+        border-bottom: 0 !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel,
+    #root [data-testid="stMain"] .st-key-user_delete_panel {
+        min-height: 100%;
+        border-color: var(--hb-ui-border) !important;
+        border-radius: 12px !important;
+        background: var(--hb-ui-surface) !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlert"],
+    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlert"] {
+        margin: .55rem 0 0 !important;
+        border: 0 !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
+    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
+        min-height: 3rem !important;
+        padding: .8rem .9rem !important;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-radius: 8px !important;
+        background: var(--hb-ui-surface-soft) !important;
+        color: var(--hb-ui-text) !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
+    #root [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
+        color: var(--hb-ui-text) !important;
+        font-size: .83rem !important;
+        line-height: 1.5 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name [data-baseweb="input"],
+    #root [data-testid="stMain"] .st-key-admin_create_username [data-baseweb="input"],
+    #root [data-testid="stMain"] .st-key-admin_create_password [data-baseweb="input"],
+    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-baseweb="input"],
+    #root [data-testid="stMain"] .st-key-admin_create_role [data-baseweb="select"] > div {
+        overflow: hidden !important;
+        border: 1px solid #d5dfe2 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        background-image: none !important;
+        color: #29373d !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name [data-baseweb="input"] *,
+    #root [data-testid="stMain"] .st-key-admin_create_username [data-baseweb="input"] *,
+    #root [data-testid="stMain"] .st-key-admin_create_password [data-baseweb="input"] *,
+    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-baseweb="input"] *,
+    #root [data-testid="stMain"] .st-key-admin_create_role [data-baseweb="select"] > div * {
+        background-color: #ffffff !important;
+        color: #29373d !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name input,
+    #root [data-testid="stMain"] .st-key-admin_create_username input,
+    #root [data-testid="stMain"] .st-key-admin_create_password input,
+    #root [data-testid="stMain"] .st-key-admin_confirm_password input {
+        border: 0 !important;
+        color-scheme: light !important;
+        color: #29373d !important;
+        caret-color: #397d74 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name input::placeholder,
+    #root [data-testid="stMain"] .st-key-admin_create_username input::placeholder,
+    #root [data-testid="stMain"] .st-key-admin_create_password input::placeholder,
+    #root [data-testid="stMain"] .st-key-admin_confirm_password input::placeholder {
+        color: #7a898e !important;
+        opacity: 1 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_password button,
+    #root [data-testid="stMain"] .st-key-admin_confirm_password button {
+        align-self: stretch !important;
+        min-width: 2.5rem !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-left: 1px solid #e1e7e9 !important;
+        border-radius: 0 !important;
+        background: #f7f9fa !important;
+        color: #526a72 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name [data-baseweb="input"]:focus-within,
+    #root [data-testid="stMain"] .st-key-admin_create_username [data-baseweb="input"]:focus-within,
+    #root [data-testid="stMain"] .st-key-admin_create_password [data-baseweb="input"]:focus-within,
+    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-baseweb="input"]:focus-within,
+    #root [data-testid="stMain"] .st-key-admin_create_role [data-baseweb="select"]:focus-within > div {
+        border-color: #78a69f !important;
+        box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
     }
     </style>
 """, unsafe_allow_html=True)
