@@ -1224,7 +1224,6 @@ st.markdown("""
 
 
 
-
 st.markdown("""
 <style>
 /* ==========================================================
@@ -13518,4 +13517,321 @@ body:not(:has(.hb-light-mode)) .st-key-prediction_precision_table [data-testid="
     }
 }
 </style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+    <style>
+    body:has(.hb-light-mode) {
+        --hb-final-page: #f4f6f7;
+        --hb-final-surface: #ffffff;
+        --hb-final-surface-soft: #f8fafb;
+        --hb-final-surface-hover: #f0f5f4;
+        --hb-final-border: #dfe5e7;
+        --hb-final-border-strong: #cfd9dc;
+        --hb-final-text: #29373d;
+        --hb-final-muted: #6b797f;
+        --hb-final-accent: #397d74;
+        --hb-final-accent-soft: #e8f2f0;
+        --hb-final-table-head: #f0f4f5;
+        --hb-final-table-row: #ffffff;
+        --hb-final-table-alt: #f8fafb;
+        --hb-final-table-border: #e1e7e9;
+        --hb-final-shadow: 0 2px 8px rgba(27, 46, 54, .035);
+    }
+    body:not(:has(.hb-light-mode)) {
+        --hb-final-page: #11181d;
+        --hb-final-surface: #171f24;
+        --hb-final-surface-soft: #1b252b;
+        --hb-final-surface-hover: #202c31;
+        --hb-final-border: #2b373d;
+        --hb-final-border-strong: #39474e;
+        --hb-final-text: #e1e8eb;
+        --hb-final-muted: #9aa8ae;
+        --hb-final-accent: #72a99f;
+        --hb-final-accent-soft: #20322f;
+        --hb-final-table-head: #202a30;
+        --hb-final-table-row: #171f24;
+        --hb-final-table-alt: #1b252b;
+        --hb-final-table-border: #2b373d;
+        --hb-final-shadow: 0 2px 10px rgba(0, 0, 0, .10);
+    }
+
+    [data-testid="stAppViewContainer"] {
+        background: var(--hb-final-page) !important;
+    }
+    [data-testid="stMain"] {
+        color: var(--hb-final-text) !important;
+    }
+    [data-testid="stMain"] h1,
+    [data-testid="stMain"] h2,
+    [data-testid="stMain"] h3,
+    [data-testid="stMain"] h4 {
+        color: var(--hb-final-text) !important;
+        font-weight: 650 !important;
+        letter-spacing: -.018em !important;
+    }
+    [data-testid="stMain"] h2 {
+        margin-top: 1.35rem !important;
+    }
+    [data-testid="stMain"] [data-testid="stCaptionContainer"],
+    [data-testid="stMain"] [data-testid="stCaptionContainer"] p {
+        color: var(--hb-final-muted) !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetric"],
+    [data-testid="stMain"] [data-testid="stForm"],
+    [data-testid="stMain"] [data-testid="stExpander"],
+    [data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"] {
+        border-color: var(--hb-final-border) !important;
+        border-radius: 12px !important;
+        box-shadow: var(--hb-final-shadow) !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetric"],
+    [data-testid="stMain"] [data-testid="stForm"],
+    [data-testid="stMain"] [data-testid="stExpander"],
+    [data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"] {
+        background: var(--hb-final-surface) !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetric"] {
+        min-height: 6.8rem !important;
+        padding: 1rem 1.1rem !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetric"]:hover {
+        transform: none !important;
+        box-shadow: var(--hb-final-shadow) !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetricLabel"],
+    [data-testid="stMain"] [data-testid="stWidgetLabel"] p {
+        color: var(--hb-final-muted) !important;
+    }
+    [data-testid="stMain"] [data-testid="stMetricValue"] {
+        color: var(--hb-final-text) !important;
+    }
+    [data-testid="stMain"] input,
+    [data-testid="stMain"] textarea,
+    [data-testid="stMain"] [role="combobox"],
+    [data-testid="stMain"] [data-testid="stDateInputField"] {
+        border-color: var(--hb-final-border-strong) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] button,
+    [data-testid="stSidebar"] button {
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    [data-testid="stMain"] button:not([kind="primary"]):not([kind="primaryFormSubmit"]),
+    [data-testid="stMain"] [data-testid="stDownloadButton"] button {
+        border-color: var(--hb-final-border-strong) !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stMain"] button:not([kind="primary"]):not([kind="primaryFormSubmit"]):hover,
+    [data-testid="stMain"] [data-testid="stDownloadButton"] button:hover {
+        background: var(--hb-final-surface-hover) !important;
+    }
+    [data-testid="stMain"] [data-testid="stAlertContainer"] {
+        border: 1px solid var(--hb-final-border) !important;
+        border-left-width: 3px !important;
+        border-radius: 9px !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] table {
+        border: 1px solid var(--hb-final-table-border) !important;
+        border-radius: 9px !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        background: var(--hb-final-surface) !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] th {
+        background: var(--hb-final-table-head) !important;
+        color: var(--hb-final-text) !important;
+        border-color: var(--hb-final-table-border) !important;
+        font-size: .76rem !important;
+        font-weight: 650 !important;
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] tbody td {
+        background: var(--hb-final-table-row) !important;
+        color: var(--hb-final-text) !important;
+        border-color: var(--hb-final-table-border) !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
+        background: var(--hb-final-table-alt) !important;
+    }
+    [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
+        background: var(--hb-final-surface-hover) !important;
+    }
+
+    /* La lista de cuentas usa un solo borde, sin marco duplicado ni halo. */
+    [data-testid="stMain"] .st-key-registered_users_table_shared {
+        padding: .35rem !important;
+        border: 1px solid var(--hb-final-border) !important;
+        border-radius: 10px !important;
+        background: var(--hb-final-surface) !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] table {
+        border: 0 !important;
+        border-radius: 7px !important;
+    }
+    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] th,
+    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] td {
+        padding: .68rem .78rem !important;
+        border-right: 1px solid var(--hb-final-table-border) !important;
+        border-bottom: 1px solid var(--hb-final-table-border) !important;
+    }
+    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] th:last-child,
+    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] td:last-child {
+        border-right: 0 !important;
+    }
+    [data-testid="stMain"] .st-key-registered_users_table_shared [data-testid="stTable"] tbody tr:last-child td {
+        border-bottom: 0 !important;
+    }
+    [data-testid="stMain"] .st-key-user_transfer_panel,
+    [data-testid="stMain"] .st-key-user_delete_panel {
+        padding: 1rem !important;
+        border: 1px solid var(--hb-final-border) !important;
+        border-radius: 11px !important;
+        background: var(--hb-final-surface) !important;
+        box-shadow: none !important;
+        transition: border-color 140ms ease !important;
+    }
+    [data-testid="stMain"] .st-key-user_transfer_panel:hover,
+    [data-testid="stMain"] .st-key-user_delete_panel:hover {
+        border-color: var(--hb-final-border-strong) !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
+    [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
+        border: 1px solid var(--hb-final-border) !important;
+        border-left-width: 2px !important;
+        border-radius: 8px !important;
+        background: var(--hb-final-surface-soft) !important;
+        color: var(--hb-final-text) !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
+    [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
+        color: var(--hb-final-text) !important;
+    }
+    [data-testid="stMain"] .quick-card {
+        border-color: var(--hb-final-border) !important;
+        border-radius: 11px !important;
+        background: var(--hb-final-surface) !important;
+        box-shadow: var(--hb-final-shadow) !important;
+    }
+    [data-testid="stMain"] .quick-card strong {
+        color: var(--hb-final-text) !important;
+    }
+    [data-testid="stMain"] .quick-card p {
+        color: var(--hb-final-muted) !important;
+    }
+    [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
+        border: 1px solid transparent !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+        box-shadow: none !important;
+    }
+    [data-testid="stSidebar"] {
+        border-right-color: var(--hb-final-border) !important;
+    }
+
+    body:has(.hb-light-mode) [data-testid="stAppViewContainer"] {
+        background:
+            radial-gradient(ellipse at 92% 0%, rgba(57, 125, 116, .045), transparent 28rem),
+            var(--hb-final-page) !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stMain"] input,
+    body:has(.hb-light-mode) [data-testid="stMain"] textarea,
+    body:has(.hb-light-mode) [data-testid="stMain"] [role="combobox"] {
+        background: var(--hb-final-surface) !important;
+        color: var(--hb-final-text) !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primary"],
+    body:has(.hb-light-mode) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
+        background: #397d74 !important;
+        border-color: #397d74 !important;
+        color: #ffffff !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
+        color: #596970 !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
+        background: #eef3f3 !important;
+        color: #354c52 !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+        border-color: #d5e2e0 !important;
+        background: #e8f0ef !important;
+        color: #315a54 !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
+    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
+        border-color: #dfe5e7 !important;
+        border-left-color: #aab9bd !important;
+        background: #f7f9fa !important;
+        color: #44545a !important;
+    }
+    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
+    body:has(.hb-light-mode) [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
+        color: #44545a !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] input,
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] textarea,
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] [role="combobox"] {
+        background: var(--hb-final-surface-soft) !important;
+        color: var(--hb-final-text) !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] button[kind="primary"],
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] button[kind="primaryFormSubmit"] {
+        background: #397d74 !important;
+        border-color: #397d74 !important;
+        color: #ffffff !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button {
+        color: #aab7bc !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] [class*="st-key-menu_item_"] button:hover {
+        background: #202a30 !important;
+        color: #e1e8eb !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stSidebar"] [class*="st-key-menu_active"] button {
+        border-color: #33423f !important;
+        background: #24312f !important;
+        color: #c4ddd7 !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"],
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] {
+        border-color: #344149 !important;
+        border-left-color: #70837f !important;
+        background: #1c272d !important;
+        color: #d2dcdf !important;
+    }
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-user_transfer_panel [data-testid="stAlertContainer"] p,
+    body:not(:has(.hb-light-mode)) [data-testid="stMain"] .st-key-user_delete_panel [data-testid="stAlertContainer"] p {
+        color: #d2dcdf !important;
+    }
+
+    @media (max-width: 640px) {
+        [data-testid="stMain"] .st-key-user_transfer_panel,
+        [data-testid="stMain"] .st-key-user_delete_panel {
+            padding: .8rem !important;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        [data-testid="stMain"] .st-key-user_transfer_panel,
+        [data-testid="stMain"] .st-key-user_delete_panel {
+            transition: none !important;
+        }
+    }
+    </style>
 """, unsafe_allow_html=True)
