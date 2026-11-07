@@ -13076,5 +13076,8 @@ st.markdown("""
 body:not(:has(.hb-light-mode)) #root [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
     border-left-color: #35454d !important;
 }
+.st-key-theme_toggle {
+    display: none !important;
+}
 </style>
 """, unsafe_allow_html=True)
