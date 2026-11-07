@@ -163,6 +163,10 @@ def construir_informe_prediccion(datos: Mapping[str, Any]) -> bytes:
     promedio = float(datos.get("promedio_diario") or 0)
     stock = float(datos.get("stock_actual") or 0)
     minimo = float(datos.get("stock_minimo") or 0)
+    dias_entrega = int(datos.get("dias_entrega") or 0)
+    dias_cobertura = int(
+        datos.get("dias_cobertura") or max(7, dias_entrega)
+    )
     sugerida = max(0, int(datos.get("cantidad_sugerida") or 0))
     periodo = datos.get("periodo", "No disponible")
     necesidad_neta = demanda + minimo - stock
@@ -198,15 +202,25 @@ def construir_informe_prediccion(datos: Mapping[str, Any]) -> bytes:
     mae = evaluacion.get("mae")
     mae_referencia = evaluacion.get("mae_baseline_7_dias")
     wape = evaluacion.get("wape_porcentaje")
-    evaluacion_superada = (
-        mae is not None
-        and mae_referencia is not None
-        and float(mae) < float(mae_referencia)
-    )
+    evaluacion_superada = evaluacion.get("supera_baseline")
+    if evaluacion_superada is None:
+        evaluacion_superada = (
+            mae is not None
+            and mae_referencia is not None
+            and float(mae) < float(mae_referencia)
+        )
     estado_evaluacion = (
-        "Superó la referencia" if evaluacion_superada
+        "Superó la referencia de forma consistente" if evaluacion_superada
         else "No disponible" if mae is None or mae_referencia is None
         else "No superó la referencia"
+    )
+    precision_producto = next(
+        (
+            metrica
+            for metrica in evaluacion.get("precision_por_producto", [])
+            if str(metrica.get("codigo_producto")) == str(datos.get("codigo_producto"))
+        ),
+        None,
     )
 
     recomendaciones = []
@@ -225,8 +239,9 @@ def construir_informe_prediccion(datos: Mapping[str, Any]) -> bytes:
         "registradas pueden subestimar la demanda si hubo quiebre de stock."
     )
     recomendaciones.append(
-        "Contrastar la sugerencia con el plazo del proveedor, presupuesto y ritmo "
-        "de reposición antes de emitir una compra."
+        f"Se consideró un plazo de entrega de {dias_entrega} días y una cobertura "
+        f"de {dias_cobertura} días; confirma el plazo actual del proveedor antes "
+        "de emitir una compra."
     )
 
     ancho_util = A4[0] - 34 * mm
@@ -274,6 +289,11 @@ def construir_informe_prediccion(datos: Mapping[str, Any]) -> bytes:
             ],
         ], [43.5 * mm] * 4),
         Spacer(1, 4),
+        tabla([
+            ["Plazo configurado del proveedor", "Periodo cubierto por el pronóstico"],
+            [f"{dias_entrega} días", f"{dias_cobertura} días"],
+        ], [ancho_util / 2, ancho_util / 2]),
+        Spacer(1, 4),
         p(
             "Cálculo de reposición: máximo entre cero y el techo de "
             "(demanda estimada + stock mínimo - stock actual). "
@@ -293,9 +313,9 @@ def construir_informe_prediccion(datos: Mapping[str, Any]) -> bytes:
         tabla([
             ["Etapa", "Descripción del proceso"],
             ["Preparación de datos", "Se agruparon las ventas por producto y fecha; los días sin registros se procesaron como cero ventas."],
-            ["Evaluación", "Se separaron fechas recientes para medir el error del pronóstico sobre datos no usados en ese tramo de entrenamiento."],
+            ["Evaluación", "Se hicieron tres pruebas cronológicas independientes, pronosticando siete días en cada corte con datos no usados para entrenar ese corte."],
             ["Comparación", "El error se contrastó con una referencia que repite las ventas observadas siete días antes."],
-            ["Activación", "El pronóstico se habilita cuando la evaluación registra menor error que la referencia."],
+            ["Activación", "El modelo se activa solo si mejora el error global y supera la referencia en la mayoría de los cortes."],
         ], [39 * mm, ancho_util - 39 * mm]),
         Paragraph("6. Resultado de la evaluación temporal", estilos["SeccionInforme"]),
     ])
@@ -308,10 +328,59 @@ def construir_informe_prediccion(datos: Mapping[str, Any]) -> bytes:
             ["Comparación", estado_evaluacion],
             ["Fechas de prueba", f"{evaluacion.get('fecha_inicio_prueba', 'No disponible')} al {evaluacion.get('fecha_fin_prueba', 'No disponible')}"],
             ["Observaciones evaluadas", str(evaluacion.get("observaciones_prueba", "No disponible"))],
+            ["Cortes temporales superados", (
+                f"{evaluacion.get('cortes_que_superan_baseline', 0)} de "
+                f"{evaluacion.get('cantidad_cortes', 0)}"
+            )],
         ]
         if wape is not None:
             filas_evaluacion.append(["WAPE del sistema", f"{float(wape):.1f}%"])
+        if precision_producto:
+            filas_evaluacion.extend(
+                [
+                    [
+                        "MAE del producto",
+                        f"{float(precision_producto['mae']):.2f} unidades por día",
+                    ],
+                    [
+                        "MAE de referencia del producto",
+                        f"{float(precision_producto['mae_baseline_7_dias']):.2f} unidades por día",
+                    ],
+                ]
+            )
+            if precision_producto.get("wape_porcentaje") is not None:
+                filas_evaluacion.append(
+                    [
+                        "WAPE del producto",
+                        f"{float(precision_producto['wape_porcentaje']):.1f}%",
+                    ]
+                )
         historia.append(tabla(filas_evaluacion, [83 * mm, ancho_util - 83 * mm]))
+        cortes_evaluacion = evaluacion.get("cortes_evaluacion", [])
+        if cortes_evaluacion:
+            filas_cortes = [
+                ["Fecha de corte", "MAE modelo", "MAE referencia", "Resultado"],
+                *[
+                    [
+                        corte.get("fecha_corte", "No disponible"),
+                        f"{float(corte['mae']):.2f}",
+                        f"{float(corte['mae_baseline_7_dias']):.2f}",
+                        (
+                            "Superó"
+                            if float(corte["mae"]) < float(corte["mae_baseline_7_dias"])
+                            else "No superó"
+                        ),
+                    ]
+                    for corte in cortes_evaluacion
+                ],
+            ]
+            historia.append(
+                tabla(
+                    filas_cortes,
+                    [43 * mm, 34 * mm, 43 * mm, ancho_util - 120 * mm],
+                    encabezado=True,
+                )
+            )
     else:
         historia.append(p("No se encontraron métricas de evaluación en el registro del pronóstico."))
 

@@ -146,16 +146,17 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
 
     marco_renderizado = (
         marco.style
-        .set_properties(
-            **{
-                "background-color": color_fondo,
-                "color": color_texto,
-                "border-color": color_borde,
-                "text-align": "center",
-            }
-        )
         .set_table_styles(
             [
+                {
+                    "selector": "th, td",
+                    "props": [
+                        ("background-color", color_fondo),
+                        ("color", color_texto),
+                        ("border-color", color_borde),
+                        ("text-align", "center"),
+                    ],
+                },
                 {
                     "selector": "th",
                     "props": [
@@ -5430,7 +5431,7 @@ def obtener_productos():
         cur = con.cursor()
         cur.execute("""
             SELECT id, codigo, nombre, categoria, precio_compra, precio_venta,
-                   stock, stock_minimo
+                   stock, stock_minimo, dias_entrega
             FROM productos
             ORDER BY id ASC
         """)
@@ -5449,6 +5450,7 @@ def generar_excel_productos(productos):
         "Precio venta (S/)",
         "Stock",
         "Stock mínimo",
+        "Días de entrega",
     ]
     filas = [
         {
@@ -5460,6 +5462,7 @@ def generar_excel_productos(productos):
             "Precio venta (S/)": p[5],
             "Stock": p[6],
             "Stock mínimo": p[7],
+            "Días de entrega": p[8],
         }
         for p in productos
     ]
@@ -5484,6 +5487,7 @@ def generar_excel_productos(productos):
             "F": 20,
             "G": 12,
             "H": 16,
+            "I": 18,
         }
         for columna, ancho in anchos.items():
             hoja.column_dimensions[columna].width = ancho
@@ -5520,6 +5524,7 @@ def crear_plantilla_productos_excel():
         "Precio venta (S/)",
         "Stock",
         "Stock mínimo",
+        "Días de entrega",
     ]
     archivo = io.BytesIO()
     with pd.ExcelWriter(archivo, engine="openpyxl") as escritor:
@@ -5530,7 +5535,7 @@ def crear_plantilla_productos_excel():
         )
         hoja = escritor.sheets["Productos"]
         hoja.freeze_panes = "A2"
-        hoja.auto_filter.ref = "A1:H1"
+        hoja.auto_filter.ref = "A1:I1"
         for columna, ancho in {
             "A": 10,
             "B": 20,
@@ -5540,6 +5545,7 @@ def crear_plantilla_productos_excel():
             "F": 20,
             "G": 12,
             "H": 16,
+            "I": 18,
         }.items():
             hoja.column_dimensions[columna].width = ancho
 
@@ -5550,6 +5556,7 @@ def crear_plantilla_productos_excel():
                 "Código y Producto son obligatorios y el código debe ser único.",
                 "Precio compra y Precio venta deben ser números no negativos; la venta debe ser mayor que cero.",
                 "Stock y Stock mínimo deben ser números enteros no negativos.",
+                "Días de entrega es opcional; usa un entero entre 0 y 30 y, si queda vacío, conserva el valor actual o usa 0 para productos nuevos.",
                 "Categoría puede quedar vacía. Si Stock mínimo queda vacío, se usará 5.",
                 "No incluyas filas de totales ni resúmenes debajo de los productos.",
             ]
@@ -5586,6 +5593,10 @@ def validar_productos_excel(contenido):
         "stock": {"stock", "stock inicial", "existencias"},
         "stock_minimo": {
             "stock minimo", "stock min", "minimo", "stock minimo recomendado",
+        },
+        "dias_entrega": {
+            "dias entrega", "dias de entrega", "plazo entrega",
+            "dias entrega proveedor", "plazo proveedor",
         },
     }
     columnas = {}
@@ -5624,11 +5635,10 @@ def validar_productos_excel(contenido):
     filas_validas = []
     errores = []
 
-    for indice, fila in original.iterrows():
+    for numero_fila, (_, fila) in enumerate(original.iterrows(), start=2):
         if all(pd.isna(valor) or str(valor).strip() == "" for valor in fila):
             continue
 
-        numero_fila = int(indice) + 2
         errores_fila = []
 
         id_producto = None
@@ -5660,6 +5670,11 @@ def validar_productos_excel(contenido):
             codigo = str(valor_codigo).strip()
 
         clave_codigo = codigo.casefold()
+        producto_actual = (
+            existentes_por_id.get(id_producto)
+            if id_producto is not None
+            else existentes_por_codigo.get(clave_codigo)
+        )
         if clave_codigo:
             if clave_codigo in codigos_archivo:
                 errores_fila.append(f"el código {codigo} está repetido en el Excel")
@@ -5726,6 +5741,34 @@ def validar_productos_excel(contenido):
             errores_fila.append("Stock mínimo debe ser un entero no negativo")
             stock_minimo = None
 
+        valor_dias_entrega = (
+            fila[columnas["dias_entrega"]]
+            if "dias_entrega" in columnas
+            else None
+        )
+        if (
+            pd.isna(valor_dias_entrega)
+            or str(valor_dias_entrega).strip() == ""
+        ):
+            dias_entrega = (
+                int(producto_actual[8])
+                if producto_actual is not None and len(producto_actual) > 8
+                else 0
+            )
+        else:
+            dias_entrega_numero = _numero_excel(valor_dias_entrega)
+            if (
+                dias_entrega_numero is None
+                or not dias_entrega_numero.is_integer()
+                or not 0 <= dias_entrega_numero <= 30
+            ):
+                errores_fila.append(
+                    "Días de entrega debe ser un entero entre 0 y 30"
+                )
+                dias_entrega = None
+            else:
+                dias_entrega = int(dias_entrega_numero)
+
         valor_categoria = (
             fila[columnas["categoria"]]
             if "categoria" in columnas
@@ -5735,7 +5778,16 @@ def validar_productos_excel(contenido):
             "" if pd.isna(valor_categoria) else str(valor_categoria).strip()
         )
 
-        if errores_fila:
+        if (
+            errores_fila
+            or precio_compra is None
+            or precio_venta is None
+            or stock is None
+            or stock_minimo is None
+            or dias_entrega is None
+        ):
+            if not errores_fila:
+                errores_fila.append("hay valores de producto que no se pudieron validar")
             errores.extend(
                 f"Fila {numero_fila}: {error}." for error in errores_fila
             )
@@ -5750,6 +5802,7 @@ def validar_productos_excel(contenido):
             "precio_venta": round(precio_venta, 2),
             "stock": int(stock),
             "stock_minimo": int(stock_minimo),
+            "dias_entrega": dias_entrega,
             "fila_excel": numero_fila,
         })
 
@@ -5769,7 +5822,8 @@ def registrar_producto(
     precio_compra,
     precio_venta,
     stock,
-    stock_minimo
+    stock_minimo,
+    dias_entrega=0,
 ):
     con = conectar()
 
@@ -5782,9 +5836,10 @@ def registrar_producto(
                 precio_compra,
                 precio_venta,
                 stock,
-                stock_minimo
+                stock_minimo,
+                dias_entrega
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             codigo,
             nombre,
@@ -5792,7 +5847,8 @@ def registrar_producto(
             precio_compra,
             precio_venta,
             stock,
-            stock_minimo
+            stock_minimo,
+            dias_entrega,
         ))
 
         con.commit()
@@ -5817,6 +5873,7 @@ def actualizar_producto(
     precio_venta,
     stock,
     stock_minimo,
+    dias_entrega=0,
 ):
     con = conectar()
 
@@ -5829,7 +5886,8 @@ def actualizar_producto(
                 precio_compra = ?,
                 precio_venta = ?,
                 stock = ?,
-                stock_minimo = ?
+                stock_minimo = ?,
+                dias_entrega = ?
             WHERE id = ?
         """, (
             codigo,
@@ -5839,6 +5897,7 @@ def actualizar_producto(
             precio_venta,
             stock,
             stock_minimo,
+            dias_entrega,
             producto_id,
         ))
         con.commit()
@@ -5910,6 +5969,7 @@ def importar_productos_excel(filas):
                 fila["precio_venta"],
                 fila["stock"],
                 fila["stock_minimo"],
+                fila.get("dias_entrega", 0),
             )
             id_producto = fila.get("id")
             if id_producto is not None:
@@ -5928,7 +5988,7 @@ def importar_productos_excel(filas):
                         UPDATE productos SET
                             codigo = ?, nombre = ?, categoria = ?,
                             precio_compra = ?, precio_venta = ?, stock = ?,
-                            stock_minimo = ?
+                            stock_minimo = ?, dias_entrega = ?
                         WHERE id = ?
                         """,
                         (*valores, id_producto),
@@ -5947,8 +6007,8 @@ def importar_productos_excel(filas):
                         """
                         INSERT INTO productos (
                             id, codigo, nombre, categoria, precio_compra,
-                            precio_venta, stock, stock_minimo
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            precio_venta, stock, stock_minimo, dias_entrega
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (id_producto, *valores),
                     )
@@ -5966,8 +6026,8 @@ def importar_productos_excel(filas):
                     """
                     INSERT INTO productos (
                         codigo, nombre, categoria, precio_compra, precio_venta,
-                        stock, stock_minimo
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                        stock, stock_minimo, dias_entrega
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     valores,
                 )
@@ -6164,12 +6224,11 @@ def validar_ventas_excel(_contenido, hash_contenido):
     errores = []
     hoy = datetime.now().date()
 
-    for indice, fila in original.iterrows():
+    for numero_fila, (_, fila) in enumerate(original.iterrows(), start=2):
         valores = [fila[columna] for columna in original.columns]
         if all(pd.isna(valor) or str(valor).strip() == "" for valor in valores):
             continue
 
-        numero_fila = int(indice) + 2
         errores_fila = []
         producto = None
 
@@ -6233,7 +6292,15 @@ def validar_ventas_excel(_contenido, hash_contenido):
                 if referencia.endswith(".0") and referencia[:-2].isdigit():
                     referencia = referencia[:-2]
 
-        if errores_fila:
+        if (
+            errores_fila
+            or fecha_parseada is None
+            or producto is None
+            or cantidad_numero is None
+            or precio is None
+        ):
+            if not errores_fila:
+                errores_fila.append("hay valores de venta que no se pudieron validar")
             errores.extend([f"Fila {numero_fila}: {error}" for error in errores_fila])
             continue
 
@@ -6885,11 +6952,10 @@ def validar_compras_excel(_contenido, hash_contenido):
     errores = []
     hoy = datetime.now().date()
 
-    for indice, fila in original.iterrows():
+    for numero_fila, (_, fila) in enumerate(original.iterrows(), start=2):
         if all(pd.isna(valor) or str(valor).strip() == "" for valor in fila.tolist()):
             continue
 
-        numero_fila = int(indice) + 2
         errores_fila = []
         producto = None
         valor_codigo = fila[columnas["codigo"]] if "codigo" in columnas else None
@@ -6952,7 +7018,15 @@ def validar_compras_excel(_contenido, hash_contenido):
                 if referencia.endswith(".0") and referencia[:-2].isdigit():
                     referencia = referencia[:-2]
 
-        if errores_fila:
+        if (
+            errores_fila
+            or fecha_parseada is None
+            or producto is None
+            or cantidad_numero is None
+            or precio is None
+        ):
+            if not errores_fila:
+                errores_fila.append("hay valores de compra que no se pudieron validar")
             errores.extend([f"Fila {numero_fila}: {error}" for error in errores_fila])
             continue
 
@@ -7572,12 +7646,10 @@ elif menu == "Administrar usuarios":
                     st.error("Las contraseñas no coinciden.")
                 else:
                     try:
-                        auth.crear_usuario(
-                            username,
-                            nombre,
-                            password,
-                            rol
-                        )
+                        if rol not in ("admin", "empleado"):
+                            st.error("Seleccione un rol válido.")
+                            st.stop()
+                        auth.crear_usuario(username, nombre, password, rol)
                         obtener_usuarios_administracion_cache.clear()
                         preparar_tabla_usuarios.clear()
                         notificar_exito(
@@ -7891,6 +7963,8 @@ elif menu == "Dashboard gerencial":
             key="dashboard_periodo_ventas",
             width="stretch",
         )
+        if periodo_grafico is None:
+            periodo_grafico = "90 días"
     with detalle_periodo:
         st.caption(
             "El periodo seleccionado se aplica a los dos gráficos. Las tarjetas "
@@ -7912,10 +7986,9 @@ elif menu == "Dashboard gerencial":
             datos_dia.groupby(
                 ["producto_id", "codigo", "nombre", "categoria"],
                 as_index=False,
-            )["cantidad"]
-            .sum()
-            .sort_values("cantidad", ascending=False)
-            .rename(columns={"cantidad": "unidades_vendidas"})
+            )
+            .agg(unidades_vendidas=("cantidad", "sum"))
+            .sort_values(by="unidades_vendidas", ascending=False)
         )
 
     panel_ventas, panel_productos = st.columns([1.2, 1], gap="large")
@@ -8109,6 +8182,14 @@ elif menu == "Productos":
                         step=1,
                         value=5
                     )
+                    dias_entrega = st.number_input(
+                        "Días de entrega del proveedor",
+                        min_value=0,
+                        max_value=30,
+                        step=1,
+                        value=0,
+                        help="Usa 0 si todavía no conoces el plazo. Se usará como mínimo para calcular los días de cobertura.",
+                    )
 
                 guardar = st.form_submit_button(
                     "Registrar producto"
@@ -8134,7 +8215,8 @@ elif menu == "Productos":
                             precio_compra,
                             precio_venta,
                             stock,
-                            stock_minimo
+                            stock_minimo,
+                            dias_entrega,
                         )
 
                         if ok:
@@ -8191,6 +8273,7 @@ elif menu == "Productos":
                             "Precio venta": f"S/ {fila['precio_venta']:.2f}",
                             "Stock": fila["stock"],
                             "Stock mínimo": fila["stock_minimo"],
+                            "Días de entrega": fila["dias_entrega"],
                         }
                         for fila in filas_productos_excel
                     ])
@@ -8224,6 +8307,9 @@ elif menu == "Productos":
                             ),
                             "Stock mínimo": st.column_config.NumberColumn(
                                 "Stock mínimo", width=100, alignment="center"
+                            ),
+                            "Días de entrega": st.column_config.NumberColumn(
+                                "Días de entrega", width=120, alignment="center"
                             ),
                         },
                     )
@@ -8279,7 +8365,8 @@ elif menu == "Productos":
                         "Precio compra": p[4],
                         "Precio venta": p[5],
                         "Stock": p[6],
-                        "Stock mínimo": p[7]
+                        "Stock mínimo": p[7],
+                        "Días de entrega": p[8],
                     })
 
                 mostrar_tabla_centrada(
@@ -8361,6 +8448,14 @@ elif menu == "Productos":
                                 step=1,
                                 value=int(producto[7] or 0),
                             )
+                            nuevo_dias_entrega = st.number_input(
+                                "Días de entrega del proveedor",
+                                min_value=0,
+                                max_value=30,
+                                step=1,
+                                value=int(producto[8] or 0),
+                                help="Usa 0 si el plazo todavía no está definido.",
+                            )
 
                         guardar_cambios = st.form_submit_button(
                             "Guardar cambios",
@@ -8368,9 +8463,9 @@ elif menu == "Productos":
                         )
 
                         if guardar_cambios:
-                            if not nuevo_codigo.strip():
+                            if nuevo_codigo is None or not nuevo_codigo.strip():
                                 st.error("Ingrese el código del producto.")
-                            elif not nuevo_nombre.strip():
+                            elif nuevo_nombre is None or not nuevo_nombre.strip():
                                 st.error("Ingrese el nombre del producto.")
                             elif nuevo_precio_venta <= 0:
                                 st.error("El precio de venta debe ser mayor que 0.")
@@ -8379,11 +8474,12 @@ elif menu == "Productos":
                                     producto_id,
                                     nuevo_codigo.strip(),
                                     nuevo_nombre.strip(),
-                                    nueva_categoria.strip(),
+                                    (nueva_categoria or "").strip(),
                                     nuevo_precio_compra,
                                     nuevo_precio_venta,
                                     nuevo_stock,
                                     nuevo_stock_minimo,
+                                    nuevo_dias_entrega,
                                 )
 
                                 if ok:
@@ -8988,12 +9084,14 @@ elif menu == "Compras":
                     "base de datos. Ejecuta una vez "
                     "migracion_importar_compras.sql en Supabase SQL Editor."
                 )
-            elif importacion_existente:
+            elif isinstance(importacion_existente, (tuple, list)) and len(importacion_existente) > 1:
                 st.warning(
                     "Este mismo archivo ya se importó el "
                     f"{importacion_existente[1]}. No se volverá a cargar para "
                     "evitar duplicar compras y stock."
                 )
+            elif importacion_existente:
+                st.error("No se pudo interpretar el registro de importación existente.")
             else:
                 filas_compras, errores_compras, _ = validar_compras_excel(
                     contenido_compras,
@@ -9228,16 +9326,14 @@ elif menu == "Análisis inteligente":
     fecha_inicio = tendencia.get("fecha_inicio")
     fecha_fin = tendencia.get("fecha_fin")
     dias_por_periodo = tendencia.get("dias_por_periodo")
-    datos_periodo_disponibles = (
+    if (
         fecha_inicio is not None
         and fecha_fin is not None
         and dias_por_periodo is not None
         and "ventas_periodo_base" in tendencia
         and "ventas_periodo_reciente" in tendencia
         and "valor" in tendencia
-    )
-
-    if datos_periodo_disponibles:
+    ):
         inicio_base = fecha_inicio.strftime("%d/%m/%Y")
         fin_base = (
             fecha_inicio
@@ -9340,14 +9436,58 @@ elif menu == "Predicción de demanda":
 
     st.write(
         "Pronóstico de demanda a partir del historial de ventas. El sistema "
-        "compara alternativas con las mismas fechas de evaluación y conserva "
-        "la que obtiene menor error."
+        "compara alternativas en tres periodos históricos y conserva "
+        "la que obtiene menor error de forma consistente."
     )
 
     st.info(
-        "El entrenamiento evalúa las fechas más recientes y activa el modelo "
-        "solo si supera el error de una referencia basada en las ventas de hace 7 días."
+        "El entrenamiento prueba tres cortes cronológicos de 7 días, muestra el "
+        "error por producto y solo activa un modelo que supera la referencia de "
+        "ventas de hace 7 días en el conjunto y en la mayoría de los periodos."
     )
+
+    def mostrar_detalle_evaluacion(evaluacion):
+        cortes = evaluacion.get("cortes_evaluacion", [])
+        if cortes:
+            detalle_cortes = pd.DataFrame(cortes).rename(
+                columns={
+                    "fecha_corte": "Fecha de corte",
+                    "fecha_inicio_prueba": "Inicio de prueba",
+                    "fecha_fin_prueba": "Fin de prueba",
+                    "observaciones_entrenamiento": "Días de entrenamiento",
+                    "observaciones_prueba": "Días evaluados",
+                    "mae": "MAE del modelo",
+                    "mae_baseline_7_dias": "MAE de referencia",
+                    "ventanas_prueba_7_dias": "Ventanas de 7 días",
+                }
+            )
+            st.subheader("Evaluación por periodo")
+            st.dataframe(
+                detalle_cortes,
+                width="stretch",
+                hide_index=True,
+            )
+
+        precision = evaluacion.get("precision_por_producto", [])
+        if not precision:
+            return
+        detalle = pd.DataFrame(precision).rename(
+            columns={
+                "codigo_producto": "Código",
+                "observaciones": "Días evaluados",
+                "mae": "MAE del modelo",
+                "mae_baseline_7_dias": "MAE de referencia",
+                "wape_porcentaje": "WAPE (%)",
+                "supera_baseline": "Supera referencia",
+            }
+        )
+        st.subheader("Precisión por producto")
+        st.dataframe(
+            detalle,
+            width="stretch",
+            height=360,
+            hide_index=True,
+        )
 
     st.warning(
         "Los días sin ventas registradas se interpretan como cero ventas. "
@@ -9375,26 +9515,29 @@ elif menu == "Predicción de demanda":
             "Las ventas nuevas se usan como contexto para pronosticar. "
             "Vuelve a entrenar para que el modelo aprenda también de esos registros."
         )
-        evaluacion_actual = estado_actual.get("evaluacion", {})
-        if evaluacion_actual:
+        evaluacion_actual = estado_actual.get("evaluacion")
+        if isinstance(evaluacion_actual, dict) and evaluacion_actual:
             st.caption(
                 f"Evaluación temporal: MAE {evaluacion_actual['mae']:.2f} unidades; "
-                f"baseline de 7 días {evaluacion_actual['mae_baseline_7_dias']:.2f}."
+                f"referencia de 7 días {evaluacion_actual['mae_baseline_7_dias']:.2f}; "
+                f"{evaluacion_actual.get('cortes_que_superan_baseline', 0)} de "
+                f"{evaluacion_actual.get('cantidad_cortes', 0)} periodos superaron la referencia."
             )
+            mostrar_detalle_evaluacion(evaluacion_actual)
     else:
         st.info(estado_actual.get("mensaje", "Entrene el modelo para habilitar predicciones."))
 
     if st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
         with st.spinner("Preparando el historial y evaluando el pronóstico..."):
             resultado_entrenamiento = prediction.entrenar_modelo()
-        evaluacion = resultado_entrenamiento.get("evaluacion", {})
-        if resultado_entrenamiento["estado"] == "ok":
+        evaluacion = resultado_entrenamiento.get("evaluacion")
+        if resultado_entrenamiento["estado"] in ("ok", "ok_local"):
             st.success(resultado_entrenamiento["mensaje"])
         elif resultado_entrenamiento["estado"] == "no_supera_baseline":
             st.warning(resultado_entrenamiento["mensaje"])
         else:
             st.warning(resultado_entrenamiento["mensaje"])
-        if evaluacion:
+        if isinstance(evaluacion, dict) and evaluacion:
             m1, m2, m3 = st.columns(3)
             m1.metric("MAE del modelo", f"{evaluacion['mae']:.2f} unidades")
             m2.metric("MAE de referencia", f"{evaluacion['mae_baseline_7_dias']:.2f} unidades")
@@ -9403,12 +9546,16 @@ elif menu == "Predicción de demanda":
                 f"Prueba cronológica: {evaluacion['fecha_inicio_prueba']} a "
                 f"{evaluacion['fecha_fin_prueba']}; "
                 f"{evaluacion['observaciones_prueba']} observaciones en "
-                f"{evaluacion['ventanas_prueba_7_dias']} ventanas de 7 días."
+                f"{evaluacion['ventanas_prueba_7_dias']} ventanas de 7 días y "
+                f"{evaluacion['cantidad_cortes']} cortes temporales."
             )
             st.caption(
-                "Se compararon alternativas con las mismas fechas de prueba y "
-                "se seleccionó la que obtuvo menor error."
+                f"La referencia se superó en "
+                f"{evaluacion['cortes_que_superan_baseline']} de "
+                f"{evaluacion['cantidad_cortes']} cortes. "
+                "Los errores por producto agregan las observaciones de todos los cortes."
             )
+            mostrar_detalle_evaluacion(evaluacion)
 
     productos = prediction.obtener_productos()
 
@@ -9434,12 +9581,18 @@ elif menu == "Predicción de demanda":
             format_func=lambda valor: opciones[valor]
         )
 
+        producto_seleccionado = productos[
+            productos["id"] == producto_id
+        ].iloc[0]
+        dias_entrega = int(producto_seleccionado["dias_entrega"] or 0)
         dias = st.number_input(
-            "Días a predecir",
-            min_value=1,
+            "Días de cobertura",
+            min_value=max(1, dias_entrega),
             max_value=30,
-            value=7,
-            step=1
+            value=max(7, dias_entrega),
+            step=1,
+            key=f"dias_cobertura_prediccion_{producto_id}",
+            help="El periodo cubre como mínimo el plazo de entrega configurado para este producto.",
         )
 
         if st.button("Generar predicción"):
@@ -9471,8 +9624,14 @@ elif menu == "Predicción de demanda":
                         "Disponible"
                     )
 
-                evaluacion = resultado.get("evaluacion", {})
-                if evaluacion:
+                st.caption(
+                    f"El pronóstico cubre {resultado['dias_cobertura']} días "
+                    f"para un plazo de entrega configurado de {resultado['dias_entrega']} días. "
+                    "La reposición también conserva el stock mínimo como reserva."
+                )
+
+                evaluacion = resultado.get("evaluacion")
+                if isinstance(evaluacion, dict) and evaluacion:
                     st.caption(
                         f"Error MAE en evaluación temporal: "
                         f"{evaluacion['mae']:.2f} unidades por producto y día."
@@ -9498,7 +9657,7 @@ elif menu == "Predicción de demanda":
                     resultado["fechas_prediccion"]
                 )
                 valores_grafico_pred = [
-                    round(valor, 2)
+                    round(float(valor), 2)
                     for valor in resultado["predicciones"]
                 ]
                 datos_tabla_pred = {
@@ -9575,7 +9734,7 @@ elif menu == "Predicción de demanda":
                 cantidad_sugerida = max(
                     0,
                     math.ceil(
-                        resultado["demanda_predicha"]
+                        float(resultado["demanda_predicha"])
                         + stock_minimo
                         - stock_actual
                     )
@@ -9623,6 +9782,8 @@ elif menu == "Predicción de demanda":
                     ).strftime("%d/%m/%Y"),
                     "demanda_predicha": resultado["demanda_predicha"],
                     "promedio_diario": resultado["promedio_diario_predicho"],
+                    "dias_entrega": resultado["dias_entrega"],
+                    "dias_cobertura": resultado["dias_cobertura"],
                     "stock_actual": stock_actual,
                     "stock_minimo": stock_minimo,
                     "cantidad_sugerida": cantidad_sugerida,

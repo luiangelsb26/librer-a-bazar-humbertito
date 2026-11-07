@@ -264,9 +264,22 @@ def crear_base_datos() -> None:
             precio_compra {real_type} NOT NULL,
             precio_venta {real_type} NOT NULL,
             stock INTEGER NOT NULL DEFAULT 0,
-            stock_minimo INTEGER NOT NULL DEFAULT 5
+            stock_minimo INTEGER NOT NULL DEFAULT 5,
+            dias_entrega INTEGER NOT NULL DEFAULT 0
+                CHECK (dias_entrega BETWEEN 0 AND 30)
         )
     """)
+
+    if not usar_supabase():
+        columnas_productos = cursor.execute(
+            "PRAGMA table_info(productos)"
+        ).fetchall()
+        if not any(columna[1] == "dias_entrega" for columna in columnas_productos):
+            cursor.execute(
+                "ALTER TABLE productos ADD COLUMN dias_entrega "
+                "INTEGER NOT NULL DEFAULT 0 "
+                "CHECK (dias_entrega BETWEEN 0 AND 30)"
+            )
 
     cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS ventas (
@@ -366,6 +379,23 @@ def crear_base_datos() -> None:
             FOREIGN KEY (producto_id) REFERENCES productos(id)
         )
     """)
+
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_detalle_ventas_venta_id "
+        "ON detalle_ventas(venta_id)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_detalle_ventas_producto_id "
+        "ON detalle_ventas(producto_id)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_detalle_compras_compra_id "
+        "ON detalle_compras(compra_id)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_detalle_compras_producto_id "
+        "ON detalle_compras(producto_id)"
+    )
 
     conexion.commit()
     conexion.close()

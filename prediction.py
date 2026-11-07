@@ -16,6 +16,9 @@ MODEL_PATH = Path(__file__).resolve().parent / "data" / "demanda_random_forest.j
 MIN_LAG_DAYS = 28
 MIN_FEATURE_DAYS = 60
 RANDOM_STATE = 42
+EVALUATION_CUTOFF_RATIOS = (0.55, 0.68, 0.81)
+EVALUATION_HORIZON_DAYS = 7
+EVALUATION_VERSION = 2
 
 
 def conectar():
@@ -121,7 +124,7 @@ def obtener_productos():
     try:
         return pd.read_sql_query(
             """
-            SELECT id, codigo, nombre, categoria, stock, stock_minimo
+            SELECT id, codigo, nombre, categoria, stock, stock_minimo, dias_entrega
             FROM productos
             ORDER BY nombre
             """,
@@ -149,6 +152,7 @@ def _obtener_ventas_diarias():
     )
 
 
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def _series_diarias(df_ventas):
     """Rellena con cero los dias sin ventas dentro del historial registrado."""
     if df_ventas.empty:
@@ -233,12 +237,20 @@ def _mae(real, estimado):
     return float(np.mean(np.abs(np.asarray(real) - np.asarray(estimado))))
 
 
-def _evaluar_horizonte(modelo, series, product_codes, corte, horizonte=7):
+def _evaluar_horizonte(
+    modelo,
+    series,
+    product_codes,
+    corte,
+    horizonte=EVALUATION_HORIZON_DAYS,
+    max_ventanas=None,
+):
     """Evalua ventanas futuras de varios dias sin alimentar valores reales del futuro."""
     reales = []
     predichos = []
     referencias = []
     fechas_evaluadas = []
+    productos_evaluados = []
     ventanas = 0
 
     for codigo_producto in product_codes:
@@ -248,6 +260,7 @@ def _evaluar_horizonte(modelo, series, product_codes, corte, horizonte=7):
         if primer_indice_prueba < MIN_LAG_DAYS:
             continue
 
+        ventanas_producto = 0
         for origen in range(
             primer_indice_prueba,
             len(valores) - horizonte + 1,
@@ -272,11 +285,23 @@ def _evaluar_horizonte(modelo, series, product_codes, corte, horizonte=7):
                 inicio + timedelta(days=origen + paso)
                 for paso in range(horizonte)
             )
+            productos_evaluados.extend([codigo_producto] * horizonte)
             ventanas += 1
+            ventanas_producto += 1
+            if max_ventanas is not None and ventanas_producto >= max_ventanas:
+                break
 
-    return reales, predichos, referencias, fechas_evaluadas, ventanas
+    return (
+        reales,
+        predichos,
+        referencias,
+        fechas_evaluadas,
+        ventanas,
+        productos_evaluados,
+    )
 
 
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def _firma_historial(df_ventas, fecha_fin_exclusiva):
     """Identifica el historial usado, sin invalidar el modelo por ventas nuevas."""
     if df_ventas.empty:
@@ -290,7 +315,7 @@ def _firma_historial(df_ventas, fecha_fin_exclusiva):
 
 
 def entrenar_modelo():
-    """Entrena y valida cronologicamente; activa el modelo si supera el baseline."""
+    """Compara modelos con cortes cronologicos y exige superar el baseline."""
     try:
         from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
         import joblib
@@ -323,12 +348,36 @@ def entrenar_modelo():
             "observaciones": int(len(y)),
         }
 
-    corte = fechas_unicas[int(len(fechas_unicas) * 0.8)]
-    mascara_entrenamiento = np.asarray([fecha < corte for fecha in fechas])
-    if mascara_entrenamiento.sum() < 30:
+    cortes = []
+    for proporcion in EVALUATION_CUTOFF_RATIOS:
+        indice = min(int(len(fechas_unicas) * proporcion), len(fechas_unicas) - 1)
+        corte = fechas_unicas[indice]
+        if cortes and (corte - cortes[-1]).days < EVALUATION_HORIZON_DAYS:
+            continue
+        if (fechas_unicas[-1] - corte).days < EVALUATION_HORIZON_DAYS - 1:
+            continue
+        cortes.append(corte)
+
+    if len(cortes) < len(EVALUATION_CUTOFF_RATIOS):
         return {
             "estado": "datos_insuficientes",
-            "mensaje": "No hay suficientes observaciones para separar entrenamiento y evaluacion temporal.",
+            "mensaje": (
+                "No hay suficientes fechas para evaluar tres periodos temporales "
+                "independientes de 7 días."
+            ),
+        }
+
+    mascaras_entrenamiento = [
+        np.asarray([fecha < corte for fecha in fechas], dtype=np.bool_)
+        for corte in cortes
+    ]
+    if any(mascara.sum() < 30 for mascara in mascaras_entrenamiento):
+        return {
+            "estado": "datos_insuficientes",
+            "mensaje": (
+                "No hay suficientes observaciones de entrenamiento en todos los "
+                "cortes temporales para evaluar el modelo."
+            ),
         }
 
     modelos = {
@@ -351,29 +400,76 @@ def entrenar_modelo():
     }
     resultados_modelos = {}
     for nombre, candidato in modelos.items():
-        candidato.fit(X[mascara_entrenamiento], y[mascara_entrenamiento])
-        reales, predicciones, baseline, fechas_prueba, ventanas = _evaluar_horizonte(
-            candidato, series, product_codes, corte, horizonte=7
-        )
-        if len(reales) >= 7:
+        reales_modelo = []
+        predicciones_modelo = []
+        baseline_modelo = []
+        fechas_modelo = []
+        productos_modelo = []
+        cortes_modelo = []
+        ventanas_modelo = 0
+
+        for corte, mascara_entrenamiento in zip(cortes, mascaras_entrenamiento):
+            candidato.fit(X[mascara_entrenamiento], y[mascara_entrenamiento])
+            (
+                reales,
+                predicciones,
+                baseline,
+                fechas_prueba,
+                ventanas,
+                productos_prueba,
+            ) = _evaluar_horizonte(
+                candidato,
+                series,
+                product_codes,
+                corte,
+                max_ventanas=1,
+            )
+            if len(reales) < EVALUATION_HORIZON_DAYS:
+                continue
+
+            reales_modelo.extend(reales)
+            predicciones_modelo.extend(predicciones)
+            baseline_modelo.extend(baseline)
+            fechas_modelo.extend(fechas_prueba)
+            productos_modelo.extend(productos_prueba)
+            ventanas_modelo += ventanas
+            cortes_modelo.append(
+                {
+                    "fecha_corte": corte.isoformat(),
+                    "fecha_inicio_prueba": min(fechas_prueba).isoformat(),
+                    "fecha_fin_prueba": max(fechas_prueba).isoformat(),
+                    "observaciones_entrenamiento": int(mascara_entrenamiento.sum()),
+                    "observaciones_prueba": len(reales),
+                    "mae": _mae(reales, predicciones),
+                    "mae_baseline_7_dias": _mae(reales, baseline),
+                    "ventanas_prueba_7_dias": ventanas,
+                }
+            )
+
+        if len(cortes_modelo) == len(cortes):
             resultados_modelos[nombre] = {
                 "modelo": candidato,
-                "reales": reales,
-                "predicciones": predicciones,
-                "baseline": baseline,
-                "fechas_prueba": fechas_prueba,
-                "ventanas": ventanas,
-                "mae": _mae(reales, predicciones),
+                "reales": reales_modelo,
+                "predicciones": predicciones_modelo,
+                "baseline": baseline_modelo,
+                "fechas_prueba": fechas_modelo,
+                "productos_prueba": productos_modelo,
+                "cortes": cortes_modelo,
+                "ventanas": ventanas_modelo,
+                "mae": _mae(reales_modelo, predicciones_modelo),
             }
 
     if not resultados_modelos:
         return {
             "estado": "datos_insuficientes",
-            "mensaje": "No hay un periodo futuro suficiente para evaluar una prediccion de 7 dias.",
+            "mensaje": (
+                "No hay suficientes productos con historial para completar los "
+                "tres periodos de evaluación de 7 días."
+            ),
         }
 
-    # Ambos algoritmos comparten el mismo corte cronologico y la misma referencia.
-    # Se selecciona por MAE fuera de muestra, antes de reajustar con todo el historial.
+    # Ambos algoritmos comparten los mismos cortes y referencias temporales.
+    # Se selecciona por MAE fuera de muestra antes de reajustar con todo el historial.
     algoritmo, mejor = min(
         resultados_modelos.items(), key=lambda elemento: elemento[1]["mae"]
     )
@@ -383,6 +479,8 @@ def entrenar_modelo():
     baseline = mejor["baseline"]
     fechas_prueba = mejor["fechas_prueba"]
     ventanas = mejor["ventanas"]
+    productos_prueba = mejor["productos_prueba"]
+    cortes_evaluacion = mejor["cortes"]
 
     y_prueba = np.asarray(reales, dtype=float)
     predicciones = np.asarray(predicciones, dtype=float)
@@ -397,17 +495,66 @@ def entrenar_modelo():
         else 0.0
     )
 
+    cortes_que_superan_baseline = sum(
+        corte["mae"] < corte["mae_baseline_7_dias"]
+        for corte in cortes_evaluacion
+    )
+    supera_baseline = (
+        mae_modelo < mae_baseline
+        and cortes_que_superan_baseline
+        >= (len(cortes_evaluacion) // 2 + 1)
+    )
+
+    precision_por_producto = []
+    for codigo_producto in product_codes:
+        indices = [
+            indice
+            for indice, codigo in enumerate(productos_prueba)
+            if codigo == codigo_producto
+        ]
+        if not indices:
+            continue
+        reales_producto = y_prueba[indices]
+        predicciones_producto = predicciones[indices]
+        baseline_producto = baseline[indices]
+        suma_real_producto = float(np.sum(np.abs(reales_producto)))
+        precision_por_producto.append(
+            {
+                "codigo_producto": codigo_producto,
+                "observaciones": len(indices),
+                "mae": _mae(reales_producto, predicciones_producto),
+                "mae_baseline_7_dias": _mae(reales_producto, baseline_producto),
+                "wape_porcentaje": (
+                    float(
+                        np.sum(np.abs(reales_producto - predicciones_producto))
+                        / suma_real_producto
+                        * 100
+                    )
+                    if suma_real_producto
+                    else None
+                ),
+                "supera_baseline": (
+                    _mae(reales_producto, predicciones_producto)
+                    < _mae(reales_producto, baseline_producto)
+                ),
+            }
+        )
+
     evaluacion = {
         "mae": mae_modelo,
         "rmse": rmse_modelo,
         "wape_porcentaje": wape,
         "mae_baseline_7_dias": mae_baseline,
-        "supera_baseline": mae_modelo < mae_baseline,
+        "supera_baseline": supera_baseline,
         "fecha_inicio_prueba": min(fechas_prueba).isoformat(),
         "fecha_fin_prueba": max(fechas_prueba).isoformat(),
         "ventanas_prueba_7_dias": ventanas,
-        "observaciones_entrenamiento": int(mascara_entrenamiento.sum()),
+        "cortes_evaluacion": cortes_evaluacion,
+        "cortes_que_superan_baseline": cortes_que_superan_baseline,
+        "cantidad_cortes": len(cortes_evaluacion),
+        "observaciones_entrenamiento": int(len(y)),
         "observaciones_prueba": int(len(y_prueba)),
+        "precision_por_producto": precision_por_producto,
         "modelos_comparados": {
             nombre: round(resultado["mae"], 4)
             for nombre, resultado in resultados_modelos.items()
@@ -418,9 +565,9 @@ def entrenar_modelo():
         return {
             "estado": "no_supera_baseline",
             "mensaje": (
-                "El mejor modelo evaluado no mejoro el error de la referencia "
-                "de ventas de hace 7 dias. No se activo el modelo; acumule mas historial "
-                "y vuelva a evaluar."
+                "El modelo no superó de forma consistente la referencia de ventas "
+                "de hace 7 días en la evaluación de varios periodos. No se activó; "
+                "acumule más historial y vuelva a evaluar."
             ),
             "evaluacion": evaluacion,
         }
@@ -432,6 +579,7 @@ def entrenar_modelo():
     fecha_firma_exclusiva = (fecha_fin_historial + timedelta(days=1)).isoformat()
     artefacto = {
         "modelo": modelo,
+        "version_validacion": EVALUATION_VERSION,
         "producto_codigos": product_codes,
         "fecha_entrenamiento": date.today().isoformat(),
         "fecha_fin_historial": fecha_fin_historial.isoformat(),
@@ -485,12 +633,19 @@ def entrenar_modelo():
 @st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def estado_modelo():
     try:
-        import joblib
         artefacto, almacenamiento = _cargar_artefacto()
         if artefacto is None:
             return {
                 "estado": "modelo_no_entrenado",
                 "mensaje": "Todavia no hay un modelo entrenado y validado.",
+            }
+        if artefacto.get("version_validacion") != EVALUATION_VERSION:
+            return {
+                "estado": "modelo_desactualizado",
+                "mensaje": (
+                    "El modelo guardado usa una evaluación anterior. "
+                    "Vuelva a entrenarlo para validar los tres periodos temporales."
+                ),
             }
         df_ventas = _obtener_ventas_diarias()
         firma_actual = _firma_historial(
@@ -542,15 +697,12 @@ def predecir_demanda(producto_id, dias_futuro=7):
         }
 
     try:
-        import joblib
+        artefacto, _ = _cargar_artefacto()
     except ImportError:
         return {
             "estado": "dependencia_faltante",
             "mensaje": "Instale las dependencias del proyecto con pip install -r requirements.txt.",
         }
-
-    try:
-        artefacto, _ = _cargar_artefacto()
     except Exception:
         return {
             "estado": "modelo_invalido",
@@ -560,6 +712,14 @@ def predecir_demanda(producto_id, dias_futuro=7):
         return {
             "estado": "modelo_no_entrenado",
             "mensaje": "Primero entrene y valide el modelo con el historial disponible.",
+        }
+    if artefacto.get("version_validacion") != EVALUATION_VERSION:
+        return {
+            "estado": "modelo_desactualizado",
+            "mensaje": (
+                "El modelo guardado usa una evaluación anterior. "
+                "Vuelva a entrenarlo para validar los tres periodos temporales."
+            ),
         }
 
     df_ventas = _obtener_ventas_diarias()
@@ -580,6 +740,8 @@ def predecir_demanda(producto_id, dias_futuro=7):
             "estado": "producto_no_encontrado",
             "mensaje": "El producto seleccionado ya no existe en la base de datos.",
         }
+    dias_entrega = int(producto.iloc[0]["dias_entrega"] or 0)
+    dias_futuro = max(dias_futuro, dias_entrega)
     codigo_producto = str(producto.iloc[0]["codigo"])
     product_codes = artefacto["producto_codigos"]
     if codigo_producto not in product_codes:
@@ -590,7 +752,7 @@ def predecir_demanda(producto_id, dias_futuro=7):
 
     series, ultima_fecha = _series_diarias(df_ventas)
     serie = series.get(codigo_producto)
-    if serie is None:
+    if serie is None or ultima_fecha is None:
         return {
             "estado": "sin_datos",
             "mensaje": "No existen ventas registradas para este producto.",
@@ -630,6 +792,8 @@ def predecir_demanda(producto_id, dias_futuro=7):
     return {
         "estado": "ok",
         "algoritmo": artefacto.get("algoritmo", "RandomForestRegressor"),
+        "dias_entrega": dias_entrega,
+        "dias_cobertura": dias_futuro,
         "dias_historicos": dias_historicos_observados,
         "fecha_base_prediccion": fecha_base.isoformat(),
         "fecha_ultima_venta_producto": fecha_ultima_venta_producto.isoformat(),
@@ -649,12 +813,18 @@ def analizar_productos():
     productos = obtener_productos()
     resultados = []
     for _, producto in productos.iterrows():
-        resultado = predecir_demanda(int(producto["id"]))
+        dias_cobertura = max(7, int(producto["dias_entrega"] or 0))
+        resultado = predecir_demanda(
+            int(producto["id"]),
+            dias_futuro=dias_cobertura,
+        )
         fila = {
             "codigo": producto["codigo"],
             "nombre": producto["nombre"],
             "stock_actual": int(producto["stock"]),
             "stock_minimo": int(producto["stock_minimo"]),
+            "dias_entrega": int(producto["dias_entrega"] or 0),
+            "dias_cobertura": dias_cobertura,
             "estado_prediccion": resultado["estado"],
         }
         if resultado["estado"] == "ok":
@@ -666,8 +836,12 @@ def analizar_productos():
             )
             fila.update(
                 {
-                    "demanda_7_dias": round(resultado["demanda_predicha"], 2),
-                    "promedio_diario": round(resultado["promedio_diario_predicho"], 2),
+                    "demanda_cobertura": round(
+                        float(resultado["demanda_predicha"]), 2
+                    ),
+                    "promedio_diario": round(
+                        float(resultado["promedio_diario_predicho"]), 2
+                    ),
                     "cantidad_sugerida": int(np.ceil(faltante)),
                     "recomendacion": (
                         f"Evaluar reposicion de aproximadamente {int(np.ceil(faltante))} unidad(es)."
@@ -679,7 +853,7 @@ def analizar_productos():
         else:
             fila.update(
                 {
-                    "demanda_7_dias": None,
+                    "demanda_cobertura": None,
                     "promedio_diario": None,
                     "cantidad_sugerida": None,
                     "recomendacion": resultado["mensaje"],
