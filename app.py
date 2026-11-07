@@ -103,41 +103,61 @@ def estilizar_tabla_por_tema(marco):
     tema_claro = bool(st.session_state.get("tema_blanco", False))
     if tema_claro:
         color_fondo = "#ffffff"
-        color_fila_alterna = "#f0f6f5"
-        color_texto = "#24383e"
-        color_cabecera = "#dceeea"
-        color_texto_cabecera = "#185b52"
-        color_borde = "#cbdedb"
+        color_fila_alterna = "#f5f8f9"
+        color_texto = "#31444b"
+        color_cabecera = "#eaf1f2"
+        color_texto_cabecera = "#344f56"
+        color_borde = "#dfe7e9"
     else:
-        color_fondo = "#131d24"
-        color_fila_alterna = "#1a2931"
-        color_texto = "#e3edf0"
-        color_cabecera = "#193b3c"
-        color_texto_cabecera = "#a9e3d8"
-        color_borde = "#30454b"
+        color_fondo = "#171f24"
+        color_fila_alterna = "#1b252b"
+        color_texto = "#dce4e7"
+        color_cabecera = "#222d33"
+        color_texto_cabecera = "#edf2f4"
+        color_borde = "#303d44"
 
     return marco.style.set_properties(
         **{
             "background-color": color_fondo,
             "color": color_texto,
-            "border-color": color_borde,
         }
     ).set_table_styles(
         [
             {
-                "selector": "th",
+                "selector": "table",
+                "props": [
+                    ("border-collapse", "separate"),
+                    ("border-spacing", "0"),
+                    ("border", f"1px solid {color_borde}"),
+                    ("border-radius", "12px"),
+                    ("overflow", "hidden"),
+                ],
+            },
+            {
+                "selector": "th, th.col_heading",
                 "props": [
                     ("background-color", color_cabecera),
                     ("color", color_texto_cabecera),
-                    ("border-color", color_borde),
-                    ("font-weight", "700"),
+                    ("border-bottom", f"1px solid {color_borde}"),
+                    ("font-weight", "650"),
+                    ("font-size", "0.78rem"),
+                    ("letter-spacing", "0.025em"),
+                    ("padding", "0.8rem 0.9rem"),
+                    ("white-space", "nowrap"),
+                ],
+            },
+            {
+                "selector": "tbody td",
+                "props": [
+                    ("border-bottom", f"1px solid {color_borde}"),
+                    ("padding", "0.78rem 0.9rem"),
+                    ("vertical-align", "middle"),
                 ],
             },
             {
                 "selector": "tbody tr:nth-child(even) td",
                 "props": [
                     ("background-color", color_fila_alterna),
-                    ("color", color_texto),
                 ],
             },
         ],
@@ -188,32 +208,11 @@ def mostrar_tabla_centrada(datos, *args, **kwargs):
 
 
 def estilizar_historial_ventas(marco):
-    """Aplica colores de alto contraste al historial según el tema elegido."""
-    tema_claro = bool(st.session_state.get("tema_blanco", False))
-    if tema_claro:
-        color_fondo = "#ffffff"
-        color_alterno = "#f0f6f5"
-        color_texto = "#24383e"
-        color_cabecera = "#dceeea"
-        color_texto_cabecera = "#185b52"
-        color_borde = "#cbdedb"
-    else:
-        color_fondo = "#131d24"
-        color_alterno = "#1a2931"
-        color_texto = "#e3edf0"
-        color_cabecera = "#193b3c"
-        color_texto_cabecera = "#a9e3d8"
-        color_borde = "#30454b"
-
+    """Aplica alineación y estilo común al historial de ventas."""
     return (
-        marco.style
+        estilizar_tabla_por_tema(marco)
         .set_properties(
-            **{
-                "background-color": color_fondo,
-                "color": color_texto,
-                "border-color": color_borde,
-                "text-align": "left",
-            }
+            **{"text-align": "left"}
         )
         .set_properties(
             subset=["N.º", "Cantidad"],
@@ -227,29 +226,7 @@ def estilizar_historial_ventas(marco):
             [
                 {
                     "selector": "th, th.col_heading",
-                    "props": [
-                        ("background-color", color_cabecera),
-                        ("color", color_texto_cabecera),
-                        ("border-color", color_borde),
-                        ("font-weight", "700"),
-                        ("text-align", "center"),
-                        ("padding", "0.7rem 0.8rem"),
-                        ("white-space", "nowrap"),
-                    ],
-                },
-                {
-                    "selector": "td",
-                    "props": [
-                        ("border-color", color_borde),
-                        ("padding", "0.65rem 0.8rem"),
-                    ],
-                },
-                {
-                    "selector": "tbody tr:nth-child(even) td",
-                    "props": [
-                        ("background-color", color_alterno),
-                        ("color", color_texto),
-                    ],
+                    "props": [("text-align", "center")],
                 },
             ],
             overwrite=False,
@@ -10710,36 +10687,43 @@ body:not(:has(.hb-light-mode)) [data-testid="stMain"] [data-testid="stAlert"]:ha
 
 /* Acabado final uniforme para superficies de datos en tema oscuro. */
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] {
-    border: 1px solid #303b44 !important;
+    border: 1px solid #303d44 !important;
     border-radius: 12px !important;
-    background: #141c24 !important;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, .16) !important;
+    background: #171f24 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .14) !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] table {
     border-collapse: separate !important;
     border-spacing: 0 !important;
-    background: #141c24 !important;
+    background: #171f24 !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] th {
-    background: #202b34 !important;
+    padding: .8rem .9rem !important;
+    background: #222d33 !important;
     color: #edf3f5 !important;
-    border-color: #303b44 !important;
+    border-color: #303d44 !important;
+    font-size: .78rem !important;
+    font-weight: 650 !important;
+    letter-spacing: .025em !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] td {
-    background: #151e26 !important;
-    color: #dce5e9 !important;
-    border-color: #2b3740 !important;
+    padding: .78rem .9rem !important;
+    background: #171f24 !important;
+    color: #dce4e7 !important;
+    border-color: #303d44 !important;
+    vertical-align: middle !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: #1a252e !important;
+    background: #1b252b !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stTable"] tbody tr:hover td {
-    background: #202d36 !important;
+    background: #222f37 !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stDataFrame"] {
-    border: 1px solid #303b44 !important;
+    border: 1px solid #303d44 !important;
     border-radius: 12px !important;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, .16) !important;
+    background: #171f24 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .14) !important;
 }
 body:not(:has(.hb-light-mode)) [data-testid="stVerticalBlockBorderWrapper"],
 body:not(:has(.hb-light-mode)) [data-testid="stForm"],
@@ -11835,10 +11819,10 @@ body:has(.hb-light-mode) [data-testid="stTabs"] button[role="tab"][aria-selected
 body:has(.hb-light-mode) [data-testid="stTable"] {
     padding: 0 !important;
     border: 1px solid var(--hb-light-border-strong) !important;
-    border-radius: 11px !important;
+    border-radius: 12px !important;
     background: #fff !important;
     overflow: auto !important;
-    box-shadow: 0 2px 8px rgba(24,55,65,.04) !important;
+    box-shadow: 0 3px 12px rgba(24,55,65,.055) !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] table {
     border-collapse: separate !important;
@@ -11847,30 +11831,33 @@ body:has(.hb-light-mode) [data-testid="stTable"] table {
     background: #fff !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] th {
-    border-bottom: 1px solid #c8d8dc !important;
-    background: #eef4f5 !important;
-    color: #30464e !important;
-    font-size: .74rem !important;
-    font-weight: 750 !important;
-    letter-spacing: .035em !important;
+    padding: .8rem .9rem !important;
+    border-bottom: 1px solid #dfe7e9 !important;
+    background: #eaf1f2 !important;
+    color: #344f56 !important;
+    font-size: .78rem !important;
+    font-weight: 650 !important;
+    letter-spacing: .025em !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] td {
-    border-bottom: 1px solid #e4ebed !important;
+    padding: .78rem .9rem !important;
+    border-bottom: 1px solid #dfe7e9 !important;
     background: #fff !important;
-    color: #30434b !important;
+    color: #31444b !important;
+    vertical-align: middle !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:nth-child(even) td {
-    background: #f8fafb !important;
+    background: #f5f8f9 !important;
 }
 body:has(.hb-light-mode) [data-testid="stTable"] tbody tr:hover td {
-    background: #eff7f5 !important;
+    background: #edf5f3 !important;
 }
 body:has(.hb-light-mode) [data-testid="stDataFrame"] {
     border: 1px solid var(--hb-light-border-strong) !important;
-    border-radius: 11px !important;
+    border-radius: 12px !important;
     background: #fff !important;
     overflow: hidden !important;
-    box-shadow: 0 2px 8px rgba(24,55,65,.04) !important;
+    box-shadow: 0 3px 12px rgba(24,55,65,.055) !important;
 }
 body:has(.hb-light-mode) [data-testid="stAlert"] {
     border: 1px solid var(--hb-light-border) !important;
@@ -14483,6 +14470,164 @@ st.markdown("""
     #root [data-testid="stMain"] .st-key-admin_create_password [data-baseweb="input"]:focus-within,
     #root [data-testid="stMain"] .st-key-admin_confirm_password [data-baseweb="input"]:focus-within,
     #root [data-testid="stMain"] .st-key-admin_create_role [data-baseweb="select"]:focus-within > div {
+        border-color: #78a69f !important;
+        box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
+    }
+    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) {
+        overflow: hidden !important;
+        border: 1px solid #d5dfe2 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #29373d !important;
+        box-shadow: none !important;
+    }
+    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) *,
+    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #29373d !important;
+        box-shadow: none !important;
+    }
+    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) input {
+        border: 0 !important;
+        color-scheme: light !important;
+        caret-color: #397d74 !important;
+    }
+    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
+        border: 0 !important;
+        border-left: 1px solid #e1e7e9 !important;
+        border-radius: 0 !important;
+        background: #f7f9fa !important;
+        color: #526a72 !important;
+    }
+    body #root [data-testid="stMain"] [data-testid="stForm"]:has(input[type="password"]) [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]):focus-within {
+        border-color: #78a69f !important;
+        box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
+    }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"],
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: .45rem 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlertContainer"],
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlertContainer"] {
+        min-height: 0 !important;
+        padding: .8rem 1rem !important;
+        border: 1px solid transparent !important;
+        border-left-width: 1px !important;
+        border-radius: 9px !important;
+        box-shadow: none !important;
+    }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"] p,
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"] p {
+        margin: 0 !important;
+        font-size: .86rem !important;
+        line-height: 1.5 !important;
+    }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
+        border-color: #d7e3eb !important;
+        background: #f3f7fa !important;
+        color: #405a6b !important;
+    }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) p { color: #405a6b !important; }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) svg { color: #607f97 !important; }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
+        border-color: #ece2c9 !important;
+        background: #faf7ef !important;
+        color: #655637 !important;
+    }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) p { color: #655637 !important; }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) svg { color: #967637 !important; }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+        border-color: #d6e6db !important;
+        background: #f1f7f3 !important;
+        color: #3e5e49 !important;
+    }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) p { color: #3e5e49 !important; }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) svg { color: #4b8061 !important; }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
+        border-color: #efdada !important;
+        background: #faf2f2 !important;
+        color: #75494c !important;
+    }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) p { color: #75494c !important; }
+    body:has(.hb-light-mode) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) svg { color: #a45f62 !important; }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"] {
+        border-color: #34444d !important;
+        background: #1b272e !important;
+        color: #d8e3e8 !important;
+    }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) p { color: #d8e3e8 !important; }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) svg { color: #8aaec5 !important; }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
+        border-color: #4a412e !important;
+        background: #29261e !important;
+        color: #e5dfce !important;
+    }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) p { color: #e5dfce !important; }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) svg { color: #c6a665 !important; }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+        border-color: #35483c !important;
+        background: #1d2924 !important;
+        color: #d8e6dc !important;
+    }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) p { color: #d8e6dc !important; }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) svg { color: #83b092 !important; }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
+        border-color: #50363a !important;
+        background: #2d2225 !important;
+        color: #eadbdd !important;
+    }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) p { color: #eadbdd !important; }
+    body:not(:has(.hb-light-mode)) #root [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) svg { color: #d09598 !important; }
+    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputRootElement"],
+    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputRootElement"],
+    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputRootElement"],
+    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputRootElement"] {
+        overflow: hidden !important;
+        border: 1px solid #d5dfe2 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        background-image: none !important;
+        color: #29373d !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputRootElement"] *,
+    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputRootElement"] *,
+    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputRootElement"] *,
+    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputRootElement"] * {
+        background-color: #ffffff !important;
+        color: #29373d !important;
+        box-shadow: none !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputField"],
+    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputField"],
+    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputField"],
+    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputField"] {
+        border: 0 !important;
+        color: #29373d !important;
+        color-scheme: light !important;
+        caret-color: #397d74 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputRootElement"] button,
+    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputRootElement"] button,
+    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputRootElement"] button,
+    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputRootElement"] button {
+        border: 0 !important;
+        border-left: 1px solid #e1e7e9 !important;
+        border-radius: 0 !important;
+        background: #f7f9fa !important;
+        color: #526a72 !important;
+    }
+    #root [data-testid="stMain"] .st-key-admin_create_name [data-testid="stTextInputRootElement"]:focus-within,
+    #root [data-testid="stMain"] .st-key-admin_create_username [data-testid="stTextInputRootElement"]:focus-within,
+    #root [data-testid="stMain"] .st-key-admin_create_password [data-testid="stTextInputRootElement"]:focus-within,
+    #root [data-testid="stMain"] .st-key-admin_confirm_password [data-testid="stTextInputRootElement"]:focus-within {
         border-color: #78a69f !important;
         box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
     }
