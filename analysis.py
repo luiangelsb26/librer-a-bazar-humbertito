@@ -79,7 +79,7 @@ def productos_mas_vendidos(df: pd.DataFrame | None = None) -> pd.DataFrame:
             as_index=False,
         ).agg({"cantidad": "sum"})
     )
-    resultado = resultado.sort_values(by="cantidad", ascending=False)
+    resultado = resultado.nlargest(len(resultado), columns="cantidad")
     resultado = resultado.rename(columns={"cantidad": "unidades_vendidas"})
 
     return resultado
