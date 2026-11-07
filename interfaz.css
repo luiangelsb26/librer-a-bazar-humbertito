@@ -1,0 +1,317 @@
+/* El tema nativo gobierna los widgets y los colores de los elementos propios. */
+.stApp {
+    --hb-surface: light-dark(#fff, #1b1e29);
+    --hb-border: light-dark(#d5dfec, #34394b);
+    --hb-muted: light-dark(#4f617b, #b1bad0);
+    --hb-accent: light-dark(#2457b4, #c8b7ff);
+    --hb-tint: light-dark(#e8eff9, #272c3d);
+    --hb-banner: light-dark(#edf3ff, #222238);
+    --hb-row-alt: light-dark(#f5f8fd, #212532);
+}
+
+[data-testid="stMainBlockContainer"] {
+    max-width: 91rem;
+    padding-inline: clamp(1rem, 3vw, 3rem);
+    padding-top: 4.5rem;
+}
+
+[data-testid="stMain"] :is(h1, h2, h3) {
+    letter-spacing: -0.025em;
+}
+
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0.8rem;
+}
+
+[data-testid="stSidebar"] [class*="st-key-menu_"] button {
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 2.55rem;
+}
+
+[data-testid="stSidebar"] [class*="st-key-menu_"] button > div {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+[data-testid="stSidebar"] hr {
+    margin-block: 0.3rem;
+}
+
+[data-testid="stSidebar"] .sidebar-section-title {
+    padding-bottom: 0.35rem;
+}
+
+.sidebar-brand,
+.user-card,
+.quick-card,
+.hb-hero,
+.login-brand,
+[data-testid="stMetric"],
+:is(.st-key-dashboard_ventas_panel, .st-key-dashboard_productos_panel,
+    .st-key-user_transfer_panel, .st-key-user_delete_panel) {
+    background: var(--hb-surface);
+    border: 1px solid var(--hb-border);
+    border-radius: 0.85rem;
+    padding: 1rem;
+}
+
+.sidebar-brand {
+    border-inline-start: 3px solid var(--hb-accent);
+}
+
+.user-card,
+.quick-card {
+    margin-bottom: 0.65rem;
+}
+
+.quick-card {
+    min-height: 8.5rem;
+}
+
+[data-testid="stMetric"] {
+    min-height: 8.7rem;
+}
+
+.sidebar-brand-kicker,
+.sidebar-section-title,
+.hb-hero-eyebrow,
+.login-brand-kicker,
+.login-setup-step {
+    color: var(--hb-accent);
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.sidebar-brand-title,
+.user-name {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.sidebar-brand-title {
+    margin-block: 0.35rem;
+    line-height: 1.25;
+}
+
+.sidebar-brand-subtitle,
+.user-role,
+.quick-card p,
+.hb-hero p,
+.login-brand-subtitle,
+.login-form-intro p,
+.sales-form-intro p {
+    color: var(--hb-muted);
+    margin: 0;
+}
+
+.sidebar-brand-subtitle,
+.user-role,
+.user-status-text {
+    font-size: 0.83rem;
+}
+
+.user-card-top {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.35rem;
+    color: var(--hb-muted);
+}
+
+.user-status-dot {
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: light-dark(#168369, #6ad4c2);
+}
+
+.hb-hero,
+.login-brand {
+    background: var(--hb-banner);
+    padding: clamp(1.3rem, 4vw, 2.75rem);
+}
+
+.hb-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.hb-hero h1 {
+    font-size: clamp(1.8rem, 3vw, 3rem);
+    line-height: 1.12;
+    margin-block: 0.55rem 0.75rem;
+    padding: 0;
+}
+
+.hb-hero p {
+    max-width: 58ch;
+}
+
+.hb-hero-date,
+.login-brand-feature {
+    background: var(--hb-surface);
+    color: var(--hb-accent);
+    border: 1px solid var(--hb-border);
+    border-radius: 2rem;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 650;
+}
+
+.quick-card strong {
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.quick-card p {
+    font-size: 0.9rem;
+}
+
+[data-testid="stMetricLabel"] p {
+    color: var(--hb-muted);
+    white-space: normal;
+}
+
+[data-testid="stMetricValue"] {
+    font-size: clamp(1.15rem, 1.8vw, 1.65rem);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+}
+
+.stApp:has(.hb-access) [data-testid="stSidebar"],
+.stApp:has(.hb-access) [data-testid="stExpandSidebarButton"] {
+    display: none;
+}
+
+.stApp:has(.hb-access) [data-testid="stMainBlockContainer"] {
+    max-width: 72rem;
+    padding-top: clamp(4.5rem, 13vh, 9rem);
+}
+
+.login-brand-head,
+.login-brand-features {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.login-brand-mark {
+    display: grid;
+    place-items: center;
+    background: var(--hb-surface);
+    border: 1px solid var(--hb-border);
+    border-radius: 0.9rem;
+    color: var(--hb-accent);
+    width: 3.25rem;
+    height: 3.25rem;
+}
+
+.login-brand-mark svg {
+    width: 1.85rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.login-brand-name,
+.login-brand-name-strong {
+    display: inline;
+    font-weight: 700;
+    font-size: 1.15rem;
+}
+
+.login-brand-title {
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    line-height: 1.1;
+    font-weight: 750;
+    letter-spacing: -0.04em;
+    margin-block: 1.6rem 0.7rem;
+}
+
+.login-brand-features {
+    margin-top: 1.4rem;
+}
+
+[data-testid="stForm"] {
+    background: var(--hb-surface);
+}
+
+:is(.st-key-sales_form_panel, .st-key-purchase_form_panel, .st-key-admin_create_panel) [data-testid="stForm"] {
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+
+[data-testid="stTable"] table {
+    font-variant-numeric: tabular-nums;
+    background: var(--hb-surface);
+}
+
+[data-testid="stTable"] :is(th, td) {
+    padding: 0.6rem 0.85rem;
+    border-inline: 0;
+    border-color: var(--hb-border);
+}
+
+[data-testid="stTable"] thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--hb-tint);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+[data-testid="stTable"] thead th p {
+    color: inherit;
+    white-space: nowrap;
+}
+
+[data-testid="stTable"] thead th {
+    color: var(--hb-accent);
+}
+
+[data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: var(--hb-row-alt);
+}
+
+[data-testid="stTable"] tbody tr:hover td {
+    background: var(--hb-tint);
+}
+
+.st-key-sales_history_table td:not(:nth-child(5)) p {
+    white-space: nowrap;
+}
+
+.st-key-sales_history_table td:nth-child(5) {
+    min-width: 12rem;
+}
+
+.st-key-sales_history_table :is(th, td):is(:nth-child(4), :nth-child(n+6)) p {
+    text-align: right;
+}
+
+@media (max-width: 640px) {
+    .hb-hero,
+    .login-brand {
+        padding: 1.15rem;
+    }
+
+    .quick-card,
+    [data-testid="stMetric"] {
+        min-height: 0;
+    }
+
+    [data-testid="stTable"] :is(th, td) {
+        padding-inline: 0.65rem;
+    }
+}
