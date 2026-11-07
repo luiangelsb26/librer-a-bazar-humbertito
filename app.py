@@ -301,7 +301,11 @@ def invalidar_cache_operativa():
         "obtener_stock",
         "obtener_productos",
         "obtener_ventas",
+        "resumen_historial_ventas",
         "obtener_compras",
+        "obtener_compras_pagina",
+        "contar_lineas_compras_historial",
+        "generar_excel_historial_compras",
         "obtener_auditoria_compras",
         "obtener_historial_importaciones_compras",
         "resumen_dashboard",
@@ -313,6 +317,8 @@ def invalidar_cache_operativa():
         funcion = globals().get(nombre)
         if callable(funcion) and hasattr(funcion, "clear"):
             funcion.clear()
+
+    st.session_state.pop("historial_compras_excel_bytes", None)
 
     # Estos módulos se importan solo en las secciones que los necesitan.
     invalidaciones_por_modulo = {
@@ -6477,9 +6483,39 @@ def importar_ventas_excel(filas, hash_archivo, nombre_archivo, descontar_stock=F
         con.close()
 
 @st.cache_data(ttl=120, show_spinner=False, max_entries=1)
-def obtener_ventas():
+def resumen_historial_ventas():
     con = conectar()
     try:
+        return con.execute("""
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(unidades), 0),
+                COALESCE(SUM(total), 0),
+                COALESCE(SUM(stock_desconocido), 0),
+                COALESCE(SUM(lineas), 0)
+            FROM (
+                SELECT
+                    v.id,
+                    MAX(v.total) AS total,
+                    SUM(dv.cantidad) AS unidades,
+                    MAX(CASE WHEN v.stock_descontado IS NULL THEN 1 ELSE 0 END)
+                        AS stock_desconocido,
+                    COUNT(*) AS lineas
+                FROM ventas v
+                JOIN detalle_ventas dv ON v.id = dv.venta_id
+                JOIN productos p ON dv.producto_id = p.id
+                GROUP BY v.id
+            ) resumen
+        """).fetchone()
+    finally:
+        con.close()
+
+
+@st.cache_data(ttl=120, show_spinner=False, max_entries=10)
+def obtener_ventas(pagina=1, filas_por_pagina=50):
+    con = conectar()
+    try:
+        offset = (pagina - 1) * filas_por_pagina
         return con.execute("""
             SELECT v.id, v.fecha, v.total, p.nombre, dv.cantidad,
                    dv.precio_unitario, dv.subtotal, v.stock_descontado,
@@ -6488,7 +6524,8 @@ def obtener_ventas():
             JOIN detalle_ventas dv ON v.id = dv.venta_id
             JOIN productos p ON dv.producto_id = p.id
             ORDER BY dv.id ASC
-        """).fetchall()
+            LIMIT ? OFFSET ?
+        """, (filas_por_pagina, offset)).fetchall()
     finally:
         con.close()
 
@@ -6718,9 +6755,18 @@ def obtener_compras():
                 ON dc.producto_id = p.id
             ORDER BY c.id DESC
         """).fetchall()
-    except Exception:
+    except Exception as error:
         # Permite consultar compras existentes si aún no se aplicó la migración
         # que añade el número de comprobante al esquema remoto.
+        es_columna_referencia_ausente = (
+            getattr(error, "sqlstate", None) == "42703"
+            or (
+                "no such column" in str(error).lower()
+                and "referencia" in str(error).lower()
+            )
+        )
+        if not es_columna_referencia_ausente:
+            raise
         con.close()
         con = conectar()
         return con.execute("""
@@ -6740,6 +6786,73 @@ def obtener_compras():
                 ON dc.producto_id = p.id
             ORDER BY c.id DESC
         """).fetchall()
+    finally:
+        con.close()
+
+
+@st.cache_data(ttl=120, show_spinner=False, max_entries=10)
+def obtener_compras_pagina(pagina=1, filas_por_pagina=50):
+    con = conectar()
+    offset = (pagina - 1) * filas_por_pagina
+    try:
+        return con.execute("""
+            SELECT
+                c.id,
+                c.fecha,
+                c.total,
+                c.referencia,
+                p.nombre,
+                dc.cantidad,
+                dc.precio_unitario,
+                dc.subtotal
+            FROM compras c
+            JOIN detalle_compras dc ON c.id = dc.compra_id
+            JOIN productos p ON dc.producto_id = p.id
+            ORDER BY c.id DESC, dc.id DESC
+            LIMIT ? OFFSET ?
+        """, (filas_por_pagina, offset)).fetchall()
+    except Exception as error:
+        es_columna_referencia_ausente = (
+            getattr(error, "sqlstate", None) == "42703"
+            or (
+                "no such column" in str(error).lower()
+                and "referencia" in str(error).lower()
+            )
+        )
+        if not es_columna_referencia_ausente:
+            raise
+        con.close()
+        con = conectar()
+        return con.execute("""
+            SELECT
+                c.id,
+                c.fecha,
+                c.total,
+                NULL,
+                p.nombre,
+                dc.cantidad,
+                dc.precio_unitario,
+                dc.subtotal
+            FROM compras c
+            JOIN detalle_compras dc ON c.id = dc.compra_id
+            JOIN productos p ON dc.producto_id = p.id
+            ORDER BY c.id DESC, dc.id DESC
+            LIMIT ? OFFSET ?
+        """, (filas_por_pagina, offset)).fetchall()
+    finally:
+        con.close()
+
+
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
+def contar_lineas_compras_historial():
+    con = conectar()
+    try:
+        return con.execute("""
+            SELECT COUNT(*)
+            FROM compras c
+            JOIN detalle_compras dc ON c.id = dc.compra_id
+            JOIN productos p ON dc.producto_id = p.id
+        """).fetchone()[0]
     finally:
         con.close()
 
@@ -6824,8 +6937,22 @@ def registrar_compra(producto_id, cantidad, precio_compra):
         con.close()
 
 
-@st.cache_data(ttl=60, show_spinner=False, max_entries=3)
-def generar_excel_historial_compras(tabla):
+@st.cache_data(ttl=120, show_spinner=False, max_entries=1)
+def generar_excel_historial_compras():
+    compras = obtener_compras()
+    tabla = [
+        {
+            "Compra": compra[0],
+            "Fecha": compra[1],
+            "Total": formatear_soles(compra[2]),
+            "Comprobante": compra[3] or "",
+            "Producto": compra[4],
+            "Cantidad": compra[5],
+            "Precio unitario": formatear_soles(compra[6]),
+            "Subtotal": formatear_soles(compra[7]),
+        }
+        for compra in compras
+    ]
     salida = io.BytesIO()
     with pd.ExcelWriter(salida, engine="openpyxl") as escritor:
         pd.DataFrame(tabla).to_excel(
@@ -6834,6 +6961,7 @@ def generar_excel_historial_compras(tabla):
     return salida.getvalue()
 
 
+@st.cache_data(ttl=3600, show_spinner=False, max_entries=1)
 def crear_plantilla_compras_excel():
     """Crea una plantilla vacía y una hoja separada con filas de demostración."""
     archivo = io.BytesIO()
@@ -8794,18 +8922,18 @@ elif menu == "Ventas":
 
         st.subheader("Historial de ventas", icon=":material/history:")
 
-        ventas = obtener_ventas()
+        ventas_resumen = resumen_historial_ventas()
+        cantidad_ventas_total = int(ventas_resumen[0] or 0)
+        unidades_vendidas = int(ventas_resumen[1] or 0)
+        total_vendido = float(ventas_resumen[2] or 0)
+        ventas_stock_desconocido = int(ventas_resumen[3] or 0)
+        total_lineas_ventas = int(ventas_resumen[4] or 0)
 
-        if ventas:
-            total_por_venta = {
-                venta[0]: float(venta[2] or 0)
-                for venta in ventas
-            }
-            unidades_vendidas = sum(int(venta[4] or 0) for venta in ventas)
+        if total_lineas_ventas:
             resumen_ventas = st.columns(3)
             resumen_ventas[0].metric(
                 "Ventas registradas",
-                formatear_numero_es(len(total_por_venta)),
+                formatear_numero_es(cantidad_ventas_total),
             )
             resumen_ventas[1].metric(
                 "Unidades vendidas",
@@ -8813,21 +8941,8 @@ elif menu == "Ventas":
             )
             resumen_ventas[2].metric(
                 "Total vendido",
-                formatear_soles(sum(total_por_venta.values())),
+                formatear_soles(total_vendido),
             )
-
-            tabla = []
-            for numero_fila, venta in enumerate(ventas, start=1):
-                tabla.append({
-                    "N.º": numero_fila,
-                    "Boleta": venta[8] or "",
-                    "Fecha": venta[1],
-                    "Total de boleta": f"S/ {venta[2]:.2f}",
-                    "Producto": venta[3],
-                    "Cantidad": venta[4],
-                    "Precio unitario": f"S/ {venta[5]:.2f}",
-                    "Subtotal de línea": f"S/ {venta[6]:.2f}",
-                })
 
             st.caption(
                 "Cada fila corresponde a un producto. El total de boleta se repite "
@@ -8835,31 +8950,49 @@ elif menu == "Ventas":
             )
 
             filas_por_pagina = 50
-            total_paginas = (len(tabla) + filas_por_pagina - 1) // filas_por_pagina
+            total_paginas = (
+                total_lineas_ventas + filas_por_pagina - 1
+            ) // filas_por_pagina
             if total_paginas > 1:
-                opciones_pagina = list(range(1, total_paginas + 1))
-                if st.session_state.get("historial_ventas_pagina", 1) not in opciones_pagina:
-                    st.session_state["historial_ventas_pagina"] = 1
-                pagina = st.selectbox(
+                clave_pagina = "historial_ventas_pagina_db"
+                pagina_guardada = st.session_state.get(clave_pagina, 1)
+                if not 1 <= int(pagina_guardada) <= total_paginas:
+                    st.session_state[clave_pagina] = 1
+                pagina = st.number_input(
                     "Página del historial",
-                    options=opciones_pagina,
-                    format_func=lambda numero: f"Página {numero} de {total_paginas}",
-                    key="historial_ventas_pagina",
-                    width=220,
+                    min_value=1,
+                    max_value=total_paginas,
+                    step=1,
+                    key=clave_pagina,
+                    help=f"Página actual de {total_paginas}.",
                 )
             else:
                 pagina = 1
 
             inicio = (pagina - 1) * filas_por_pagina
-            fin = min(inicio + filas_por_pagina, len(tabla))
+            fin = min(inicio + filas_por_pagina, total_lineas_ventas)
+            ventas = obtener_ventas(pagina, filas_por_pagina)
+            tabla_pagina = [
+                {
+                    "N.º": inicio + indice + 1,
+                    "Boleta": venta[8] or "",
+                    "Fecha": venta[1],
+                    "Total de boleta": f"S/ {venta[2]:.2f}",
+                    "Producto": venta[3],
+                    "Cantidad": venta[4],
+                    "Precio unitario": f"S/ {venta[5]:.2f}",
+                    "Subtotal de línea": f"S/ {venta[6]:.2f}",
+                }
+                for indice, venta in enumerate(ventas)
+            ]
             st.caption(
                 f"Mostrando filas {formatear_numero_es(inicio + 1)}–"
-                f"{formatear_numero_es(fin)} de {formatear_numero_es(len(tabla))}."
+                f"{formatear_numero_es(fin)} de "
+                f"{formatear_numero_es(total_lineas_ventas)}."
             )
-            tabla_pagina = pd.DataFrame(tabla[inicio:fin])
             with st.container(key="sales_history_table"):
                 st.table(
-                    estilizar_historial_ventas(tabla_pagina),
+                    estilizar_historial_ventas(pd.DataFrame(tabla_pagina)),
                     width="stretch",
                     height=520,
                     hide_index=True,
@@ -8928,12 +9061,6 @@ elif menu == "Ventas":
                             st.rerun()
                         else:
                             st.error(mensaje)
-
-            cantidad_ventas_total = len({venta[0] for venta in ventas})
-            estados_stock_ventas = {venta[0]: venta[7] for venta in ventas}
-            ventas_stock_desconocido = sum(
-                estado is None for estado in estados_stock_ventas.values()
-            )
 
             with st.expander("Eliminar todas las ventas"):
                 with st.container(key="delete_all_sales_warning", border=True):
@@ -9168,7 +9295,6 @@ elif menu == "Compras":
                             st.error(mensaje)
 
         st.subheader("Historial de compras")
-
         try:
             auditoria = obtener_auditoria_compras()
             m1, m2, m3, m4 = st.columns(4)
@@ -9199,14 +9325,39 @@ elif menu == "Compras":
                 f"No se pudo mostrar la auditoría de compras. Detalle: {error}"
             )
 
-        compras = obtener_compras()
+        total_lineas_compras = contar_lineas_compras_historial()
+        if total_lineas_compras:
+            filas_por_pagina = 50
+            total_paginas_compras = (
+                total_lineas_compras + filas_por_pagina - 1
+            ) // filas_por_pagina
+            clave_pagina_compras = "historial_compras_pagina_db"
+            if total_paginas_compras > 1:
+                pagina_guardada = st.session_state.get(clave_pagina_compras, 1)
+                if not 1 <= int(pagina_guardada) <= total_paginas_compras:
+                    st.session_state[clave_pagina_compras] = 1
+                pagina_compras = st.number_input(
+                    "Página del historial",
+                    min_value=1,
+                    max_value=total_paginas_compras,
+                    step=1,
+                    key=clave_pagina_compras,
+                    help=f"Página actual de {total_paginas_compras}.",
+                )
+            else:
+                pagina_compras = 1
 
-        if compras:
-
-            tabla = []
-
-            for compra in compras:
-                tabla.append({
+            inicio_compras = (pagina_compras - 1) * filas_por_pagina
+            fin_compras = min(
+                inicio_compras + filas_por_pagina,
+                total_lineas_compras,
+            )
+            compras = obtener_compras_pagina(
+                pagina_compras,
+                filas_por_pagina,
+            )
+            tabla = [
+                {
                     "Compra": compra[0],
                     "Fecha": compra[1],
                     "Total": formatear_soles(compra[2]),
@@ -9214,9 +9365,15 @@ elif menu == "Compras":
                     "Producto": compra[4],
                     "Cantidad": compra[5],
                     "Precio unitario": formatear_soles(compra[6]),
-                    "Subtotal": formatear_soles(compra[7])
-                })
-
+                    "Subtotal": formatear_soles(compra[7]),
+                }
+                for compra in compras
+            ]
+            st.caption(
+                f"Mostrando filas {formatear_numero_es(inicio_compras + 1)}–"
+                f"{formatear_numero_es(fin_compras)} de "
+                f"{formatear_numero_es(total_lineas_compras)}."
+            )
             mostrar_tabla_centrada(
                 tabla,
                 width="stretch",
@@ -9224,16 +9381,33 @@ elif menu == "Compras":
                 height=420,
             )
 
-            st.download_button(
-                "Descargar historial de compras en Excel",
-                data=generar_excel_historial_compras(tabla),
-                file_name="historial_compras_humbertito.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="descargar_historial_compras",
+            if st.session_state.get("historial_compras_excel_bytes") is None:
+                st.caption(
+                    "El archivo incluye todas las compras, no solo la página visible."
+                )
+                if st.button(
+                    "Preparar historial completo en Excel",
+                    key="preparar_historial_compras_excel",
+                ):
+                    with st.spinner("Preparando historial completo..."):
+                        st.session_state["historial_compras_excel_bytes"] = (
+                            generar_excel_historial_compras()
+                        )
+            archivo_compras_excel = st.session_state.get(
+                "historial_compras_excel_bytes"
             )
-
+            if archivo_compras_excel is not None:
+                st.download_button(
+                    "Descargar historial de compras en Excel",
+                    data=archivo_compras_excel,
+                    file_name="historial_compras_humbertito.xlsx",
+                    mime=(
+                        "application/vnd.openxmlformats-officedocument."
+                        "spreadsheetml.sheet"
+                    ),
+                    key="descargar_historial_compras",
+                )
         else:
-
             st.info("Todavía no hay compras registradas.")
 
         try:
@@ -13076,8 +13250,146 @@ st.markdown("""
 body:not(:has(.hb-light-mode)) #root [data-testid="stTextInput"] [data-baseweb="input"]:has(input[type="password"]) button {
     border-left-color: #35454d !important;
 }
-.st-key-theme_toggle {
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+body:has(.hb-light-mode) {
+    --hb-ui-text: #26383e;
+    --hb-ui-muted: #647780;
+    --hb-ui-border: #dce6e9;
+    --hb-ui-surface: #ffffff;
+    --hb-ui-surface-soft: #f5f8f9;
+    --hb-ui-shadow: 0 8px 24px rgba(34, 52, 61, .055);
+    --hb-ui-focus: rgba(47, 143, 131, .24);
+}
+body:not(:has(.hb-light-mode)) {
+    --hb-ui-text: #e5ecef;
+    --hb-ui-muted: #aab9bf;
+    --hb-ui-border: #34434b;
+    --hb-ui-surface: #19242b;
+    --hb-ui-surface-soft: #202c33;
+    --hb-ui-shadow: 0 8px 24px rgba(0, 0, 0, .16);
+    --hb-ui-focus: rgba(102, 190, 177, .28);
+}
+
+#root [data-testid="stTooltipIcon"],
+#root [data-testid="stTooltipIcon"] button,
+#root [data-testid="stWidgetLabel"] button[aria-label*="Help" i] {
     display: none !important;
+}
+
+#root .st-key-theme_toggle {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+#root .st-key-theme_toggle button {
+    min-width: 6.15rem !important;
+    min-height: 2.55rem !important;
+    border-radius: 999px !important;
+    font-weight: 650 !important;
+    letter-spacing: .01em !important;
+    transition: transform .18s ease, box-shadow .18s ease,
+        background-color .18s ease, border-color .18s ease !important;
+}
+#root .st-key-theme_toggle button:hover {
+    transform: translateY(-1px) !important;
+}
+#root .st-key-theme_toggle button:focus-visible {
+    outline: 3px solid var(--hb-ui-focus) !important;
+    outline-offset: 3px !important;
+}
+
+[data-testid="stMainBlockContainer"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 1560px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-top: 2rem !important;
+}
+[data-testid="stMain"] h1,
+[data-testid="stMain"] h2,
+[data-testid="stMain"] h3 {
+    letter-spacing: -.025em !important;
+    line-height: 1.25 !important;
+}
+[data-testid="stMain"] h2,
+[data-testid="stMain"] h3 {
+    color: var(--hb-ui-text) !important;
+}
+[data-testid="stMain"] [data-testid="stCaptionContainer"] {
+    color: var(--hb-ui-muted);
+}
+
+[data-testid="stMain"] .stButton > button,
+[data-testid="stMain"] .stDownloadButton > button,
+[data-testid="stMain"] [data-testid="stFormSubmitButton"] > button {
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    transition: transform .16s ease, box-shadow .16s ease,
+        border-color .16s ease, background-color .16s ease !important;
+}
+[data-testid="stMain"] .stButton > button:hover,
+[data-testid="stMain"] .stDownloadButton > button:hover,
+[data-testid="stMain"] [data-testid="stFormSubmitButton"] > button:hover {
+    transform: translateY(-1px);
+}
+[data-testid="stMain"] input:focus,
+[data-testid="stMain"] textarea:focus,
+[data-testid="stMain"] [data-baseweb="select"]:focus-within,
+[data-testid="stMain"] [data-testid="stNumberInput"] button:focus-visible {
+    outline: 3px solid var(--hb-ui-focus) !important;
+    outline-offset: 1px !important;
+}
+[data-testid="stMain"] [data-testid="stMetric"],
+[data-testid="stMain"] [data-testid="stForm"],
+[data-testid="stMain"] [data-testid="stExpander"],
+[data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: var(--hb-ui-border) !important;
+    box-shadow: var(--hb-ui-shadow);
+}
+[data-testid="stMain"] [data-testid="stAlert"] {
+    border-radius: 12px !important;
+}
+[data-testid="stMain"] [data-testid="stTable"] table {
+    border-radius: 12px !important;
+    border-color: var(--hb-ui-border) !important;
+}
+[data-testid="stSidebar"] {
+    border-right-color: var(--hb-ui-border) !important;
+}
+[data-testid="stSidebar"] hr {
+    opacity: .7;
+}
+
+@media (max-width: 640px) {
+    [data-testid="stMainBlockContainer"] {
+        padding: 1.5rem .85rem 2rem !important;
+    }
+    #root .st-key-theme_toggle button {
+        min-width: 2.55rem !important;
+        width: 2.55rem !important;
+        min-height: 2.55rem !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        font-size: 0 !important;
+    }
+    #root .st-key-theme_toggle button p {
+        display: none !important;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    #root .st-key-theme_toggle button,
+    [data-testid="stMain"] .stButton > button,
+    [data-testid="stMain"] .stDownloadButton > button,
+    [data-testid="stMain"] [data-testid="stFormSubmitButton"] > button {
+        transition: none !important;
+        transform: none !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
