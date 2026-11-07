@@ -358,7 +358,8 @@ def crear_base_datos() -> None:
             id {id_type},
             fecha TEXT NOT NULL,
             total {real_type} NOT NULL,
-            referencia TEXT
+            referencia TEXT,
+            hash_importacion TEXT
         )
     """)
 
@@ -366,6 +367,8 @@ def crear_base_datos() -> None:
         columnas_compras = cursor.execute("PRAGMA table_info(compras)").fetchall()
         if not any(columna[1] == "referencia" for columna in columnas_compras):
             cursor.execute("ALTER TABLE compras ADD COLUMN referencia TEXT")
+        if not any(columna[1] == "hash_importacion" for columna in columnas_compras):
+            cursor.execute("ALTER TABLE compras ADD COLUMN hash_importacion TEXT")
 
     cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS detalle_compras (
@@ -395,6 +398,10 @@ def crear_base_datos() -> None:
     cursor.execute(
         "CREATE INDEX IF NOT EXISTS idx_detalle_compras_producto_id "
         "ON detalle_compras(producto_id)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_compras_hash_importacion "
+        "ON compras(hash_importacion)"
     )
 
     conexion.commit()

@@ -103,18 +103,18 @@ def estilizar_tabla_por_tema(marco):
     tema_claro = bool(st.session_state.get("tema_blanco", False))
     if tema_claro:
         color_fondo = "#ffffff"
-        color_fila_alterna = "#f5f8f9"
-        color_texto = "#31444b"
-        color_cabecera = "#eaf1f2"
-        color_texto_cabecera = "#344f56"
-        color_borde = "#dfe7e9"
+        color_fila_alterna = "#f7f9fa"
+        color_texto = "#34474e"
+        color_cabecera = "#eef3f4"
+        color_texto_cabecera = "#344b52"
+        color_borde = "#dce5e8"
     else:
         color_fondo = "#171f24"
         color_fila_alterna = "#1b252b"
-        color_texto = "#dce4e7"
+        color_texto = "#dbe3e6"
         color_cabecera = "#222d33"
-        color_texto_cabecera = "#edf2f4"
-        color_borde = "#303d44"
+        color_texto_cabecera = "#e6eef0"
+        color_borde = "#303c43"
 
     return marco.style.set_properties(
         **{
@@ -264,6 +264,10 @@ def seleccionar_modulo(nombre):
     st.session_state.menu = nombre
 
 
+def limpiar_confirmacion_borrado_importacion():
+    st.session_state["confirmar_borrar_importacion_compras"] = False
+
+
 def invalidar_cache_operativa():
     """Refresca solo lecturas del negocio, conservando cachés de plantillas."""
     funciones_app = (
@@ -274,6 +278,7 @@ def invalidar_cache_operativa():
         "resumen_historial_ventas",
         "obtener_compras",
         "obtener_compras_pagina",
+        "obtener_auditoria_compras",
         "contar_lineas_compras_historial",
         "generar_excel_historial_compras",
         "obtener_auditoria_compras",
@@ -7206,27 +7211,125 @@ def obtener_auditoria_compras():
 
 @st.cache_data(ttl=30, show_spinner=False, max_entries=1)
 def obtener_historial_importaciones_compras():
-    """Devuelve cargas; sin la columna nueva, el estado del stock queda desconocido."""
+    """Devuelve importaciones y compras vinculadas cuando el esquema lo permite."""
+    con = conectar()
+
+    def consultar_historial(incluir_vinculos, incluir_estado_stock):
+        campo_stock = (
+            "i.stock_actualizado"
+            if incluir_estado_stock
+            else "NULL AS stock_actualizado"
+        )
+        campo_vinculos = (
+            "(SELECT COUNT(*) FROM compras c "
+            "WHERE c.hash_importacion = i.hash_archivo) AS compras_vinculadas"
+            if incluir_vinculos
+            else "0 AS compras_vinculadas"
+        )
+        return con.execute(f"""
+            SELECT
+                i.hash_archivo,
+                i.nombre_archivo,
+                i.fecha_importacion,
+                i.filas_importadas,
+                {campo_stock},
+                {campo_vinculos}
+            FROM importaciones_compras i
+            ORDER BY i.fecha_importacion DESC
+        """).fetchall()
+
+    try:
+        incluir_vinculos = True
+        incluir_estado_stock = True
+        while True:
+            try:
+                return consultar_historial(
+                    incluir_vinculos,
+                    incluir_estado_stock,
+                )
+            except Exception as error:
+                mensaje_error = str(error).lower()
+                columna_ausente = (
+                    "no such column" in mensaje_error
+                    or "does not exist" in mensaje_error
+                )
+                if (
+                    columna_ausente
+                    and "hash_importacion" in mensaje_error
+                    and incluir_vinculos
+                ):
+                    incluir_vinculos = False
+                elif (
+                    columna_ausente
+                    and "stock_actualizado" in mensaje_error
+                    and incluir_estado_stock
+                ):
+                    incluir_estado_stock = False
+                else:
+                    raise
+                con.rollback()
+    finally:
+        con.close()
+
+
+def eliminar_importacion_compras(hash_archivo):
+    """Elimina la auditoría y las compras vinculadas, sin modificar el stock."""
     con = conectar()
     try:
+        importacion = con.execute(
+            "SELECT 1 FROM importaciones_compras WHERE hash_archivo = ?",
+            (hash_archivo,),
+        ).fetchone()
+        if importacion is None:
+            return False, "La importación seleccionada ya no existe."
+
         try:
-            return con.execute("""
-                SELECT nombre_archivo, fecha_importacion, filas_importadas, stock_actualizado
-                FROM importaciones_compras
-                ORDER BY fecha_importacion DESC
-            """).fetchall()
+            compras_vinculadas = con.execute(
+                "SELECT COUNT(*) FROM compras WHERE hash_importacion = ?",
+                (hash_archivo,),
+            ).fetchone()[0]
         except Exception as error:
-            # La migración puede no haberse aplicado todavía en bases antiguas.
-            # Recupera el historial y marca esos estados como desconocidos.
-            if "stock_actualizado" not in str(error).lower():
+            mensaje_error = str(error).lower()
+            if "hash_importacion" not in mensaje_error or not (
+                "no such column" in mensaje_error
+                or "does not exist" in mensaje_error
+            ):
                 raise
             con.rollback()
-            return con.execute("""
-                SELECT nombre_archivo, fecha_importacion, filas_importadas,
-                       NULL AS stock_actualizado
-                FROM importaciones_compras
-                ORDER BY fecha_importacion DESC
-            """).fetchall()
+            compras_vinculadas = 0
+
+        if compras_vinculadas:
+            con.execute(
+                "DELETE FROM detalle_compras "
+                "WHERE compra_id IN ("
+                "SELECT id FROM compras WHERE hash_importacion = ?"
+                ")",
+                (hash_archivo,),
+            )
+            con.execute(
+                "DELETE FROM compras WHERE hash_importacion = ?",
+                (hash_archivo,),
+            )
+        con.execute(
+            "DELETE FROM importaciones_compras WHERE hash_archivo = ?",
+            (hash_archivo,),
+        )
+        con.commit()
+        invalidar_cache_operativa()
+
+        if compras_vinculadas:
+            return True, (
+                f"Se eliminó la auditoría y {compras_vinculadas} compra(s) vinculada(s). "
+                "El stock no se modificó."
+            )
+        return True, (
+            "Se eliminó el registro de auditoría. Las compras de esta importación "
+            "son anteriores al seguimiento de origen y se conservaron. El stock "
+            "no se modificó."
+        )
+    except Exception as error:
+        con.rollback()
+        return False, f"No se pudo eliminar la importación: {error}"
     finally:
         con.close()
 
@@ -7267,12 +7370,13 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
                     detalles_grupo[0]["fecha"],
                     round(sum(detalle["subtotal"] for detalle in detalles_grupo), 2),
                     referencia or None,
+                    hash_archivo,
                 )
                 for (_, referencia), detalles_grupo in lote
             ]
-            marcadores = ", ".join("(?, ?, ?)" for _ in valores)
+            marcadores = ", ".join("(?, ?, ?, ?)" for _ in valores)
             compras_insertadas = con.execute(
-                "INSERT INTO compras (fecha, total, referencia) VALUES "
+                "INSERT INTO compras (fecha, total, referencia, hash_importacion) VALUES "
                 f"{marcadores} RETURNING id, fecha, referencia",
                 tuple(valor for compra in valores for valor in compra),
             ).fetchall()
@@ -7342,6 +7446,12 @@ def importar_compras_excel(filas, hash_archivo, nombre_archivo, actualizar_stock
         )
     except Exception as e:
         con.rollback()
+        if "hash_importacion" in str(e).lower():
+            return False, (
+                "No se pudo registrar el origen de las compras. Ejecuta primero "
+                "migracion_vincular_compras_importacion.sql en Supabase y vuelve "
+                "a importar el archivo."
+            )
         return False, f"No se pudo importar el archivo de compras: {e}"
     finally:
         con.close()
@@ -9393,24 +9503,115 @@ elif menu == "Compras":
             if historial_importaciones:
                 with st.expander("Auditoría de archivos importados"):
                     filas_importaciones = []
-                    for nombre, fecha, filas, stock_actualizado in historial_importaciones:
+                    importaciones_por_hash = {}
+                    for (
+                        hash_archivo,
+                        nombre,
+                        fecha,
+                        filas,
+                        stock_actualizado,
+                        compras_vinculadas,
+                    ) in historial_importaciones:
                         if stock_actualizado is None:
                             estado_stock = "No registrado en esa versión"
                         else:
                             estado_stock = "Sí" if stock_actualizado else "No"
+                        estado_compras = (
+                            f"{compras_vinculadas} compra(s)"
+                            if compras_vinculadas
+                            else "Anterior · sin vínculo"
+                        )
                         filas_importaciones.append({
                             "Archivo": nombre,
                             "Fecha de importación": fecha,
                             "Filas": filas,
                             "Sumó al stock": estado_stock,
+                            "Compras identificadas": estado_compras,
                         })
+                        importaciones_por_hash[hash_archivo] = (
+                            nombre,
+                            fecha,
+                            compras_vinculadas,
+                            stock_actualizado,
+                        )
                     mostrar_tabla_centrada(
                         filas_importaciones,
                         width="stretch",
                         hide_index=True,
                     )
-        except Exception:
-            st.caption("No se pudo cargar el historial de archivos importados.")
+
+                    hash_seleccionado = st.selectbox(
+                        "Selecciona la importación que deseas borrar",
+                        options=list(importaciones_por_hash),
+                        format_func=lambda hash_archivo: (
+                            f"{importaciones_por_hash[hash_archivo][0]} · "
+                            f"{importaciones_por_hash[hash_archivo][1]}"
+                        ),
+                        key="seleccionar_importacion_compras_borrar",
+                        on_change=limpiar_confirmacion_borrado_importacion,
+                    )
+                    (
+                        nombre_seleccionado,
+                        _,
+                        compras_seleccionadas,
+                        stock_actualizado_seleccionado,
+                    ) = importaciones_por_hash[hash_seleccionado]
+                    es_importacion_anterior = compras_seleccionadas == 0
+                    if es_importacion_anterior:
+                        st.info(
+                            "Esta importación es anterior al seguimiento por archivo. "
+                            "Solo se borrará su registro de auditoría; las compras "
+                            "existentes se conservarán."
+                        )
+                    else:
+                        st.warning(
+                            f"Se borrarán la auditoría y {compras_seleccionadas} "
+                            "compra(s) vinculada(s). El stock no se modificará."
+                        )
+                    if stock_actualizado_seleccionado:
+                        st.caption(
+                            "La importación indicó que sumó unidades al stock. "
+                            "El borrado no resta esas unidades."
+                        )
+
+                    with st.form(key="form_borrar_importacion_compras"):
+                        confirmado = st.checkbox(
+                            (
+                                f"Confirmo borrar solo la auditoría de "
+                                f"{nombre_seleccionado}"
+                                if es_importacion_anterior
+                                else (
+                                    f"Confirmo borrar la auditoría y las compras "
+                                    f"de {nombre_seleccionado}; el stock quedará "
+                                    "sin cambios"
+                                )
+                            ),
+                            key="confirmar_borrar_importacion_compras",
+                        )
+                        borrar_importacion = st.form_submit_button(
+                            "Borrar importación seleccionada",
+                            type="secondary",
+                            icon=":material/delete:",
+                        )
+
+                    if borrar_importacion:
+                        if not confirmado:
+                            st.error(
+                                "Confirma el borrado antes de continuar."
+                            )
+                        else:
+                            ok, mensaje = eliminar_importacion_compras(
+                                hash_seleccionado
+                            )
+                            if ok:
+                                notificar_exito(mensaje)
+                                st.rerun()
+                            else:
+                                st.error(mensaje)
+        except Exception as error:
+            st.error(
+                f"No se pudo cargar el historial de archivos importados: {error}"
+            )
 
 
 # ==========================================================
@@ -13291,13 +13492,13 @@ body:has(.hb-light-mode) {
     --hb-ui-surface-soft: #f5f8f9;
     --hb-ui-shadow: 0 8px 24px rgba(34, 52, 61, .055);
     --hb-ui-focus: rgba(47, 143, 131, .24);
-    --hb-ui-table-head: #dceeea;
-    --hb-ui-table-head-text: #185b52;
+    --hb-ui-table-head: #eef3f4;
+    --hb-ui-table-head-text: #344b52;
     --hb-ui-table-row: #ffffff;
-    --hb-ui-table-row-alt: #f0f6f5;
-    --hb-ui-table-text: #24383e;
-    --hb-ui-table-border: #cbdedb;
-    --hb-ui-table-hover: #e2f2ef;
+    --hb-ui-table-row-alt: #f7f9fa;
+    --hb-ui-table-text: #34474e;
+    --hb-ui-table-border: #dce5e8;
+    --hb-ui-table-hover: #eef5f4;
 }
 body:not(:has(.hb-light-mode)) {
     --hb-ui-text: #e5ecef;
@@ -13307,13 +13508,13 @@ body:not(:has(.hb-light-mode)) {
     --hb-ui-surface-soft: #1a2931;
     --hb-ui-shadow: 0 8px 24px rgba(0, 0, 0, .16);
     --hb-ui-focus: rgba(102, 190, 177, .28);
-    --hb-ui-table-head: #193b3c;
-    --hb-ui-table-head-text: #a9e3d8;
-    --hb-ui-table-row: #131d24;
-    --hb-ui-table-row-alt: #1a2931;
-    --hb-ui-table-text: #e3edf0;
-    --hb-ui-table-border: #30454b;
-    --hb-ui-table-hover: #25413f;
+    --hb-ui-table-head: #222d33;
+    --hb-ui-table-head-text: #e6eef0;
+    --hb-ui-table-row: #171f24;
+    --hb-ui-table-row-alt: #1b252b;
+    --hb-ui-table-text: #dbe3e6;
+    --hb-ui-table-border: #303c43;
+    --hb-ui-table-hover: #222e34;
 }
 
 #root [data-testid="stTooltipIcon"],
@@ -14632,4 +14833,132 @@ st.markdown("""
         box-shadow: 0 0 0 2px rgba(57, 125, 116, .12) !important;
     }
     </style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    border: 1px solid #dce5e8 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    box-shadow: 0 3px 12px rgba(30, 55, 64, .055) !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] table {
+    width: 100% !important;
+    border: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    background: #ffffff !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] thead th {
+    padding: .8rem .9rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid #dce5e8 !important;
+    background: #eef3f4 !important;
+    color: #52666d !important;
+    font-size: .75rem !important;
+    font-weight: 650 !important;
+    letter-spacing: .035em !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] tbody td {
+    padding: .78rem .9rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid #e8edef !important;
+    background: #ffffff !important;
+    color: #34474e !important;
+    vertical-align: middle !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: #f7f9fa !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
+    background: #eef5f4 !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    border: 1px solid #303c43 !important;
+    border-radius: 12px !important;
+    background: #171f24 !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .16) !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] table {
+    width: 100% !important;
+    border: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    background: #171f24 !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] thead th {
+    padding: .8rem .9rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid #303c43 !important;
+    background: #222d33 !important;
+    color: #bdcbd0 !important;
+    font-size: .75rem !important;
+    font-weight: 650 !important;
+    letter-spacing: .035em !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] tbody td {
+    padding: .78rem .9rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid #29363d !important;
+    background: #171f24 !important;
+    color: #dbe3e6 !important;
+    vertical-align: middle !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:nth-child(even) td {
+    background: #1b252b !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:hover td {
+    background: #222e34 !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stTable"] tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] [data-testid="stDataFrame"] {
+    overflow: hidden !important;
+    border: 1px solid #dce5e8 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    box-shadow: 0 3px 12px rgba(30, 55, 64, .055) !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] [data-testid="stDataFrame"] {
+    overflow: hidden !important;
+    border: 1px solid #303c43 !important;
+    border-radius: 12px !important;
+    background: #171f24 !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .16) !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button {
+    border: 1px solid #e8c9c5 !important;
+    background: #fff6f5 !important;
+    color: #943f37 !important;
+}
+body:has(.hb-light-mode) #root [data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button:hover {
+    border-color: #d7aaa4 !important;
+    background: #fcebe9 !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button {
+    border: 1px solid #563b39 !important;
+    background: #2b2021 !important;
+    color: #f0c4bd !important;
+}
+body:not(:has(.hb-light-mode)) #root [data-testid="stMain"] .st-key-form_borrar_importacion_compras [data-testid="stFormSubmitButton"] button:hover {
+    border-color: #76504c !important;
+    background: #352627 !important;
+}
+@media (max-width: 640px) {
+    #root [data-testid="stMain"] [data-testid="stTable"] th,
+    #root [data-testid="stMain"] [data-testid="stTable"] td {
+        padding: .62rem .68rem !important;
+        font-size: .78rem !important;
+    }
+}
+</style>
 """, unsafe_allow_html=True)

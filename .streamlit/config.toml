@@ -10,8 +10,8 @@ baseRadius = "12px"
 buttonRadius = "10px"
 showWidgetBorder = true
 showSidebarBorder = true
-dataframeHeaderBackgroundColor = "#202A30"
-dataframeBorderColor = "#2B373D"
+dataframeHeaderBackgroundColor = "#222D33"
+dataframeBorderColor = "#303C43"
 baseFontSize = 15
 baseFontWeight = 400
 headingFontWeights = [650, 650, 600, 550, 500, 500]
@@ -39,8 +39,8 @@ backgroundColor = "#F4F6F7"
 secondaryBackgroundColor = "#FFFFFF"
 textColor = "#29373D"
 borderColor = "#DFE5E7"
-dataframeHeaderBackgroundColor = "#F0F4F5"
-dataframeBorderColor = "#E1E7E9"
+dataframeHeaderBackgroundColor = "#EEF3F4"
+dataframeBorderColor = "#DCE5E8"
 
 [theme.light.sidebar]
 backgroundColor = "#FFFFFF"
@@ -54,8 +54,8 @@ backgroundColor = "#11181D"
 secondaryBackgroundColor = "#171F24"
 textColor = "#E1E8EB"
 borderColor = "#2B373D"
-dataframeHeaderBackgroundColor = "#202A30"
-dataframeBorderColor = "#2B373D"
+dataframeHeaderBackgroundColor = "#222D33"
+dataframeBorderColor = "#303C43"
 
 [theme.dark.sidebar]
 backgroundColor = "#141C21"
