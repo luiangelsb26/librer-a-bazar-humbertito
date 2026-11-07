@@ -3,76 +3,102 @@ import logging
 import os
 import sqlite3
 import threading
+from collections.abc import Iterable, Sequence
 from pathlib import Path
+from typing import Any
 
 # Ubicación de la base de datos local
 DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-_DATABASE_URL = os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_URL")
+_database_url: str | None = (
+    os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_URL")
+)
 
 # Si la conexión a Supabase falla, la app debe seguir funcionando con sqlite local.
-_FALLBACK_SQLITE = False
-_POSTGRES_POOL = None
+_fallback_sqlite = False
+_postgres_pool: Any | None = None
 _POOL_LOCK = threading.Lock()
 _LOGGER = logging.getLogger(__name__)
 
 
 class _CursorPostgres:
-    def __init__(self, cursor):
+    def __init__(self, cursor: Any) -> None:
         self._cursor = cursor
 
-    def execute(self, consulta, parametros=()):
+    def execute(
+        self,
+        consulta: str,
+        parametros: Sequence[Any] = (),
+    ) -> _CursorPostgres:
         self._cursor.execute(consulta.replace("?", "%s"), parametros)
         return self
 
-    def executemany(self, consulta, parametros):
+    def executemany(
+        self,
+        consulta: str,
+        parametros: Iterable[Sequence[Any]],
+    ) -> _CursorPostgres:
         self._cursor.executemany(consulta.replace("?", "%s"), parametros)
         return self
 
-    def fetchone(self):
+    def fetchone(self) -> Any:
         return self._cursor.fetchone()
 
-    def fetchmany(self, cantidad=None):
+    def fetchmany(self, cantidad: int | None = None) -> list[Any]:
         if cantidad is None:
             return self._cursor.fetchmany()
         return self._cursor.fetchmany(cantidad)
 
-    def fetchall(self):
+    def fetchall(self) -> list[Any]:
         return self._cursor.fetchall()
 
-    def close(self):
+    def close(self) -> None:
         self._cursor.close()
 
     @property
-    def rowcount(self):
+    def rowcount(self) -> int:
         return self._cursor.rowcount
 
     @property
-    def description(self):
+    def description(self) -> Any:
         return self._cursor.description
 
 
 class _ConexionPostgres:
-    def __init__(self, conexion, pool=None):
+    def __init__(self, conexion: Any, pool: Any | None = None) -> None:
         self._conexion = conexion
         self._pool = pool
 
-    def cursor(self):
+    def cursor(self) -> _CursorPostgres:
+        if self._conexion is None:
+            raise RuntimeError("La conexión a la base de datos ya está cerrada.")
         return _CursorPostgres(self._conexion.cursor())
 
-    def execute(self, consulta, parametros=()):
+    def execute(
+        self,
+        consulta: str,
+        parametros: Sequence[Any] = (),
+    ) -> _CursorPostgres:
         return self.cursor().execute(consulta, parametros)
 
-    def executemany(self, consulta, parametros):
+    def executemany(
+        self,
+        consulta: str,
+        parametros: Iterable[Sequence[Any]],
+    ) -> _CursorPostgres:
         return self.cursor().executemany(consulta, parametros)
 
-    def commit(self):
+    def commit(self) -> None:
+        if self._conexion is None:
+            raise RuntimeError("La conexión a la base de datos ya está cerrada.")
         self._conexion.commit()
 
-    def rollback(self):
+    def rollback(self) -> None:
+        if self._conexion is None:
+            raise RuntimeError("La conexión a la base de datos ya está cerrada.")
         self._conexion.rollback()
 
-    def close(self):
+    def close(self) -> None:
         conexion = self._conexion
         if conexion is None:
             return
@@ -83,17 +109,25 @@ class _ConexionPostgres:
             self._pool.putconn(conexion)
 
 
-def _obtener_pool_postgres():
-    """Crea una piscina pequeña compartida para reutilizar conexiones TLS."""
-    global _POSTGRES_POOL
+DatabaseConnection = sqlite3.Connection | _ConexionPostgres
 
-    if _POSTGRES_POOL is None:
+
+def _obtener_pool_postgres() -> Any:
+    """Crea una piscina pequeña compartida para reutilizar conexiones TLS."""
+    global _postgres_pool
+
+    if _postgres_pool is None:
         with _POOL_LOCK:
-            if _POSTGRES_POOL is None:
+            if _postgres_pool is None:
                 from psycopg_pool import ConnectionPool
 
-                _POSTGRES_POOL = ConnectionPool(
-                    conninfo=_DATABASE_URL,
+                if _database_url is None:
+                    raise RuntimeError(
+                        "No se configuró la URL de conexión de PostgreSQL."
+                    )
+
+                _postgres_pool = ConnectionPool(
+                    conninfo=_database_url,
                     # Keep the app-side pool small. Supabase's transaction-mode
                     # pooler (port 6543) multiplexes these client connections.
                     min_size=1,
@@ -107,22 +141,22 @@ def _obtener_pool_postgres():
                         "prepare_threshold": None,
                     },
                 )
-                atexit.register(_POSTGRES_POOL.close)
-    return _POSTGRES_POOL
+                atexit.register(_postgres_pool.close)
+    return _postgres_pool
 
 
-def configurar_desde_streamlit():
+def configurar_desde_streamlit() -> None:
     """Lee la URL de Supabase desde los secrets de Streamlit, si existe."""
-    global _DATABASE_URL
+    global _database_url
 
-    if _DATABASE_URL:
+    if _database_url:
         return
 
     import streamlit as st
     from streamlit.errors import StreamlitSecretNotFoundError
 
     try:
-        _DATABASE_URL = (
+        _database_url = (
             st.secrets.get("SUPABASE_DB_URL")
             or st.secrets.get("DATABASE_URL")
         )
@@ -130,11 +164,11 @@ def configurar_desde_streamlit():
         return
 
 
-def usar_supabase():
-    return bool(_DATABASE_URL) and not _FALLBACK_SQLITE
+def usar_supabase() -> bool:
+    return bool(_database_url) and not _fallback_sqlite
 
 
-def es_error_integridad(error):
+def es_error_integridad(error: BaseException) -> bool:
     if isinstance(error, sqlite3.IntegrityError):
         return True
 
@@ -146,15 +180,15 @@ def es_error_integridad(error):
     return isinstance(error, IntegrityError)
 
 
-def conectar():
+def conectar() -> DatabaseConnection:
     """Conecta a Supabase si está configurado; si falla, usa SQLite local."""
-    global _DATABASE_URL, _FALLBACK_SQLITE
+    global _database_url, _fallback_sqlite
 
-    if _DATABASE_URL and not _FALLBACK_SQLITE:
+    if _database_url and not _fallback_sqlite:
         try:
             import psycopg
         except ModuleNotFoundError:
-            _FALLBACK_SQLITE = True
+            _fallback_sqlite = True
             return sqlite3.connect(DB_PATH)
 
         try:
@@ -164,14 +198,14 @@ def conectar():
             try:
                 return _ConexionPostgres(
                     psycopg.connect(
-                        _DATABASE_URL,
+                        _database_url,
                         connect_timeout=8,
                         sslmode="require",
                     )
                 )
             except Exception:
-                _FALLBACK_SQLITE = True
-                _DATABASE_URL = None
+                _fallback_sqlite = True
+                _database_url = None
                 return sqlite3.connect(DB_PATH)
 
         pool = None
@@ -195,14 +229,14 @@ def conectar():
                 pool.close()
             except Exception:
                 pass
-        _FALLBACK_SQLITE = True
-        _DATABASE_URL = None
+        _fallback_sqlite = True
+        _database_url = None
         return sqlite3.connect(DB_PATH)
 
     return sqlite3.connect(DB_PATH)
 
 
-def crear_base_datos():
+def crear_base_datos() -> None:
     """Crea las tablas principales en SQLite o PostgreSQL."""
     conexion = conectar()
 
@@ -337,7 +371,7 @@ def crear_base_datos():
     conexion.close()
 
 
-def reiniciar_datos():
+def reiniciar_datos() -> dict[str, int]:
     """Elimina todos los registros y conserva las tablas del sistema."""
     conexion = conectar()
 
@@ -352,7 +386,7 @@ def reiniciar_datos():
             "compras",
             "productos",
         )
-        registros_eliminados = {}
+        registros_eliminados: dict[str, int] = {}
 
         for tabla in tablas:
             registros_eliminados[tabla] = cursor.execute(

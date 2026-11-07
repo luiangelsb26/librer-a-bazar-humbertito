@@ -3,10 +3,11 @@
 from datetime import datetime
 from io import BytesIO
 from math import ceil
+from typing import Any, Mapping
 from xml.sax.saxutils import escape
 
 
-def construir_informe_prediccion(datos):
+def construir_informe_prediccion(datos: Mapping[str, Any]) -> bytes:
     """Devuelve un PDF de diagnóstico para una predicción completada."""
     from reportlab.lib import colors
     from reportlab.lib.enums import TA_CENTER, TA_LEFT

@@ -16,7 +16,7 @@ TABLAS = (
 BATCH_SIZE = 500
 
 
-def migrar():
+def migrar() -> None:
     database.configurar_desde_streamlit()
 
     if not database.usar_supabase():

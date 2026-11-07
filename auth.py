@@ -2,18 +2,28 @@ import hashlib
 import hmac
 import secrets
 from datetime import datetime
+from typing import Any, Literal, TypedDict
 import database
 
 
 PASSWORD_HASH_ITERATIONS = 600_000
 PASSWORD_HASH_PREFIX = "pbkdf2_sha256"
+RolUsuario = Literal["admin", "empleado"]
+
+
+class UsuarioAutenticado(TypedDict):
+    id: int
+    username: str
+    nombre: str
+    rol: RolUsuario
+    activo: int
 
 
 # ==========================================================
 # CONFIGURACIÓN DE LA BASE DE DATOS
 # ==========================================================
 
-def conectar():
+def conectar() -> database.DatabaseConnection:
     return database.conectar()
 
 
@@ -21,7 +31,7 @@ def conectar():
 # SEGURIDAD DE CONTRASEÑAS
 # ==========================================================
 
-def generar_hash(password):
+def generar_hash(password: str) -> str:
     salt = secrets.token_bytes(16)
     digest = hashlib.pbkdf2_hmac(
         "sha256",
@@ -35,7 +45,7 @@ def generar_hash(password):
     )
 
 
-def verificar_hash(password, hash_guardado):
+def verificar_hash(password: str, hash_guardado: object) -> tuple[bool, bool]:
     """Verifica hashes PBKDF2 nuevos y SHA-256 legado durante la transición."""
     if not isinstance(hash_guardado, str):
         return False, False
@@ -69,7 +79,7 @@ def verificar_hash(password, hash_guardado):
 # INICIALIZAR TABLA DE USUARIOS
 # ==========================================================
 
-def inicializar():
+def inicializar() -> int:
     """Prepara usuarios y devuelve cuántas cuentas admin están activas."""
     con = conectar()
     try:
@@ -101,7 +111,7 @@ def inicializar():
 # CANTIDAD DE USUARIOS
 # ==========================================================
 
-def cantidad_usuarios():
+def cantidad_usuarios() -> int:
     con = conectar()
     try:
         cur = con.cursor()
@@ -114,11 +124,11 @@ def cantidad_usuarios():
 # ==========================================================
 
 def crear_usuario(
-    username,
-    nombre,
-    password,
-    rol="empleado"
-):
+    username: str,
+    nombre: str,
+    password: str,
+    rol: RolUsuario = "empleado",
+) -> None:
     username = username.strip()
     nombre = nombre.strip()
     if not username:
@@ -155,9 +165,9 @@ def crear_usuario(
 # ==========================================================
 
 def verificar_usuario(
-    username,
-    password
-):
+    username: str,
+    password: str,
+) -> UsuarioAutenticado | None:
     username = username.strip()
     con = conectar()
     try:
@@ -206,7 +216,7 @@ def verificar_usuario(
 # LISTAR USUARIOS
 # ==========================================================
 
-def listar_usuarios():
+def listar_usuarios() -> list[tuple[Any, ...]]:
     con = conectar()
     try:
         cur = con.cursor()
@@ -222,7 +232,10 @@ def listar_usuarios():
 # ELIMINAR USUARIO
 # ==========================================================
 
-def eliminar_usuario(usuario_id, usuario_actual_id=None):
+def eliminar_usuario(
+    usuario_id: int | str | None,
+    usuario_actual_id: int | str | None = None,
+) -> None:
     if usuario_id is None:
         raise ValueError("Selecciona una cuenta válida.")
 
@@ -275,9 +288,9 @@ def eliminar_usuario(usuario_id, usuario_actual_id=None):
 # ==========================================================
 
 def transferir_administracion_y_eliminar_usuario(
-    usuario_actual_id,
-    nuevo_admin_id,
-):
+    usuario_actual_id: int | str | None,
+    nuevo_admin_id: int | str | None,
+) -> None:
     if usuario_actual_id is None or nuevo_admin_id is None:
         raise ValueError("Selecciona una cuenta válida para el traspaso.")
 

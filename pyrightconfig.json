@@ -1,0 +1,23 @@
+{
+  "include": [
+    "auth.py",
+    "database.py",
+    "pdf_report.py",
+    "migrate_to_supabase.py"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "app.py",
+    "analysis.py",
+    "prediction.py",
+    "app_backup.py",
+    "prueba_historial.py"
+  ],
+  "pythonVersion": "3.14",
+  "typeCheckingMode": "basic",
+  "strict": [
+    "auth.py",
+    "database.py"
+  ],
+  "reportMissingTypeStubs": "none"
+}
