@@ -174,13 +174,6 @@ def preparar_tabla_usuarios():
 # AUTENTICACIÓN Y CONTROL DE ACCESO
 # ==========================================================
 
-if not database.usar_supabase():
-    st.warning(
-        "La app está usando SQLite local. Configura SUPABASE_DB_URL "
-        "en los Secrets de Streamlit Cloud para usar la base persistente."
-    )
-
-
 def contar_usuarios_acceso():
     """Usa el conteo obtenido al preparar la conexión de autenticación."""
     return preparar_tabla_usuarios()
@@ -192,141 +185,129 @@ def obtener_usuarios_administracion_cache():
 
 
 def pantalla_acceso():
-    
     try:
         administradores_activos = contar_usuarios_acceso()
-        error_revision_admin = False
     except Exception:
         administradores_activos = None
-        error_revision_admin = True
 
 
-    st.html('<span class="hb-access" hidden></span>')
-
-    brand_column, access_column = st.columns(
-        [1.08, 0.92],
-        vertical_alignment="center",
-        gap="large",
-    )
-    with brand_column:
-        st.markdown(
-            """
-            <section class="login-brand">
-                <div class="login-brand-head">
-                    <div class="login-brand-mark" aria-hidden="true">
-                        <svg viewBox="0 0 32 32" focusable="false">
-                            <path d="M16 8.2c-3.6-2.1-7.3-2.1-11-.8v16.8c3.7-1.3 7.4-1.3 11 .8m0-16.8c3.6-2.1 7.3-2.1 11-.8v16.8c-3.7-1.3-7.4-1.3-11 .8m0-16.8v16.8"/>
-                            <path d="M8.5 12.1c1.7-.3 3.3 0 4.8.7m-4.8 3c1.7-.3 3.3 0 4.8.7m8.2-3.7c1.4-.7 3.1-1 4.8-.7m-4.8 3.7c1.4-.7 3.1-1 4.8-.7"/>
-                        </svg>
-                    </div>
-                    <div class="login-brand-identity">
-                        <div class="login-brand-kicker">Sistema de gestión</div>
-                        <div class="login-brand-name">Librería Bazar</div>
-                        <div class="login-brand-name-strong">Humbertito</div>
-                    </div>
-                </div>
-                <div class="login-brand-title">Tu negocio, en buenas manos.</div>
-                <div class="login-brand-subtitle">
-                    Gestiona ventas, inventario y compras desde una plataforma
-                    diseñada para que tengas el control de tu librería.
-                </div>
-                <div class="login-brand-features">
-                    <div class="login-brand-feature">Stock al día</div>
-                    <div class="login-brand-feature">Ventas ágiles</div>
-                    <div class="login-brand-feature">Control integral</div>
-                </div>
-            </section>
-            """,
-            unsafe_allow_html=True,
+    with st.container(key="access_shell"):
+        brand_column, access_column = st.columns(
+            [1.03, 0.97],
+            vertical_alignment="center",
+            gap=None,
         )
-
-    with access_column:
-        st.caption("Apariencia en el menú ⋮ · Light / Dark")
-        configurar_admin = administradores_activos == 0
-        if configurar_admin:
+        with brand_column:
             st.markdown(
                 """
-                <div class="login-form-intro">
-                    <span class="login-setup-step">CONFIGURACIÓN INICIAL · PASO 1</span>
-                    <h2>Crear administrador</h2>
-                    <p>Registra la cuenta principal para proteger y administrar tu sistema.</p>
-                </div>
+                <section class="login-brand">
+                    <div class="login-brand-head">
+                        <div class="login-brand-mark" aria-hidden="true">
+                            <svg viewBox="0 0 32 32" focusable="false">
+                                <path d="M16 8.2c-3.6-2.1-7.3-2.1-11-.8v16.8c3.7-1.3 7.4-1.3 11 .8m0-16.8c3.6-2.1 7.3-2.1 11-.8v16.8c-3.7-1.3-7.4-1.3-11 .8m0-16.8v16.8"/>
+                                <path d="M8.5 12.1c1.7-.3 3.3 0 4.8.7m-4.8 3c1.7-.3 3.3 0 4.8.7m8.2-3.7c1.4-.7 3.1-1 4.8-.7m-4.8 3.7c1.4-.7 3.1-1 4.8-.7"/>
+                            </svg>
+                        </div>
+                        <div class="login-brand-identity">
+                            <div class="login-brand-kicker">Sistema de gestión</div>
+                            <div class="login-brand-name">Librería Bazar</div>
+                            <div class="login-brand-name-strong">Humbertito</div>
+                        </div>
+                    </div>
+                    <div class="login-brand-title">Gestiona tu librería</div>
+                    <p class="login-brand-subtitle">
+                        Registra ventas, controla el stock y consulta tus compras
+                        desde el mismo lugar.
+                    </p>
+                    <div class="login-brand-features">
+                        <span class="login-brand-feature">Inventario</span>
+                        <span class="login-brand-feature">Ventas</span>
+                        <span class="login-brand-feature">Compras</span>
+                    </div>
+                </section>
                 """,
                 unsafe_allow_html=True,
             )
 
-            with st.form("crear_primer_admin"):
-                nombre = st.text_input("Nombre completo")
-                username = st.text_input("Usuario")
-                password = st.text_input("Contraseña", type="password")
-                confirmar = st.text_input("Confirmar contraseña", type="password")
-                enviar = st.form_submit_button(
-                    "Crear administrador",
-                    type="primary",
-                    width="stretch",
-                )
+        with access_column:
+            configurar_admin = administradores_activos == 0
+            if configurar_admin:
+                with st.form("crear_primer_admin", border=False):
+                    st.caption("Configuración inicial")
+                    st.title("Crear administrador")
+                    st.write("Crea la cuenta principal para administrar Humbertito.")
+                    nombre = st.text_input("Nombre completo", autocomplete="name")
+                    username = st.text_input("Usuario", autocomplete="username")
+                    password = st.text_input("Contraseña", type="password")
+                    confirmar = st.text_input("Confirmar contraseña", type="password")
+                    enviar = st.form_submit_button(
+                        "Crear administrador",
+                        type="primary",
+                        width="stretch",
+                    )
 
-            if enviar:
-                if password != confirmar:
-                    st.error("Las contraseñas no coinciden.")
-                else:
-                    try:
-                        preparar_tabla_usuarios.clear()
-                        cantidad = contar_usuarios_acceso()
-                        if cantidad != 0:
-                            st.error("Ya existe una cuenta administradora activa. Inicia sesión.")
-                        else:
-                            auth.crear_usuario(username, nombre, password, "admin")
+                if enviar:
+                    if password != confirmar:
+                        st.error("Las contraseñas no coinciden.")
+                    else:
+                        try:
                             preparar_tabla_usuarios.clear()
-                            notificar_exito("Administrador creado. Inicia sesión.")
+                            cantidad = contar_usuarios_acceso()
+                            if cantidad != 0:
+                                st.error("Ya existe una cuenta administradora activa. Inicia sesión.")
+                            else:
+                                auth.crear_usuario(username, nombre, password, "admin")
+                                preparar_tabla_usuarios.clear()
+                                notificar_exito("Administrador creado. Inicia sesión.")
+                                st.rerun()
+                        except ValueError as error:
+                            st.error(str(error))
+                        except Exception:
+                            st.error(
+                                "No se pudo conectar con la base de datos. "
+                                "Vuelve a intentarlo en unos segundos."
+                            )
+
+            else:
+                with st.form("form_login", border=False):
+                    st.caption("Acceso al sistema")
+                    st.title("Iniciar sesión")
+                    st.write("Ingresa con la cuenta de tu librería.")
+                    username = st.text_input("Usuario", autocomplete="username")
+                    password = st.text_input(
+                        "Contraseña", type="password", autocomplete="current-password"
+                    )
+                    entrar = st.form_submit_button(
+                        "Iniciar sesión",
+                        icon=":material/login:",
+                        type="primary",
+                        width="stretch",
+                    )
+
+                if entrar and (not username or not username.strip() or not password):
+                    st.warning("Ingresa tu usuario y contraseña para continuar.")
+                elif entrar:
+                    try:
+                        with st.spinner("Verificando tus datos de acceso..."):
+                            usuario = auth.verificar_usuario(username, password)
+                        if usuario:
+                            st.session_state["usuario"] = usuario
+                            st.session_state["menu"] = "Inicio"
                             st.rerun()
-                    except ValueError as error:
-                        st.error(str(error))
-                    except Exception:
+                        else:
+                            st.error(
+                                "Usuario o contraseña incorrectos. "
+                                "Revisa tus datos e inténtalo de nuevo."
+                            )
+                    except Exception as error:
                         st.error(
                             "No se pudo conectar con la base de datos. "
-                            "Vuelve a intentarlo en unos segundos."
+                            "Revisa la conexión e inténtalo otra vez."
                         )
-
-        else:
-            st.markdown(
-                """
-                <div class="login-form-intro">
-                    <h2>Bienvenido de nuevo</h2>
-                    <p>Ingresa tus datos para acceder a tu espacio de trabajo.</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            with st.form("form_login"):
-                username = st.text_input("Usuario")
-                password = st.text_input("Contraseña", type="password")
-                entrar = st.form_submit_button(
-                    "Iniciar sesión",
-                    type="primary",
-                    width="stretch",
-                )
-
-            if entrar:
-                try:
-                    with st.spinner("Verificando tus datos de acceso..."):
-                        usuario = auth.verificar_usuario(username, password)
-                    if usuario:
-                        st.session_state["usuario"] = usuario
-                        st.session_state["menu"] = "Inicio"
-                        st.rerun()
-                    else:
-                        st.error("Usuario o contraseña incorrectos.")
-                except Exception as error:
-                    st.error(
-                        "No se pudo conectar con la base de datos. "
-                        "Revisa la conexión e inténtalo otra vez."
-                    )
-                    st.caption(
-                        "Diagnóstico técnico: "
-                        f"{type(error).__name__}."
-                    )
+                        st.caption(
+                            "Diagnóstico técnico: "
+                            f"{type(error).__name__}."
+                        )
 
 
 if "usuario" not in st.session_state:
@@ -396,6 +377,14 @@ if usuario_actual is None:
 
 st.session_state["usuario"] = usuario_actual
 es_admin = usuario_actual.get("rol", "empleado") == "admin"
+
+if not database.usar_supabase():
+    st.warning(
+        "La app está usando SQLite local. Configura SUPABASE_DB_URL "
+        "en los Secrets de Streamlit Cloud para usar la base persistente."
+    )
+
+
 # Las tablas operativas no bloquean la pantalla de acceso; se preparan al entrar.
 @st.cache_resource(show_spinner=False)
 def preparar_esquema_sistema():
@@ -2334,7 +2323,9 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-    if st.button("Cerrar sesión", key="cerrar_sesion"):
+    if st.button(
+        "Cerrar sesión", key="cerrar_sesion", icon=":material/logout:", width="stretch"
+    ):
         st.session_state.pop("usuario", None)
         st.session_state.pop("menu", None)
         st.rerun()
@@ -2388,7 +2379,6 @@ with st.sidebar:
 
     menu = st.session_state.menu
 
-    st.caption("Apariencia en el menú ⋮ · Light / Dark")
     st.divider()
 
     # ADMINISTRACIÓN
@@ -2502,7 +2492,7 @@ if menu == "Inicio":
     )
 
     st.subheader("Accesos rápidos", icon=":material/bolt:")
-    a1, a2, a3, a4 = st.columns(4)
+    a1, a2, a3, a4 = st.columns(4, border=True)
 
     with a1:
         st.markdown(
@@ -2517,6 +2507,7 @@ if menu == "Inicio":
         st.button(
             "Ir a productos",
             key="quick_productos",
+            width="stretch",
             icon=":material/inventory_2:",
             on_click=seleccionar_modulo,
             args=("Productos",),
@@ -2535,6 +2526,7 @@ if menu == "Inicio":
         st.button(
             "Ir a ventas",
             key="quick_ventas",
+            width="stretch",
             icon=":material/point_of_sale:",
             on_click=seleccionar_modulo,
             args=("Ventas",),
@@ -2553,6 +2545,7 @@ if menu == "Inicio":
         st.button(
             "Ir a compras",
             key="quick_compras",
+            width="stretch",
             icon=":material/shopping_cart:",
             on_click=seleccionar_modulo,
             args=("Compras",),
@@ -2562,8 +2555,8 @@ if menu == "Inicio":
         st.markdown(
             """
             <div class="quick-card">
-                <strong>Ver análisis</strong>
-                <p>Revisa la tendencia, rotación y recomendaciones de reposición.</p>
+                <strong>Consultar indicadores</strong>
+                <p>Revisa los ingresos y los productos más vendidos.</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -2571,6 +2564,7 @@ if menu == "Inicio":
         st.button(
             "Ver dashboard",
             key="quick_dashboard",
+            width="stretch",
             icon=":material/dashboard:",
             on_click=seleccionar_modulo,
             args=("Dashboard gerencial",),
@@ -4288,7 +4282,7 @@ elif menu == "Análisis inteligente":
 
     st.subheader("Resumen comercial")
 
-    a1, a2, a3, a4 = st.columns(4)
+    a1, a2, a3, a4 = st.columns(4, border=True)
 
     with a1:
         st.metric(

@@ -6,6 +6,7 @@
     --hb-accent: light-dark(#2457b4, #c8b7ff);
     --hb-tint: light-dark(#e8eff9, #272c3d);
     --hb-banner: light-dark(#edf3ff, #222238);
+    --hb-shadow: light-dark(rgb(23 53 103 / 10%), rgb(0 0 0 / 30%));
     --hb-row-alt: light-dark(#f5f8fd, #212532);
 }
 
@@ -27,6 +28,7 @@
     justify-content: flex-start;
     text-align: left;
     min-height: 2.55rem;
+    padding-inline: 0.8rem;
 }
 
 [data-testid="stSidebar"] [class*="st-key-menu_"] button > div {
@@ -44,9 +46,7 @@
 
 .sidebar-brand,
 .user-card,
-.quick-card,
 .hb-hero,
-.login-brand,
 [data-testid="stMetric"],
 :is(.st-key-dashboard_ventas_panel, .st-key-dashboard_productos_panel,
     .st-key-user_transfer_panel, .st-key-user_delete_panel) {
@@ -60,13 +60,13 @@
     border-inline-start: 3px solid var(--hb-accent);
 }
 
-.user-card,
-.quick-card {
-    margin-bottom: 0.65rem;
+.user-card {
+    margin-bottom: 0.45rem;
 }
 
 .quick-card {
-    min-height: 8.5rem;
+    min-height: 6.5rem;
+    padding-block: 0.15rem;
 }
 
 [data-testid="stMetric"] {
@@ -76,8 +76,7 @@
 .sidebar-brand-kicker,
 .sidebar-section-title,
 .hb-hero-eyebrow,
-.login-brand-kicker,
-.login-setup-step {
+.login-brand-kicker {
     color: var(--hb-accent);
     font-size: 0.72rem;
     font-weight: 750;
@@ -101,7 +100,6 @@
 .quick-card p,
 .hb-hero p,
 .login-brand-subtitle,
-.login-form-intro p,
 .sales-form-intro p {
     color: var(--hb-muted);
     margin: 0;
@@ -128,8 +126,7 @@
     background: light-dark(#168369, #6ad4c2);
 }
 
-.hb-hero,
-.login-brand {
+.hb-hero {
     background: var(--hb-banner);
     padding: clamp(1.3rem, 4vw, 2.75rem);
 }
@@ -184,14 +181,77 @@
     letter-spacing: -0.03em;
 }
 
-.stApp:has(.hb-access) [data-testid="stSidebar"],
-.stApp:has(.hb-access) [data-testid="stExpandSidebarButton"] {
+.stApp:has(.st-key-access_shell) [data-testid="stSidebar"],
+.stApp:has(.st-key-access_shell) [data-testid="stExpandSidebarButton"] {
     display: none;
 }
 
-.stApp:has(.hb-access) [data-testid="stMainBlockContainer"] {
-    max-width: 72rem;
-    padding-top: clamp(4.5rem, 13vh, 9rem);
+.stApp:has(.st-key-access_shell) [data-testid="stMainBlockContainer"] {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    max-width: 68rem;
+    min-height: 100dvh;
+    padding-block: 4.25rem;
+}
+
+.stApp:has(.st-key-access_shell) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
+    justify-content: center;
+}
+
+.st-key-access_shell {
+    --access-padding: clamp(1.4rem, 4vw, 3.1rem);
+    border: 1px solid var(--hb-border);
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background: linear-gradient(90deg, var(--hb-banner) 51.5%, var(--hb-surface) 51.5%);
+    box-shadow: 0 1rem 3rem var(--hb-shadow);
+}
+
+.login-brand {
+    padding: var(--access-padding);
+}
+
+.st-key-access_shell [data-testid="stColumn"]:last-child {
+    padding: var(--access-padding);
+}
+
+.st-key-access_shell [data-testid="stForm"] {
+    padding: 0;
+    background: transparent;
+}
+
+.st-key-access_shell [data-testid="stForm"] h1 {
+    font-size: clamp(1.8rem, 3.3vw, 2.55rem);
+    line-height: 1.15;
+    padding-block: 0 0.2rem;
+}
+
+.st-key-access_shell [data-testid="stForm"] [data-testid="stCaptionContainer"] {
+    opacity: 1;
+}
+
+.st-key-access_shell [data-testid="stForm"] [data-testid="stCaptionContainer"] p {
+    color: var(--hb-accent);
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.st-key-access_shell [data-testid="stForm"] button[kind="primaryFormSubmit"] {
+    min-height: 2.8rem;
+}
+
+.st-key-access_shell [data-testid="stTextInput"] [data-baseweb="input"]:focus-within {
+    outline: 2px solid var(--hb-accent);
+    outline-offset: 2px;
+}
+
+[data-testid="stMain"] [role="tab"]:focus-visible,
+[data-testid="stSidebar"] [class*="st-key-menu_"] button:focus-visible {
+    outline: 2px solid var(--hb-accent);
+    outline-offset: 2px;
 }
 
 .login-brand-head,
@@ -235,6 +295,7 @@
     font-weight: 750;
     letter-spacing: -0.04em;
     margin-block: 1.6rem 0.7rem;
+    text-wrap: balance;
 }
 
 .login-brand-features {
@@ -267,6 +328,7 @@
     top: 0;
     z-index: 1;
     background: var(--hb-tint);
+    color: var(--hb-accent);
     font-weight: 700;
     white-space: nowrap;
 }
@@ -274,10 +336,6 @@
 [data-testid="stTable"] thead th p {
     color: inherit;
     white-space: nowrap;
-}
-
-[data-testid="stTable"] thead th {
-    color: var(--hb-accent);
 }
 
 [data-testid="stTable"] tbody tr:nth-child(even) td {
@@ -300,9 +358,39 @@
     text-align: right;
 }
 
-@media (max-width: 640px) {
-    .hb-hero,
+@media (max-width: 760px) {
+    .st-key-access_shell {
+        --access-padding: 1.25rem;
+        background: var(--hb-surface);
+    }
+
+    .st-key-access_shell [data-testid="stHorizontalBlock"] {
+        flex-direction: column;
+    }
+
+    .st-key-access_shell [data-testid="stColumn"] {
+        width: 100%;
+        flex: none;
+    }
+
+    .st-key-access_shell [data-testid="stColumn"]:last-child {
+        padding-top: 1.65rem;
+    }
+
     .login-brand {
+        background: var(--hb-banner);
+        border-bottom: 1px solid var(--hb-border);
+    }
+
+    .login-brand-title,
+    .login-brand-subtitle,
+    .login-brand-features {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .hb-hero {
         padding: 1.15rem;
     }
 
