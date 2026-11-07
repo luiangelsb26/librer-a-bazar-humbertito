@@ -3415,12 +3415,12 @@ st.markdown("""
 }
 
 /* ---------- AVISOS ---------- */
-[data-testid="stMain"] [data-testid="stAlert"] {
+[data-testid="stAppViewContainer"] [data-testid="stAlert"] {
     max-width:980px !important;
     margin:.7rem 0 !important;
     overflow:visible !important;
 }
-[data-testid="stMain"] [data-testid="stAlertContainer"] {
+[data-testid="stAppViewContainer"] [data-testid="stAlertContainer"] {
     display:flex !important;
     align-items:center !important;
     box-sizing:border-box !important;
@@ -13398,7 +13398,7 @@ body:not(:has(.hb-light-mode)) {
     border-color: var(--hb-ui-border) !important;
     box-shadow: var(--hb-ui-shadow);
 }
-[data-testid="stMain"] [data-testid="stAlert"] {
+[data-testid="stAppViewContainer"] [data-testid="stAlert"] {
     border-radius: 12px !important;
 }
 [data-testid="stMain"] [data-testid="stTable"] table {
@@ -13628,7 +13628,7 @@ st.markdown("""
     [data-testid="stMain"] [data-testid="stDownloadButton"] button:hover {
         background: var(--hb-final-surface-hover) !important;
     }
-    [data-testid="stMain"] [data-testid="stAlertContainer"] {
+    [data-testid="stAppViewContainer"] [data-testid="stAlertContainer"] {
         border: 1px solid var(--hb-final-border) !important;
         border-left-width: 3px !important;
         border-radius: 9px !important;
@@ -13848,6 +13848,14 @@ st.markdown("""
         --hb-ui-accent: #397d74;
         --hb-ui-accent-soft: #e8f0ef;
         --hb-ui-shadow: 0 1px 2px rgba(24, 39, 45, .035), 0 8px 24px rgba(24, 39, 45, .025);
+        --hb-alert-info-bg: #f3f7fa;
+        --hb-alert-info-icon: #527b99;
+        --hb-alert-warning-bg: #faf7ef;
+        --hb-alert-warning-icon: #9a7734;
+        --hb-alert-success-bg: #f1f7f3;
+        --hb-alert-success-icon: #4b8061;
+        --hb-alert-error-bg: #faf2f2;
+        --hb-alert-error-icon: #a45f62;
     }
     body:not(:has(.hb-light-mode)) {
         --hb-ui-page: #11181d;
@@ -13860,6 +13868,14 @@ st.markdown("""
         --hb-ui-accent: #4c9387;
         --hb-ui-accent-soft: #24312f;
         --hb-ui-shadow: 0 1px 2px rgba(0, 0, 0, .14), 0 8px 24px rgba(0, 0, 0, .08);
+        --hb-alert-info-bg: #1b272e;
+        --hb-alert-info-icon: #8aaec5;
+        --hb-alert-warning-bg: #29261e;
+        --hb-alert-warning-icon: #c6a665;
+        --hb-alert-success-bg: #1d2924;
+        --hb-alert-success-icon: #83b092;
+        --hb-alert-error-bg: #2d2225;
+        --hb-alert-error-icon: #d09598;
     }
     [data-testid="stAppViewContainer"] {
         background: var(--hb-ui-page) !important;
@@ -13925,6 +13941,67 @@ st.markdown("""
     }
     [data-testid="stMain"] [data-testid="stMetricDelta"] {
         font-size: .78rem !important;
+    }
+    [data-testid="stMain"] [data-testid="stAlert"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: .45rem 0 !important;
+        overflow: visible !important;
+    }
+    [data-testid="stMain"] [data-testid="stAlertContainer"] {
+        display: flex !important;
+        align-items: center !important;
+        gap: .7rem !important;
+        min-height: 0 !important;
+        padding: .8rem 1rem !important;
+        border: 1px solid var(--hb-ui-border) !important;
+        border-left-width: 1px !important;
+        border-radius: 10px !important;
+        background: var(--hb-ui-surface) !important;
+        color: var(--hb-ui-text) !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"] svg {
+        display: block !important;
+        flex: 0 0 1.1rem !important;
+        width: 1.1rem !important;
+        height: 1.1rem !important;
+        color: var(--hb-ui-muted) !important;
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"] p {
+        margin: 0 !important;
+        color: var(--hb-ui-text) !important;
+        font-size: .875rem !important;
+        line-height: 1.5 !important;
+        overflow-wrap: anywhere !important;
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) {
+        --hb-alert-current-bg: var(--hb-alert-info-bg);
+        --hb-alert-current-icon: var(--hb-alert-info-icon);
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) {
+        --hb-alert-current-bg: var(--hb-alert-warning-bg);
+        --hb-alert-current-icon: var(--hb-alert-warning-icon);
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) {
+        --hb-alert-current-bg: var(--hb-alert-success-bg);
+        --hb-alert-current-icon: var(--hb-alert-success-icon);
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) {
+        --hb-alert-current-bg: var(--hb-alert-error-bg);
+        --hb-alert-current-icon: var(--hb-alert-error-icon);
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"],
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"],
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"],
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
+        background: var(--hb-alert-current-bg) !important;
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) svg,
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) svg,
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) svg,
+    [data-testid="stAppViewContainer"] [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) svg {
+        color: var(--hb-alert-current-icon) !important;
     }
     [data-testid="stMain"] [data-testid="stForm"] {
         padding: 1.15rem !important;
