@@ -26,6 +26,11 @@
 
 [data-testid="stSidebar"] .st-key-sidebar_navigation {
     gap: 0.7rem;
+    padding-block-start: 0.8rem;
+}
+
+[data-testid="stSidebar"] .st-key-sidebar_navigation [data-testid="stExpander"] {
+    margin-block-start: 0.9rem;
 }
 
 [data-testid="stSidebar"] [class*="st-key-sidebar_group_"] {

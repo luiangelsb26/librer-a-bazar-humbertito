@@ -6,10 +6,11 @@ import math
 import hashlib
 import re
 import unicodedata
-from datetime import datetime
+from datetime import date, datetime
 from html import escape
 from pathlib import Path
 from time import perf_counter
+from typing import Literal
 import database
 import auth
 
@@ -65,20 +66,19 @@ def formatear_soles(valor):
     return f"S/ {formatear_numero_es(valor, 2)}"
 
 
-def mostrar_tabla(datos, *, height="content", **opciones):
+def mostrar_tabla(datos, *, height: int | Literal["content"] = "content", **opciones):
     """Muestra tablas navegables sin reservar espacio para filas vacías."""
     import pandas as pd
 
     marco = datos if isinstance(datos, pd.DataFrame) else pd.DataFrame(datos)
     alto_fila = 36
-    if height == "content":
-        height = "auto"
-    else:
-        height = min(height, 42 + alto_fila * max(1, len(marco)))
+    altura: int | Literal["auto"] = (
+        "auto" if height == "content" else min(height, 42 + alto_fila * max(1, len(marco)))
+    )
 
     return st.dataframe(
         marco,
-        height=height,
+        height=altura,
         row_height=alto_fila,
         lazy=len(marco) > 1000,
         **opciones,
@@ -624,8 +624,9 @@ def validar_productos_excel(contenido):
     filas_validas = []
     errores = []
 
-    for numero_fila, (_, fila) in enumerate(original.iterrows(), start=2):
-        if all(pd.isna(valor) or str(valor).strip() == "" for valor in fila):
+    for numero_fila, (_, datos_fila) in enumerate(original.iterrows(), start=2):
+        fila = datos_fila.to_dict()
+        if all(_celda_excel_vacia(valor) for valor in fila.values()):
             continue
 
         errores_fila = []
@@ -719,7 +720,7 @@ def validar_productos_excel(contenido):
             else None
         )
         stock_minimo = (
-            5.0 if pd.isna(valor_stock_minimo) or str(valor_stock_minimo).strip() == ""
+            5.0 if _celda_excel_vacia(valor_stock_minimo)
             else _numero_excel(valor_stock_minimo)
         )
         if (
@@ -735,10 +736,7 @@ def validar_productos_excel(contenido):
             if "dias_entrega" in columnas
             else None
         )
-        if (
-            pd.isna(valor_dias_entrega)
-            or str(valor_dias_entrega).strip() == ""
-        ):
+        if _celda_excel_vacia(valor_dias_entrega):
             dias_entrega = (
                 int(producto_actual[8])
                 if producto_actual is not None and len(producto_actual) > 8
@@ -1140,6 +1138,13 @@ def _normalizar_encabezado_excel(valor):
     return re.sub(r"[^a-z0-9]+", " ", texto.lower()).strip()
 
 
+def _celda_excel_vacia(valor: object) -> bool:
+    """Comprueba si una celda de Excel está vacía, incluida una cadena en blanco."""
+    if isinstance(valor, str):
+        return not valor.strip()
+    return pd.api.types.is_scalar(valor) and bool(pd.isna([valor])[0])
+
+
 def _numero_excel(valor):
     if pd.isna(valor):
         return None
@@ -1160,6 +1165,18 @@ def _numero_excel(valor):
         return float(texto)
     except ValueError:
         return None
+
+
+def _fecha_excel(valor) -> date | None:
+    """Convierte una fecha de Excel o su número de serie a una fecha de calendario."""
+    try:
+        if isinstance(valor, (int, float)) and not isinstance(valor, bool):
+            fecha = pd.Timestamp("1899-12-30") + pd.to_timedelta(float(valor), unit="D")
+        else:
+            fecha = pd.to_datetime(valor, dayfirst=True, format="mixed", errors="coerce")
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return fecha.date() if isinstance(fecha, pd.Timestamp) else None
 
 
 @st.cache_data(ttl=180, show_spinner=False, max_entries=6)
@@ -1213,9 +1230,9 @@ def validar_ventas_excel(_contenido, hash_contenido):
     errores = []
     hoy = datetime.now().date()
 
-    for numero_fila, (_, fila) in enumerate(original.iterrows(), start=2):
-        valores = [fila[columna] for columna in original.columns]
-        if all(pd.isna(valor) or str(valor).strip() == "" for valor in valores):
+    for numero_fila, (_, datos_fila) in enumerate(original.iterrows(), start=2):
+        fila = datos_fila.to_dict()
+        if all(_celda_excel_vacia(valor) for valor in fila.values()):
             continue
 
         errores_fila = []
@@ -1223,11 +1240,11 @@ def validar_ventas_excel(_contenido, hash_contenido):
 
         valor_codigo = fila[columnas["codigo"]] if "codigo" in columnas else None
         valor_nombre = fila[columnas["producto"]] if "producto" in columnas else None
-        if not pd.isna(valor_codigo) and str(valor_codigo).strip():
+        if not _celda_excel_vacia(valor_codigo):
             producto = por_codigo.get(str(valor_codigo).strip().casefold())
             if producto is None:
                 errores_fila.append(f"código de producto no registrado: {valor_codigo}")
-        elif not pd.isna(valor_nombre) and str(valor_nombre).strip():
+        elif not _celda_excel_vacia(valor_nombre):
             coincidencias = por_nombre.get(str(valor_nombre).strip().casefold(), [])
             if len(coincidencias) == 1:
                 producto = coincidencias[0]
@@ -1243,23 +1260,7 @@ def validar_ventas_excel(_contenido, hash_contenido):
         if pd.isna(valor_fecha):
             errores_fila.append("falta la fecha")
         else:
-            try:
-                if isinstance(valor_fecha, (int, float)) and not isinstance(valor_fecha, bool):
-                    fecha_parseada = (
-                        pd.Timestamp("1899-12-30")
-                        + pd.to_timedelta(float(valor_fecha), unit="D")
-                    ).date()
-                else:
-                    fecha_convertida = pd.to_datetime(
-                        valor_fecha,
-                        dayfirst=True,
-                        format="mixed",
-                        errors="coerce",
-                    )
-                    if not pd.isna(fecha_convertida):
-                        fecha_parseada = fecha_convertida.date()
-            except (TypeError, ValueError, OverflowError):
-                fecha_parseada = None
+            fecha_parseada = _fecha_excel(valor_fecha)
             if fecha_parseada is None:
                 errores_fila.append("fecha inválida")
             elif fecha_parseada > hoy:
@@ -1941,19 +1942,20 @@ def validar_compras_excel(_contenido, hash_contenido):
     errores = []
     hoy = datetime.now().date()
 
-    for numero_fila, (_, fila) in enumerate(original.iterrows(), start=2):
-        if all(pd.isna(valor) or str(valor).strip() == "" for valor in fila.tolist()):
+    for numero_fila, (_, datos_fila) in enumerate(original.iterrows(), start=2):
+        fila = datos_fila.to_dict()
+        if all(_celda_excel_vacia(valor) for valor in fila.values()):
             continue
 
         errores_fila = []
         producto = None
         valor_codigo = fila[columnas["codigo"]] if "codigo" in columnas else None
         valor_nombre = fila[columnas["producto"]] if "producto" in columnas else None
-        if not pd.isna(valor_codigo) and str(valor_codigo).strip():
+        if not _celda_excel_vacia(valor_codigo):
             producto = por_codigo.get(str(valor_codigo).strip().casefold())
             if producto is None:
                 errores_fila.append(f"código de producto no registrado: {valor_codigo}")
-        elif not pd.isna(valor_nombre) and str(valor_nombre).strip():
+        elif not _celda_excel_vacia(valor_nombre):
             coincidencias = por_nombre.get(str(valor_nombre).strip().casefold(), [])
             if len(coincidencias) == 1:
                 producto = coincidencias[0]
@@ -1969,23 +1971,7 @@ def validar_compras_excel(_contenido, hash_contenido):
         if pd.isna(valor_fecha):
             errores_fila.append("falta la fecha")
         else:
-            try:
-                if isinstance(valor_fecha, (int, float)) and not isinstance(valor_fecha, bool):
-                    fecha_parseada = (
-                        pd.Timestamp("1899-12-30")
-                        + pd.to_timedelta(float(valor_fecha), unit="D")
-                    ).date()
-                else:
-                    fecha_convertida = pd.to_datetime(
-                        valor_fecha,
-                        dayfirst=True,
-                        format="mixed",
-                        errors="coerce",
-                    )
-                    if not pd.isna(fecha_convertida):
-                        fecha_parseada = fecha_convertida.date()
-            except (TypeError, ValueError, OverflowError):
-                fecha_parseada = None
+            fecha_parseada = _fecha_excel(valor_fecha)
             if fecha_parseada is None:
                 errores_fila.append("fecha inválida")
             elif fecha_parseada > hoy:
@@ -2989,17 +2975,14 @@ elif menu == "Dashboard gerencial":
 
             if not datos_dia.empty:
                 diario = (
-                    datos_dia.groupby(
-                        datos_dia["fecha"].dt.date
-                    )["subtotal"]
-                    .sum()
-                    .rename("Ventas")
+                    datos_dia.groupby(datos_dia["fecha"].dt.date)
+                    .agg(Ventas=("subtotal", "sum"))
                 )
 
                 grafico_ventas_diarias = go.Figure(
                     go.Scatter(
                         x=pd.to_datetime(diario.index),
-                        y=diario.values,
+                        y=diario.loc[:, "Ventas"].to_numpy(),
                         mode="lines+markers",
                         line={"width": 2.5},
                         marker={
@@ -4582,7 +4565,7 @@ elif menu == "Predicción de demanda":
                 if reposicion.empty:
                     st.info("No hay productos para evaluar.")
                 else:
-                    validos = reposicion["estado_prediccion"].eq("ok")
+                    validos = reposicion.loc[:, "estado_prediccion"].eq("ok")
                     pedidos = reposicion.loc[validos & reposicion["cantidad_sugerida"].gt(0)]
                     st.metric("Recomendaciones de reposición", len(pedidos))
                     st.caption(
@@ -4614,24 +4597,20 @@ elif menu == "Predicción de demanda":
 
     else:
 
-        opciones = {
-            int(fila["id"]): (
-                f"{fila['codigo']} - {fila['nombre']} | "
-                f"Stock: {fila['stock']}"
-            )
-            for _, fila in productos.iterrows()
+        opciones_pronostico = {
+            int(id_producto): (f"{codigo} - {nombre} | Stock: {stock}", dias_entrega)
+            for id_producto, codigo, nombre, stock, dias_entrega in productos[
+                ["id", "codigo", "nombre", "stock", "dias_entrega"]
+            ].itertuples(index=False, name=None)
         }
 
         producto_id = st.selectbox(
             "Seleccionar producto",
-            list(opciones.keys()),
-            format_func=lambda valor: opciones[valor]
+            list(opciones_pronostico.keys()),
+            format_func=lambda valor: opciones_pronostico[valor][0],
         )
 
-        producto_seleccionado = productos[
-            productos["id"] == producto_id
-        ].iloc[0]
-        dias_entrega = int(producto_seleccionado.get("dias_entrega", 0) or 0)
+        dias_entrega = int(opciones_pronostico[producto_id][1] or 0)
         dias = st.number_input(
             "Días de cobertura",
             min_value=max(1, dias_entrega),
