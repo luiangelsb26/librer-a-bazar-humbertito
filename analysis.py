@@ -398,3 +398,29 @@ if __name__ == "__main__":
     print(
         analisis_productos()
     )
+
+
+
+def alertas_importes_diarios(ventas: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Marca importes diarios fuera de las cercas de Tukey."""
+    columnas = ["Fecha", "Ventas (S/)", "Alerta"]
+    if ventas.empty:
+        return pd.DataFrame(columns=columnas), 0
+
+    fechas = pd.to_datetime(ventas["fecha"]).dt.normalize()
+    inicio = fechas.max() - pd.Timedelta(days=89)
+    importes = ventas.groupby(fechas)["subtotal"].sum().loc[inicio:]
+    dias_evaluados = len(importes)
+    if dias_evaluados < 14:
+        return pd.DataFrame(columns=columnas), dias_evaluados
+
+    q1, q3 = importes.quantile([0.25, 0.75])
+    rango = q3 - q1
+    inferior = q1 - 1.5 * rango
+    superior = q3 + 1.5 * rango
+    atipicos = importes[(importes < inferior) | (importes > superior)]
+    return pd.DataFrame({
+        "Fecha": atipicos.index.strftime("%d/%m/%Y"),
+        "Ventas (S/)": atipicos.to_numpy(),
+        "Alerta": (atipicos > superior).map({True: "Importe alto", False: "Importe bajo"}).to_numpy(),
+    }), dias_evaluados

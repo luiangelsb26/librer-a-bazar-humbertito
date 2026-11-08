@@ -9,6 +9,7 @@ import unicodedata
 from datetime import datetime
 from html import escape
 from pathlib import Path
+from time import perf_counter
 import database
 import auth
 
@@ -2379,42 +2380,43 @@ with st.sidebar:
 
     menu = st.session_state.menu
 
-    st.divider()
+    if es_admin:
+        st.divider()
 
-    # ADMINISTRACIÓN
-    st.markdown(
-        '<div class="sidebar-section-title">Administración</div>',
-        unsafe_allow_html=True
-    )
-
-    with st.expander("Administración de datos"):
-        st.caption(
-            "El reinicio elimina productos, compras, ventas y sus historiales. "
-            "Esta acción no se puede deshacer."
+        # ADMINISTRACIÓN
+        st.markdown(
+            '<div class="sidebar-section-title">Administración</div>',
+            unsafe_allow_html=True
         )
 
-        confirmacion = st.text_input(
-            "Escriba REINICIAR para continuar",
-            key="confirmar_reinicio",
-            max_chars=9,
-        )
+        with st.expander("Administración de datos"):
+            st.caption(
+                "El reinicio elimina productos, compras, ventas y sus historiales. "
+                "Esta acción no se puede deshacer."
+            )
 
-        if st.button(
-            "Eliminar todo y empezar de cero",
-            key="reiniciar_datos",
-            type="secondary",
-            disabled=confirmacion.strip().upper() != "REINICIAR",
-        ):
-            try:
-                database.reiniciar_datos()
-                invalidar_cache_operativa()
-                st.session_state.pop("confirmar_reinicio", None)
-                notificar_exito(
-                    "Sistema reiniciado correctamente. Ya puedes comenzar un nuevo registro."
-                )
-                st.rerun()
-            except Exception as error:
-                st.error(f"No se pudo reiniciar el sistema: {error}")
+            confirmacion = st.text_input(
+                "Escriba REINICIAR para continuar",
+                key="confirmar_reinicio",
+                max_chars=9,
+            )
+
+            if st.button(
+                "Eliminar todo y empezar de cero",
+                key="reiniciar_datos",
+                type="secondary",
+                disabled=confirmacion.strip().upper() != "REINICIAR",
+            ):
+                try:
+                    database.reiniciar_datos()
+                    invalidar_cache_operativa()
+                    st.session_state.pop("confirmar_reinicio", None)
+                    notificar_exito(
+                        "Sistema reiniciado correctamente. Ya puedes comenzar un nuevo registro."
+                    )
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"No se pudo reiniciar el sistema: {error}")
 
 if menu != "Inicio":
     import pandas as pd
@@ -2935,9 +2937,17 @@ elif menu == "Dashboard gerencial":
 
     st.divider()
 
+    inicio_analisis = perf_counter()
     datos_historicos = analysis.obtener_datos_ventas()
     resumen = analysis.resumen_ventas(datos_historicos)
     tendencia = analysis.tendencia_ventas(datos_historicos)
+    alertas_ventas, dias_evaluados = analysis.alertas_importes_diarios(datos_historicos)
+    tiempo_analisis = perf_counter() - inicio_analisis
+    st.caption(
+        f"{formatear_numero_es(len(datos_historicos))} registros agregados por "
+        f"producto y día · Consulta y análisis inicial en "
+        f"{formatear_numero_es(tiempo_analisis, 3)} s. El tiempo puede incluir datos en caché."
+    )
 
     s1, s2, s3 = st.columns(3)
 
@@ -3527,37 +3537,38 @@ elif menu == "Productos":
                                 else:
                                     st.error(mensaje)
 
-                with st.expander("Eliminar todos los productos"):
-                    st.warning(
-                        "Esto elimina el catálogo completo. Si existen ventas o "
-                        "compras asociadas, el sistema conservará los productos para "
-                        "proteger ese historial."
-                    )
-                    with st.form("form_eliminar_todos_productos"):
-                        confirmar_eliminacion_total = st.checkbox(
-                            "Confirmo que deseo eliminar todos los productos registrados."
+                if es_admin:
+                    with st.expander("Eliminar todos los productos"):
+                        st.warning(
+                            "Esto elimina el catálogo completo. Si existen ventas o "
+                            "compras asociadas, el sistema conservará los productos para "
+                            "proteger ese historial."
                         )
-                        eliminar_todos = st.form_submit_button(
-                            "Eliminar todos los productos",
-                            type="secondary",
-                        )
+                        with st.form("form_eliminar_todos_productos"):
+                            confirmar_eliminacion_total = st.checkbox(
+                                "Confirmo que deseo eliminar todos los productos registrados."
+                            )
+                            eliminar_todos = st.form_submit_button(
+                                "Eliminar todos los productos",
+                                type="secondary",
+                            )
 
-                        if eliminar_todos:
-                            if not confirmar_eliminacion_total:
-                                st.error(
-                                    "Marca la confirmación para eliminar el catálogo."
-                                )
-                            else:
-                                ok, mensaje = eliminar_todos_productos()
-                                if ok:
-                                    notificar_exito(mensaje)
-                                    st.session_state.pop(
-                                        "producto_seleccionado_edicion",
-                                        None,
+                            if eliminar_todos:
+                                if not confirmar_eliminacion_total:
+                                    st.error(
+                                        "Marca la confirmación para eliminar el catálogo."
                                     )
-                                    st.rerun()
                                 else:
-                                    st.error(mensaje)
+                                    ok, mensaje = eliminar_todos_productos()
+                                    if ok:
+                                        notificar_exito(mensaje)
+                                        st.session_state.pop(
+                                            "producto_seleccionado_edicion",
+                                            None,
+                                        )
+                                        st.rerun()
+                                    else:
+                                        st.error(mensaje)
 
             else:
 
@@ -3936,55 +3947,56 @@ elif menu == "Ventas":
                         else:
                             st.error(mensaje)
 
-            cantidad_ventas_total = len({venta[0] for venta in ventas})
-            estados_stock_ventas = {venta[0]: venta[7] for venta in ventas}
-            ventas_stock_desconocido = sum(
-                estado is None for estado in estados_stock_ventas.values()
-            )
+            if es_admin:
+                cantidad_ventas_total = len({venta[0] for venta in ventas})
+                estados_stock_ventas = {venta[0]: venta[7] for venta in ventas}
+                ventas_stock_desconocido = sum(
+                    estado is None for estado in estados_stock_ventas.values()
+                )
 
-            with st.expander("Eliminar todas las ventas"):
-                with st.container(key="delete_all_sales_warning", border=True):
-                    st.markdown(
-                        ":material/delete_forever: **Eliminación permanente**",
-                        text_alignment="center",
-                    )
-                    st.markdown(
-                        f"Se eliminarán **{formatear_numero_es(cantidad_ventas_total)} "
-                        "ventas** y sus detalles. El stock se restaurará solo para "
-                        "las ventas que el sistema marcó como descontadas.",
-                        text_alignment="center",
-                    )
-                if ventas_stock_desconocido:
-                    st.info(
-                        f"{ventas_stock_desconocido} ventas antiguas no tienen "
-                        "registro de si descontaron stock; su eliminación no cambiará "
-                        "el inventario."
-                    )
-                st.caption(
-                    "También se borrará el registro de archivos importados para "
-                    "que puedas importarlos nuevamente."
-                )
-                confirmar_eliminar_todas = st.checkbox(
-                    f"Confirmo que deseo eliminar todas las "
-                    f"{cantidad_ventas_total} ventas",
-                    key=f"confirmar_eliminar_todas_ventas_{cantidad_ventas_total}",
-                )
-                if st.button(
-                    "Eliminar todas las ventas",
-                    key="eliminar_todas_ventas",
-                    type="secondary",
-                ):
-                    if not confirmar_eliminar_todas:
-                        st.warning(
-                            "Marca la confirmación antes de eliminar todas las ventas."
+                with st.expander("Eliminar todas las ventas"):
+                    with st.container(key="delete_all_sales_warning", border=True):
+                        st.markdown(
+                            ":material/delete_forever: **Eliminación permanente**",
+                            text_alignment="center",
                         )
-                    else:
-                        ok, mensaje = eliminar_todas_ventas()
-                        if ok:
-                            notificar_exito(mensaje)
-                            st.rerun()
+                        st.markdown(
+                            f"Se eliminarán **{formatear_numero_es(cantidad_ventas_total)} "
+                            "ventas** y sus detalles. El stock se restaurará solo para "
+                            "las ventas que el sistema marcó como descontadas.",
+                            text_alignment="center",
+                        )
+                    if ventas_stock_desconocido:
+                        st.info(
+                            f"{ventas_stock_desconocido} ventas antiguas no tienen "
+                            "registro de si descontaron stock; su eliminación no cambiará "
+                            "el inventario."
+                        )
+                    st.caption(
+                        "También se borrará el registro de archivos importados para "
+                        "que puedas importarlos nuevamente."
+                    )
+                    confirmar_eliminar_todas = st.checkbox(
+                        f"Confirmo que deseo eliminar todas las "
+                        f"{cantidad_ventas_total} ventas",
+                        key=f"confirmar_eliminar_todas_ventas_{cantidad_ventas_total}",
+                    )
+                    if st.button(
+                        "Eliminar todas las ventas",
+                        key="eliminar_todas_ventas",
+                        type="secondary",
+                    ):
+                        if not confirmar_eliminar_todas:
+                            st.warning(
+                                "Marca la confirmación antes de eliminar todas las ventas."
+                            )
                         else:
-                            st.error(mensaje)
+                            ok, mensaje = eliminar_todas_ventas()
+                            if ok:
+                                notificar_exito(mensaje)
+                                st.rerun()
+                            else:
+                                st.error(mensaje)
 
         else:
 
@@ -4276,9 +4288,17 @@ elif menu == "Análisis inteligente":
 
     st.header("Análisis inteligente", icon=":material/query_stats:")
 
+    inicio_analisis = perf_counter()
     datos_historicos = analysis.obtener_datos_ventas()
     resumen = analysis.resumen_ventas(datos_historicos)
     tendencia = analysis.tendencia_ventas(datos_historicos)
+    alertas_ventas, dias_evaluados = analysis.alertas_importes_diarios(datos_historicos)
+    tiempo_analisis = perf_counter() - inicio_analisis
+    st.caption(
+        f"{formatear_numero_es(len(datos_historicos))} registros agregados por "
+        f"producto y día · Consulta y análisis inicial en "
+        f"{formatear_numero_es(tiempo_analisis, 3)} s. El tiempo puede incluir datos en caché."
+    )
 
     st.subheader("Resumen comercial")
 
@@ -4378,6 +4398,24 @@ elif menu == "Análisis inteligente":
         st.info(f"**Tendencia estable.** {explicacion_tendencia}")
     else:
         st.info(explicacion_tendencia)
+
+    st.subheader("Importes diarios atípicos")
+    st.caption(
+        "Se revisan los días con ventas de los últimos 90 días del historial. "
+        "Se señalan importes fuera de 1,5 rangos intercuartílicos. "
+        "Cada alerta es un importe que conviene revisar."
+    )
+    if dias_evaluados < 14:
+        st.info("Se necesitan al menos 14 días con ventas para detectar importes atípicos.")
+    elif alertas_ventas.empty:
+        st.info(f"Sin importes atípicos en {dias_evaluados} días con ventas.")
+    else:
+        st.caption(f"{len(alertas_ventas)} alertas en {dias_evaluados} días con ventas.")
+        mostrar_tabla(
+            alertas_ventas,
+            hide_index=True,
+            column_config={"Ventas (S/)": st.column_config.NumberColumn(format="S/ %.2f")},
+        )
 
     st.subheader("Productos más vendidos")
 
@@ -4534,7 +4572,7 @@ elif menu == "Predicción de demanda":
     else:
         st.info(estado_actual.get("mensaje", "Entrene el modelo para habilitar predicciones."))
 
-    if st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
+    if es_admin and st.button("Entrenar y evaluar modelo", key="entrenar_modelo_demanda"):
         with st.spinner("Preparando el historial y evaluando el pronóstico..."):
             resultado_entrenamiento = prediction.entrenar_modelo()
         evaluacion = resultado_entrenamiento.get("evaluacion")
@@ -4563,6 +4601,38 @@ elif menu == "Predicción de demanda":
                 "Los errores por producto agregan las observaciones de todos los cortes."
             )
             mostrar_detalle_evaluacion(evaluacion)
+
+    if estado_actual["estado"] == "ok":
+        with st.expander("Resumen de reposición del catálogo"):
+            st.caption("Calcula la necesidad de reposición de cada producto según su plazo de entrega.")
+            if st.button("Evaluar reposición del catálogo", key="evaluar_reposicion_catalogo"):
+                inicio_reposicion = perf_counter()
+                with st.spinner("Evaluando el catálogo..."):
+                    reposicion = prediction.analizar_productos()
+                if reposicion.empty:
+                    st.info("No hay productos para evaluar.")
+                else:
+                    validos = reposicion["estado_prediccion"].eq("ok")
+                    pedidos = reposicion.loc[validos & reposicion["cantidad_sugerida"].gt(0)]
+                    st.metric("Recomendaciones de reposición", len(pedidos))
+                    st.caption(
+                        f"{int(validos.sum())} de {len(reposicion)} productos con pronóstico "
+                        f"válido · {formatear_numero_es(perf_counter() - inicio_reposicion, 3)} s."
+                    )
+                    if not pedidos.empty:
+                        mostrar_tabla(
+                            pedidos[["codigo", "nombre", "dias_cobertura", "demanda_cobertura",
+                                     "stock_actual", "stock_minimo", "cantidad_sugerida"]].rename(
+                                columns={
+                                    "codigo": "Código", "nombre": "Producto",
+                                    "dias_cobertura": "Días de cobertura",
+                                    "demanda_cobertura": "Demanda estimada",
+                                    "stock_actual": "Stock actual", "stock_minimo": "Stock mínimo",
+                                    "cantidad_sugerida": "Unidades sugeridas",
+                                }
+                            ),
+                            hide_index=True,
+                        )
 
     productos = prediction.obtener_productos()
 
