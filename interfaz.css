@@ -139,7 +139,6 @@
 .hb-hero {
     background: var(--hb-banner);
     padding: clamp(1.3rem, 4vw, 2.75rem);
-    margin-block-end: 1.15rem;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;

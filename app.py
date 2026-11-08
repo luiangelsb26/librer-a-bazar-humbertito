@@ -2413,6 +2413,7 @@ if menu == "Inicio":
         operacion = resumen_operativo()
         alertas = obtener_alertas_stock(3)
 
+    st.space(size=20)
     st.caption(":material/database: Resumen operativo")
 
     k1, k2, k3, k4, k5 = st.columns(5)
