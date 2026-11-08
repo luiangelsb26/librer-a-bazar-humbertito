@@ -139,9 +139,7 @@
 .hb-hero {
     background: var(--hb-banner);
     padding: clamp(1.3rem, 4vw, 2.75rem);
-}
-
-.hb-hero {
+    margin-block-end: 1.15rem;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -156,8 +154,9 @@
     padding: 0;
 }
 
-.hb-hero p {
-    max-width: 58ch;
+.hb-hero-content {
+    flex: 1 1 28rem;
+    min-width: 0;
 }
 
 .hb-hero-date,
