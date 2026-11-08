@@ -21,7 +21,15 @@
 }
 
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-    gap: 0.8rem;
+    gap: 0.65rem;
+}
+
+[data-testid="stSidebar"] .st-key-sidebar_navigation {
+    gap: 0.7rem;
+}
+
+[data-testid="stSidebar"] [class*="st-key-sidebar_group_"] {
+    gap: 0.15rem;
 }
 
 [data-testid="stSidebar"] [class*="st-key-menu_"] button {
@@ -36,16 +44,11 @@
     justify-content: flex-start;
 }
 
-[data-testid="stSidebar"] hr {
-    margin-block: 0.3rem;
-}
-
 [data-testid="stSidebar"] .sidebar-section-title {
-    padding-bottom: 0.35rem;
+    padding: 0.1rem 0.8rem 0.2rem;
 }
 
 .sidebar-brand,
-.user-card,
 .hb-hero,
 [data-testid="stMetric"],
 :is(.st-key-dashboard_ventas_panel, .st-key-dashboard_productos_panel,
@@ -58,10 +61,8 @@
 
 .sidebar-brand {
     border-inline-start: 3px solid var(--hb-accent);
-}
-
-.user-card {
-    margin-bottom: 0.45rem;
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 0.6rem;
 }
 
 .quick-card {
@@ -106,17 +107,21 @@
 }
 
 .sidebar-brand-subtitle,
-.user-role,
-.user-status-text {
+.user-role {
     font-size: 0.83rem;
 }
 
-.user-card-top {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin-bottom: 0.35rem;
-    color: var(--hb-muted);
+[data-testid="stSidebar"] .st-key-sidebar_account {
+    background: var(--hb-surface);
+    border-color: var(--hb-border);
+    gap: 0.5rem;
+}
+
+.sidebar-account-profile {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.55rem;
 }
 
 .user-status-dot {

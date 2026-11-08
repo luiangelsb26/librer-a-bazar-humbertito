@@ -148,21 +148,6 @@ def invalidar_cache_operativa():
 
 st.html(Path(__file__).with_name("interfaz.css"))
 
-with st.sidebar:
-    st.markdown(
-        """
-        <div class="sidebar-brand">
-            <div class="sidebar-brand-kicker">SISTEMA DE GESTIÓN</div>
-            <div class="sidebar-brand-title">
-                <span class="sidebar-brand-name">LIBRERÍA BAZAR<br>“HUMBERTITO”</span>
-            </div>
-            <div class="sidebar-brand-subtitle">Gestión comercial inteligente</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.divider()
-
 @st.cache_resource(ttl=300, show_spinner=False)
 def preparar_tabla_usuarios():
     """Prepara la autenticación y refresca en segundo plano al vencer."""
@@ -2306,117 +2291,102 @@ def obtener_alertas_stock(limit=5):
 # ==========================================================
 
 with st.sidebar:
-
-    rol_texto = "Administrador" if es_admin else "Empleado"
-
-    # PERFIL / SESIÓN
     st.markdown(
-        f"""
-        <div class="user-card">
-            <div class="user-card-top">
-                <span class="user-status-dot"></span>
-                <span class="user-status-text">Sesión activa</span>
-            </div>
-            <div class="user-name">{escape(str(usuario_actual['nombre']))}</div>
-            <div class="user-role">{rol_texto}</div>
+        """
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-kicker">SISTEMA DE GESTIÓN</div>
+            <div class="sidebar-brand-title">Librería Bazar Humbertito</div>
+            <div class="sidebar-brand-subtitle">Gestión comercial inteligente</div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    if st.button(
-        "Cerrar sesión", key="cerrar_sesion", icon=":material/logout:", width="stretch"
-    ):
-        st.session_state.pop("usuario", None)
-        st.session_state.pop("menu", None)
-        st.rerun()
-
-    st.divider()
-
-    # MENÚ PRINCIPAL
-    st.markdown(
-        '<div class="sidebar-section-title">Menú principal</div>',
-        unsafe_allow_html=True
+    menu = st.session_state.setdefault("menu", "Inicio")
+    grupos_menu = (
+        ("Resumen", (
+            ("inicio", "Inicio", "home"),
+            ("dashboard", "Dashboard gerencial", "dashboard"),
+        )),
+        ("Operaciones", (
+            ("productos", "Productos", "inventory_2"),
+            ("ventas", "Ventas", "point_of_sale"),
+            ("compras", "Compras", "shopping_cart"),
+        )),
+        ("Análisis", (
+            ("analisis", "Análisis inteligente", "query_stats"),
+            ("prediccion", "Predicción de demanda", "trending_up"),
+        )),
     )
-
-    opciones_menu = [
-        "Inicio",
-        "Dashboard gerencial",
-        "Productos",
-        "Ventas",
-        "Compras",
-        "Análisis inteligente",
-        "Predicción de demanda"
-    ]
-
     if es_admin:
-        opciones_menu.append("Administrar usuarios")
+        grupos_menu += (("Administración", (
+            ("usuarios", "Administrar usuarios", "manage_accounts"),
+        )),)
 
-    if "menu" not in st.session_state:
-        st.session_state.menu = "Inicio"
-
-    iconos_menu = {
-        "Inicio": ":material/home:",
-        "Dashboard gerencial": ":material/dashboard:",
-        "Productos": ":material/inventory_2:",
-        "Ventas": ":material/point_of_sale:",
-        "Compras": ":material/shopping_cart:",
-        "Análisis inteligente": ":material/query_stats:",
-        "Predicción de demanda": ":material/trending_up:",
-        "Administrar usuarios": ":material/manage_accounts:",
-    }
-
-    for indice, opcion in enumerate(opciones_menu):
-        clave = "menu_active" if opcion == st.session_state.menu else f"menu_item_{indice}"
-        st.button(
-            opcion,
-            key=clave,
-            type="primary" if clave == "menu_active" else "tertiary",
-            width="stretch",
-            icon=iconos_menu[opcion],
-            on_click=seleccionar_modulo,
-            args=(opcion,),
-        )
-
-    menu = st.session_state.menu
-
-    if es_admin:
-        st.divider()
-
-        # ADMINISTRACIÓN
-        st.markdown(
-            '<div class="sidebar-section-title">Administración</div>',
-            unsafe_allow_html=True
-        )
-
-        with st.expander("Administración de datos"):
-            st.caption(
-                "El reinicio elimina productos, compras, ventas y sus historiales. "
-                "Esta acción no se puede deshacer."
-            )
-
-            confirmacion = st.text_input(
-                "Escriba REINICIAR para continuar",
-                key="confirmar_reinicio",
-                max_chars=9,
-            )
-
-            if st.button(
-                "Eliminar todo y empezar de cero",
-                key="reiniciar_datos",
-                type="secondary",
-                disabled=confirmacion.strip().upper() != "REINICIAR",
-            ):
-                try:
-                    database.reiniciar_datos()
-                    invalidar_cache_operativa()
-                    st.session_state.pop("confirmar_reinicio", None)
-                    notificar_exito(
-                        "Sistema reiniciado correctamente. Ya puedes comenzar un nuevo registro."
+    with st.container(key="sidebar_navigation"):
+        for titulo, opciones in grupos_menu:
+            with st.container(key=f"sidebar_group_{opciones[0][0]}"):
+                st.html(f'<div class="sidebar-section-title">{titulo}</div>')
+                for clave, opcion, icono in opciones:
+                    st.button(
+                        opcion,
+                        key=f"menu_{clave}",
+                        type="primary" if opcion == menu else "tertiary",
+                        width="stretch",
+                        icon=f":material/{icono}:",
+                        on_click=seleccionar_modulo,
+                        args=(opcion,),
                     )
-                    st.rerun()
-                except Exception as error:
-                    st.error(f"No se pudo reiniciar el sistema: {error}")
+
+        if es_admin:
+            with st.expander("Administración de datos"):
+                st.caption(
+                    "El reinicio elimina productos, compras, ventas y sus historiales. "
+                    "Esta acción no se puede deshacer."
+                )
+
+                confirmacion = st.text_input(
+                    "Escriba REINICIAR para continuar",
+                    key="confirmar_reinicio",
+                    max_chars=9,
+                )
+
+                if st.button(
+                    "Eliminar todo y empezar de cero",
+                    key="reiniciar_datos",
+                    type="secondary",
+                    disabled=confirmacion.strip().upper() != "REINICIAR",
+                ):
+                    try:
+                        database.reiniciar_datos()
+                        invalidar_cache_operativa()
+                        st.session_state.pop("confirmar_reinicio", None)
+                        notificar_exito(
+                            "Sistema reiniciado correctamente. Ya puedes comenzar un nuevo registro."
+                        )
+                        st.rerun()
+                    except Exception as error:
+                        st.error(f"No se pudo reiniciar el sistema: {error}")
+
+    with st.container(key="sidebar_account", border=True):
+        rol_texto = "Administrador" if es_admin else "Empleado"
+        st.html(
+            f"""
+            <div class="sidebar-account-profile">
+                <span class="user-status-dot" aria-hidden="true"></span>
+                <div>
+                    <div class="user-name">{escape(str(usuario_actual['nombre']))}</div>
+                    <div class="user-role">{rol_texto}</div>
+                </div>
+            </div>
+            """
+        )
+        if st.button(
+            "Cerrar sesión", key="cerrar_sesion", icon=":material/logout:", width="stretch"
+        ):
+            st.session_state.pop("usuario", None)
+            st.session_state.pop("menu", None)
+            st.rerun()
 
 if menu != "Inicio":
     import pandas as pd
