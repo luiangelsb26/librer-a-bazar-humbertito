@@ -428,27 +428,117 @@ def obtener_productos():
     finally:
         con.close()
 
+COLUMNAS_EXCEL_PRODUCTOS = (
+    "ID", "Código", "Producto", "Categoría", "Precio compra (S/)",
+    "Precio venta (S/)", "Stock", "Stock mínimo", "Días de entrega",
+)
+ANCHOS_EXCEL_PRODUCTOS = (11, 21, 37, 26, 21, 21, 13, 17, 19)
+MONEDA_EXCEL = '"S/ " #,##0.00'
+FORMATOS_EXCEL_PRODUCTOS = {"B": "@", "E": MONEDA_EXCEL, "F": MONEDA_EXCEL}
+ANCHOS_EXCEL_MOVIMIENTOS = (19, 25, 14, 32, 26)
+FORMATOS_EXCEL_MOVIMIENTOS = {"A": "dd/mm/yyyy", "B": "@", "D": MONEDA_EXCEL, "E": "@"}
+
+
+def dar_formato_excel(hoja, anchos, formatos, *, captura=False, nombre_tabla=None):
+    """Formatea datos y plantillas con el encabezado en la primera fila."""
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.table import Table, TableStyleInfo
+
+    hoja.freeze_panes = "A2"
+    hoja.sheet_view.showGridLines = False
+    hoja.sheet_properties.tabColor = "2457B4"
+    hoja.row_dimensions[1].height = 32
+    for celda in hoja[1]:
+        celda.font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+        celda.fill = PatternFill("solid", fgColor="20385F")
+        celda.alignment = Alignment(vertical="center", wrap_text=True, indent=1)
+
+    ultima_fila = hoja.max_row
+    if nombre_tabla and ultima_fila > 1:
+        tabla = Table(displayName=nombre_tabla, ref=hoja.dimensions)
+        tabla.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
+        hoja.add_table(tabla)
+    else:
+        hoja.auto_filter.ref = hoja.dimensions
+
+    fondo_alterno = PatternFill("solid", fgColor="EDF3FC")
+    fondo_claro = PatternFill("solid", fgColor="FFFFFF")
+    texto = Font(name="Calibri", size=11, color="182B48")
+    alineacion = Alignment(vertical="center")
+    for i, ancho in enumerate(anchos, start=1):
+        letra = get_column_letter(i)
+        columna = hoja.column_dimensions[letra]
+        columna.width = ancho
+        if letra in formatos:
+            columna.number_format = formatos[letra]
+
+    if captura:
+        ultima_fila = max(ultima_fila, 26)
+        hoja.auto_filter.ref = f"A1:{get_column_letter(len(anchos))}{ultima_fila}"
+    for fila in hoja.iter_rows(min_row=2, max_row=ultima_fila):
+        for celda in fila:
+            if celda.data_type in ("f", "e"):
+                celda.data_type = "s"
+            if captura:
+                celda.fill = fondo_alterno if celda.row % 2 == 0 else fondo_claro
+            celda.font = texto
+            celda.alignment = alineacion
+            if celda.column_letter in formatos:
+                celda.number_format = formatos[celda.column_letter]
+
+
+def agregar_guia_excel(libro, titulo, instrucciones):
+    """Presenta las instrucciones fuera de la hoja que lee el importador."""
+    from openpyxl.styles import Alignment, Font, PatternFill
+
+    hoja = libro.create_sheet("Instrucciones")
+    hoja.sheet_view.showGridLines = False
+    hoja.sheet_properties.tabColor = "227D72"
+    hoja.column_dimensions["A"].width = 10
+    hoja.column_dimensions["B"].width = 82
+    hoja.merge_cells("A1:B1")
+    hoja["A1"] = titulo
+    hoja["A1"].font = Font(name="Calibri", size=16, bold=True, color="FFFFFF")
+    hoja["A1"].fill = PatternFill("solid", fgColor="20385F")
+    hoja["A1"].alignment = Alignment(vertical="center", indent=1)
+    hoja.row_dimensions[1].height = 35
+    for fila, texto in enumerate(instrucciones, start=3):
+        hoja.cell(fila, 1, fila - 2)
+        hoja.cell(fila, 2, texto)
+        for celda in hoja[fila]:
+            celda.fill = PatternFill("solid", fgColor="EDF3FC" if fila % 2 else "F7F9FD")
+            celda.font = Font(name="Calibri", size=11, color="182B48", bold=celda.column == 1)
+            celda.alignment = Alignment(
+                horizontal="center" if celda.column == 1 else "left",
+                vertical="center", wrap_text=True,
+            )
+        hoja.row_dimensions[fila].height = 36 if len(texto) > 85 else 26
+
+
+def validar_columna_excel(hoja, columna, tipo, operador, minimo, maximo=None):
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    regla = DataValidation(
+        type=tipo, operator=operador, formula1=minimo, formula2=maximo,
+        allow_blank=True, showErrorMessage=True,
+    )
+    regla.errorTitle = "Valor fuera de rango"
+    regla.error = "Consulta la hoja Instrucciones para conocer los valores admitidos."
+    hoja.add_data_validation(regla)
+    regla.add(f"{columna}2:{columna}1048576")
+
+
 @st.cache_data(ttl=60, show_spinner=False, max_entries=3)
 def generar_excel_productos(productos):
-    columnas = [
-        "ID",
-        "Código",
-        "Producto",
-        "Categoría",
-        "Precio compra (S/)",
-        "Precio venta (S/)",
-        "Stock",
-        "Stock mínimo",
-        "Días de entrega",
-    ]
     filas = [
         {
             "ID": p[0],
             "Código": p[1],
             "Producto": p[2],
             "Categoría": p[3] or "",
-            "Precio compra (S/)": p[4],
-            "Precio venta (S/)": p[5],
+            "Precio compra (S/)": float(p[4]),
+            "Precio venta (S/)": float(p[5]),
             "Stock": p[6],
             "Stock mínimo": p[7],
             "Días de entrega": p[8],
@@ -458,108 +548,51 @@ def generar_excel_productos(productos):
 
     archivo = io.BytesIO()
     with pd.ExcelWriter(archivo, engine="openpyxl") as escritor:
-        pd.DataFrame(filas, columns=columnas).to_excel(
-            escritor,
-            index=False,
-            sheet_name="Productos",
+        pd.DataFrame(filas, columns=list(COLUMNAS_EXCEL_PRODUCTOS)).to_excel(
+            escritor, index=False, sheet_name="Productos",
         )
-        hoja = escritor.sheets["Productos"]
-        hoja.freeze_panes = "A2"
-        hoja.auto_filter.ref = hoja.dimensions
-
-        anchos = {
-            "A": 10,
-            "B": 18,
-            "C": 34,
-            "D": 24,
-            "E": 20,
-            "F": 20,
-            "G": 12,
-            "H": 16,
-            "I": 18,
-        }
-        for columna, ancho in anchos.items():
-            hoja.column_dimensions[columna].width = ancho
-
-        if filas:
-            from openpyxl.worksheet.table import Table, TableStyleInfo
-
-            tabla = Table(
-                displayName="TablaProductos",
-                ref=hoja.dimensions,
-            )
-            tabla.tableStyleInfo = TableStyleInfo(
-                name="TableStyleMedium2",
-                showFirstColumn=False,
-                showLastColumn=False,
-                showRowStripes=True,
-                showColumnStripes=False,
-            )
-            hoja.add_table(tabla)
-
-    archivo.seek(0)
+        dar_formato_excel(
+            escritor.sheets["Productos"], ANCHOS_EXCEL_PRODUCTOS,
+            FORMATOS_EXCEL_PRODUCTOS, nombre_tabla="TablaProductos",
+        )
+        agregar_guia_excel(escritor.book, "Catálogo de productos", [
+            "Conserva los encabezados y la hoja Productos si vas a importar este archivo.",
+            "Conserva el ID y el código al actualizar un producto existente.",
+            "Para agregar un producto, deja el ID vacío y usa un código nuevo.",
+        ])
     return archivo.getvalue()
 
 
 @st.cache_data(ttl=60, show_spinner=False, max_entries=3)
 def crear_plantilla_productos_excel():
     """Genera una plantilla para registrar productos desde Excel."""
-    columnas = [
-        "ID",
-        "Código",
-        "Producto",
-        "Categoría",
-        "Precio compra (S/)",
-        "Precio venta (S/)",
-        "Stock",
-        "Stock mínimo",
-        "Días de entrega",
-    ]
     archivo = io.BytesIO()
     with pd.ExcelWriter(archivo, engine="openpyxl") as escritor:
-        pd.DataFrame(columns=columnas).to_excel(
-            escritor,
-            index=False,
-            sheet_name="Productos",
+        pd.DataFrame(columns=list(COLUMNAS_EXCEL_PRODUCTOS)).to_excel(
+            escritor, index=False, sheet_name="Productos",
         )
         hoja = escritor.sheets["Productos"]
-        hoja.freeze_panes = "A2"
-        hoja.auto_filter.ref = "A1:I1"
-        for columna, ancho in {
-            "A": 10,
-            "B": 20,
-            "C": 34,
-            "D": 26,
-            "E": 20,
-            "F": 20,
-            "G": 12,
-            "H": 16,
-            "I": 18,
-        }.items():
-            hoja.column_dimensions[columna].width = ancho
-
-        pd.DataFrame({
-            "Instrucciones": [
-                "Una fila por producto; no cambies los encabezados.",
-                "ID es opcional: conserva el ID exportado para actualizar el mismo producto; déjalo vacío para uno nuevo.",
-                "Código y Producto son obligatorios y el código debe ser único.",
-                "Precio compra y Precio venta deben ser números no negativos; la venta debe ser mayor que cero.",
-                "Stock y Stock mínimo deben ser números enteros no negativos.",
-                "Días de entrega es opcional; usa un entero entre 0 y 30 y, si queda vacío, conserva el valor actual o usa 0 para productos nuevos.",
-                "Categoría puede quedar vacía. Si Stock mínimo queda vacío, se usará 5.",
-                "No incluyas filas de totales ni resúmenes debajo de los productos.",
-            ]
-        }).to_excel(escritor, index=False, sheet_name="Instrucciones")
-        escritor.sheets["Instrucciones"].column_dimensions["A"].width = 105
-
-    archivo.seek(0)
+        dar_formato_excel(hoja, ANCHOS_EXCEL_PRODUCTOS, FORMATOS_EXCEL_PRODUCTOS, captura=True)
+        validar_columna_excel(hoja, "E", "decimal", "greaterThanOrEqual", 0)
+        validar_columna_excel(hoja, "F", "decimal", "greaterThan", 0)
+        for columna in ("G", "H"):
+            validar_columna_excel(hoja, columna, "whole", "greaterThanOrEqual", 0)
+        validar_columna_excel(hoja, "I", "whole", "between", 0, 30)
+        agregar_guia_excel(escritor.book, "Plantilla de productos", [
+            "Completa una fila por producto en la hoja Productos. Conserva los encabezados y evita filas de totales.",
+            "Deja el ID vacío para un producto nuevo. Para actualizar, conserva el ID y el código exportados.",
+            "Escribe un código único y el nombre del producto. La categoría es opcional.",
+            "El precio de compra puede ser cero. El precio de venta debe ser mayor que cero.",
+            "Ingresa cantidades enteras no negativas. Si omites el stock mínimo, se usará 5.",
+            "El plazo admite 0 a 30 días. Si lo omites, se conserva el valor actual o se usa 0 para productos nuevos.",
+        ])
     return archivo.getvalue()
 
 
 def validar_productos_excel(contenido):
     """Valida el catálogo de productos de Excel sin modificar la base de datos."""
     try:
-        original = pd.read_excel(io.BytesIO(contenido), sheet_name=0)
+        original = pd.read_excel(io.BytesIO(contenido), sheet_name=0, dtype=object)
     except Exception as e:
         return [], [f"No se pudo leer el archivo Excel: {e}"]
 
@@ -1110,23 +1143,15 @@ def crear_plantilla_ventas_excel():
             sheet_name="Ventas",
         )
         hoja = escritor.sheets["Ventas"]
-        hoja.freeze_panes = "A2"
-        hoja.auto_filter.ref = "A1:E1"
-        for columna, ancho in {"A": 18, "B": 24, "C": 12, "D": 22, "E": 18}.items():
-            hoja.column_dimensions[columna].width = ancho
-
-        pd.DataFrame({
-            "Instrucciones": [
-                "Registra una fila por cada producto vendido.",
-                "Usa la fecha impresa en la boleta; no se aceptan fechas futuras.",
-                "El código debe coincidir con el catálogo de productos del sistema.",
-                "Cantidad debe ser un entero mayor que cero.",
-                "Usa el precio unitario que figura en la boleta.",
-                "N° Boleta es opcional; repite el mismo número para agrupar sus productos.",
-                "No agregues totales ni filas de resumen debajo de las ventas.",
-            ]
-        }).to_excel(escritor, index=False, sheet_name="Instrucciones")
-        escritor.sheets["Instrucciones"].column_dimensions["A"].width = 100
+        dar_formato_excel(hoja, ANCHOS_EXCEL_MOVIMIENTOS, FORMATOS_EXCEL_MOVIMIENTOS, captura=True)
+        validar_columna_excel(hoja, "C", "whole", "greaterThan", 0)
+        validar_columna_excel(hoja, "D", "decimal", "greaterThan", 0)
+        agregar_guia_excel(escritor.book, "Plantilla de ventas", [
+            "Completa una fila por producto vendido en la hoja Ventas. Conserva los encabezados y evita filas de totales.",
+            "Usa la fecha de la boleta y el código del producto registrado en Humbertito.",
+            "Ingresa la cantidad entera y el precio unitario de la venta en soles.",
+            "El número de boleta es opcional. Repite la fecha y la boleta para agrupar sus productos.",
+        ])
 
     archivo.seek(0)
     return archivo.getvalue()
@@ -1183,7 +1208,7 @@ def _fecha_excel(valor) -> date | None:
 def validar_ventas_excel(_contenido, hash_contenido):
     """Lee y valida el Excel sin modificar la base de datos."""
     try:
-        original = pd.read_excel(io.BytesIO(_contenido), sheet_name=0)
+        original = pd.read_excel(io.BytesIO(_contenido), sheet_name=0, dtype=object)
     except Exception as e:
         return [], [f"No se pudo leer el archivo Excel: {e}"], pd.DataFrame()
 
@@ -1815,12 +1840,47 @@ def registrar_compra(producto_id, cantidad, precio_compra):
 
 
 @st.cache_data(ttl=60, show_spinner=False, max_entries=3)
-def generar_excel_historial_compras(tabla):
+def generar_excel_historial(tabla, nombre_hoja, campos_importe):
+    datos = pd.DataFrame(tabla).copy()
+    formatos = {}
+    if not datos.empty:
+        from openpyxl.utils import get_column_letter
+
+        def fecha_de_excel(valor):
+            if isinstance(valor, str):
+                try:
+                    fecha = datetime.fromisoformat(valor)
+                except ValueError:
+                    return valor
+                if fecha.tzinfo is None:
+                    return fecha
+            return valor
+
+        datos["Fecha"] = datos["Fecha"].map(fecha_de_excel)
+        for campo in campos_importe:
+            datos[campo] = pd.to_numeric(datos[campo])
+        for i, columna in enumerate(datos.columns, start=1):
+            letra = get_column_letter(i)
+            if columna in campos_importe:
+                formatos[letra] = MONEDA_EXCEL
+            elif columna == "Fecha":
+                formatos[letra] = "dd/mm/yyyy hh:mm:ss"
+            elif columna in ("Boleta", "Comprobante"):
+                formatos[letra] = "@"
+
     salida = io.BytesIO()
     with pd.ExcelWriter(salida, engine="openpyxl") as escritor:
-        pd.DataFrame(tabla).to_excel(
-            escritor, index=False, sheet_name="Historial de compras"
+        datos.to_excel(escritor, index=False, sheet_name=nombre_hoja)
+        dar_formato_excel(
+            escritor.sheets[nombre_hoja],
+            (13, 25, 23, 23, 38, 14, 21, 23)[:len(datos.columns)],
+            formatos, nombre_tabla="TablaHistorial",
         )
+        agregar_guia_excel(escritor.book, nombre_hoja, [
+            "Cada fila corresponde a un producto de una transacción.",
+            "Suma los subtotales de las líneas para obtener el importe total. "
+            "El total del comprobante puede repetirse en varias filas.",
+        ])
     return salida.getvalue()
 
 
@@ -1842,12 +1902,9 @@ def crear_plantilla_compras_excel():
             sheet_name="Compras",
         )
         hoja = escritor.sheets["Compras"]
-        hoja.freeze_panes = "A2"
-        hoja.auto_filter.ref = "A1:E1"
-        for columna, ancho in {
-            "A": 18, "B": 24, "C": 12, "D": 32, "E": 24
-        }.items():
-            hoja.column_dimensions[columna].width = ancho
+        dar_formato_excel(hoja, ANCHOS_EXCEL_MOVIMIENTOS, FORMATOS_EXCEL_MOVIMIENTOS, captura=True)
+        validar_columna_excel(hoja, "C", "whole", "greaterThan", 0)
+        validar_columna_excel(hoja, "D", "decimal", "greaterThan", 0)
 
         pd.DataFrame({
             "Fecha": ["2026-10-01", "2026-10-01", "2026-10-02", "2026-10-03"],
@@ -1860,26 +1917,17 @@ def crear_plantilla_compras_excel():
                 "COMP-DEMO-001", "COMP-DEMO-001", "COMP-DEMO-002", "COMP-DEMO-003"
             ],
         }).to_excel(escritor, index=False, sheet_name="Ejemplo DEMO - NO IMPORTAR")
-        ejemplo = escritor.sheets["Ejemplo DEMO - NO IMPORTAR"]
-        ejemplo.freeze_panes = "A2"
-        ejemplo.auto_filter.ref = "A1:E5"
-        for columna, ancho in {
-            "A": 18, "B": 24, "C": 12, "D": 32, "E": 24
-        }.items():
-            ejemplo.column_dimensions[columna].width = ancho
-
-        pd.DataFrame({
-            "Instrucciones": [
-                "La hoja Compras está vacía y es la que lee el sistema.",
-                "La hoja Ejemplo DEMO - NO IMPORTAR contiene valores ficticios para reemplazar.",
-                "Copia las filas necesarias del ejemplo a Compras y reemplaza todos los valores por los del comprobante real.",
-                "Cada fila representa un producto comprado; una misma factura puede ocupar varias filas.",
-                "Repite el mismo Comprobante y Fecha en las filas de productos de una misma compra.",
-                "Usa la fecha del comprobante, el código registrado en el sistema, cantidad entera y costo unitario real.",
-                "No subas filas de demostración: los códigos DEMO y precios son solo ilustrativos.",
-            ]
-        }).to_excel(escritor, index=False, sheet_name="Instrucciones")
-        escritor.sheets["Instrucciones"].column_dimensions["A"].width = 110
+        dar_formato_excel(
+            escritor.sheets["Ejemplo DEMO - NO IMPORTAR"],
+            ANCHOS_EXCEL_MOVIMIENTOS, FORMATOS_EXCEL_MOVIMIENTOS,
+            nombre_tabla="TablaEjemploCompras",
+        )
+        agregar_guia_excel(escritor.book, "Plantilla de compras", [
+            "Completa una fila por producto comprado en la hoja Compras. Conserva los encabezados y evita filas de totales.",
+            "Usa la fecha y el código de producto registrados, una cantidad entera y el costo unitario real.",
+            "Repite la fecha y el comprobante en las líneas que pertenecen a la misma compra.",
+            "La hoja de ejemplo contiene datos ficticios. Usa los datos del comprobante real en Compras.",
+        ])
 
     archivo.seek(0)
     return archivo.getvalue()
@@ -1889,10 +1937,10 @@ def crear_plantilla_compras_excel():
 def validar_compras_excel(_contenido, hash_contenido):
     """Valida las compras del Excel antes de insertar o modificar el inventario."""
     try:
-        original = pd.read_excel(io.BytesIO(_contenido), sheet_name="Compras")
+        original = pd.read_excel(io.BytesIO(_contenido), sheet_name="Compras", dtype=object)
     except ValueError:
         try:
-            original = pd.read_excel(io.BytesIO(_contenido), sheet_name=0)
+            original = pd.read_excel(io.BytesIO(_contenido), sheet_name=0, dtype=object)
         except Exception as e:
             return [], [f"No se pudo leer la hoja Compras: {e}"], pd.DataFrame()
     except Exception as e:
@@ -3794,11 +3842,11 @@ elif menu == "Ventas":
                     "N.º": numero_fila,
                     "Boleta": venta[8] or "",
                     "Fecha": venta[1],
-                    "Total de boleta": f"S/ {venta[2]:.2f}",
+                    "Total de boleta": venta[2],
                     "Producto": venta[3],
                     "Cantidad": venta[4],
-                    "Precio unitario": f"S/ {venta[5]:.2f}",
-                    "Subtotal de línea": f"S/ {venta[6]:.2f}",
+                    "Precio unitario": venta[5],
+                    "Subtotal de línea": venta[6],
                 })
 
             st.caption(
@@ -3828,7 +3876,10 @@ elif menu == "Ventas":
                 f"Mostrando filas {formatear_numero_es(inicio + 1)}–"
                 f"{formatear_numero_es(fin)} de {formatear_numero_es(len(tabla))}."
             )
+            campos_importe = ("Total de boleta", "Precio unitario", "Subtotal de línea")
             tabla_pagina = pd.DataFrame(tabla[inicio:fin])
+            for campo in campos_importe:
+                tabla_pagina[campo] = tabla_pagina[campo].map(lambda valor: f"S/ {valor:.2f}")
             with st.container(key="sales_history_table"):
                 st.table(
                     tabla_pagina,
@@ -3836,6 +3887,14 @@ elif menu == "Ventas":
                     height="content" if len(tabla_pagina) <= 10 else 520,
                     hide_index=True,
                 )
+
+            st.download_button(
+                "Descargar historial de ventas en Excel",
+                data=lambda: generar_excel_historial(tabla, "Historial de ventas", campos_importe),
+                file_name="historial_ventas_humbertito.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="descargar_historial_ventas",
+            )
 
             with st.expander("Eliminar una venta registrada por error"):
                 ventas_por_id = {venta[0]: venta for venta in ventas}
@@ -4182,24 +4241,23 @@ elif menu == "Compras":
                 tabla.append({
                     "Compra": compra[0],
                     "Fecha": compra[1],
-                    "Total": formatear_soles(compra[2]),
+                    "Total": compra[2],
                     "Comprobante": compra[3] or "",
                     "Producto": compra[4],
                     "Cantidad": compra[5],
-                    "Precio unitario": formatear_soles(compra[6]),
-                    "Subtotal": formatear_soles(compra[7])
+                    "Precio unitario": compra[6],
+                    "Subtotal": compra[7]
                 })
 
-            mostrar_tabla(
-                tabla,
-                width="stretch",
-                hide_index=True,
-                height=420,
-            )
+            campos_importe = ("Total", "Precio unitario", "Subtotal")
+            tabla_visible = pd.DataFrame(tabla)
+            for campo in campos_importe:
+                tabla_visible[campo] = tabla_visible[campo].map(formatear_soles)
+            mostrar_tabla(tabla_visible, hide_index=True, height=420)
 
             st.download_button(
                 "Descargar historial de compras en Excel",
-                data=generar_excel_historial_compras(tabla),
+                data=lambda: generar_excel_historial(tabla, "Historial de compras", campos_importe),
                 file_name="historial_compras_humbertito.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 key="descargar_historial_compras",
