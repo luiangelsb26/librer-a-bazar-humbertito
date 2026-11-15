@@ -123,14 +123,45 @@ function Metrics({ items }) {
   </div>;
 }
 
+const axisAmount = new Intl.NumberFormat('es-PE', {
+  style: 'currency', currency: 'PEN', minimumFractionDigits: 0, maximumFractionDigits: 2,
+});
+
 function Trend({ rows }) {
+  const [activeDay, setActiveDay] = useState(null);
   if (!rows?.length) return <p className="empty">Registra ventas para ver la tendencia.</p>;
-  const max = Math.max(1, ...rows.map(row => Number(row.value)));
-  return <div className="trend" aria-label="Gráfico de ventas">
-    {rows.map((row, index) => <div className="bar-column" key={index} title={row.label + ' · ' + money.format(row.value)}>
-      <div className="bar-track"><div style={{ height: (100 * Number(row.value) / max) + '%' }}/></div>
-      <span>{row.label}</span>
-    </div>)}
+
+  const peak = Math.max(1, ...rows.map(row => row.value));
+  const interval = peak / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(interval));
+  const step = [1, 2, 2.5, 5, 10].find(size => size * magnitude >= interval) * magnitude;
+  const max = step * 4;
+  const selected = rows.find(row => row.day === activeDay) ?? rows.at(-1);
+
+  return <div className="sales-chart" role="group" aria-label="Ventas por día">
+    <div className="sales-chart-summary" aria-live="polite">
+      <strong>{money.format(selected.value)}</strong>
+      <time dateTime={selected.day}>{formatDay(selected.day)}</time>
+    </div>
+    <div className="sales-chart-frame">
+      <div className="sales-chart-axis" aria-hidden="true">
+        {[4, 3, 2, 1, 0].map(tick => <span key={tick}>{axisAmount.format(tick * step)}</span>)}
+      </div>
+      <div className="sales-chart-grid" aria-hidden="true"/>
+      <div className="sales-chart-bars">
+        {rows.map(row => <button key={row.day} type="button" className="sales-chart-day"
+          aria-label={formatDay(row.day) + ', ' + money.format(row.value)}
+          aria-pressed={selected.day === row.day}
+          onPointerEnter={() => setActiveDay(row.day)}
+          onFocus={() => setActiveDay(row.day)}
+          onClick={() => setActiveDay(row.day)}>
+          <span className="sales-chart-column" aria-hidden="true">
+            <span style={{ height: (100 * row.value / max) + '%' }}/>
+          </span>
+          <span className="sales-chart-date" aria-hidden="true">{row.label}</span>
+        </button>)}
+      </div>
+    </div>
   </div>;
 }
 
@@ -504,7 +535,7 @@ export default function Page() {
     const day = String(row.fecha ?? '').slice(0, 10);
     if (day) daily.set(day, (daily.get(day) ?? 0) + Number(row.subtotal));
   }
-  const trend = [...daily].sort(([a], [b]) => a.localeCompare(b)).slice(-10).map(([day, value]) => ({ label: day.slice(5).split('-').reverse().join('/'), value }));
+  const trend = [...daily].sort(([a], [b]) => a.localeCompare(b)).slice(-10).map(([day, value]) => ({ day, label: day.slice(5).split('-').reverse().join('/'), value }));
   const props = { submit, busy, admin };
   return <div className="shell">
     <aside className={drawer ? 'sidebar open' : 'sidebar'}>
