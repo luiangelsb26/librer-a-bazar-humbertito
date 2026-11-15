@@ -8,15 +8,20 @@ import {
 } from 'lucide-react';
 import Script from 'next/script';
 
-const sections = [
-  ['resumen', 'Vista general', 'dashboard'],
-  ['productos', 'Inventario', 'inventory_2'],
-  ['ventas', 'Ventas', 'point_of_sale'],
-  ['compras', 'Compras', 'shopping_cart'],
-  ['analisis', 'Análisis comercial', 'monitoring'],
-  ['modelo', 'Pronóstico', 'trending_up'],
-  ['usuarios', 'Administración', 'manage_accounts'],
+const navigation = [
+  ['Resumen', [['resumen', 'Vista general', 'dashboard']]],
+  ['Operaciones', [
+    ['productos', 'Inventario', 'inventory_2'],
+    ['ventas', 'Ventas', 'point_of_sale'],
+    ['compras', 'Compras', 'shopping_cart'],
+  ]],
+  ['Análisis', [
+    ['analisis', 'Análisis comercial', 'monitoring'],
+    ['modelo', 'Pronóstico', 'trending_up'],
+  ]],
+  ['Gestión', [['usuarios', 'Administración', 'manage_accounts']]],
 ];
+const sections = navigation.flatMap(([, entries]) => entries);
 const money = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
 const integer = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 2 });
 const localDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Lima' });
@@ -233,15 +238,55 @@ function Movements({ kind, products, rows, audit, submit, busy, admin }) {
   </>;
 }
 
+const percent = new Intl.NumberFormat('es-PE', {
+  style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero',
+});
+const shortDate = new Intl.DateTimeFormat('es-PE', {
+  day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
+});
+const modelStatuses = {
+  ok: ['Modelo listo', 'Disponible para generar pronósticos.'],
+  modelo_no_entrenado: ['Pendiente de entrenamiento', 'Entrena el modelo con el historial de ventas para generar pronósticos.'],
+  modelo_desactualizado: ['Requiere actualización', 'Entrena y evalúa el modelo con el historial actual.'],
+  modelo_invalido: ['Modelo no disponible', 'Vuelve a entrenarlo para generar pronósticos.'],
+};
+
+function formatDay(value) {
+  if (!value) return '—';
+  const date = new Date(String(value).slice(0, 10) + 'T00:00:00Z');
+  return Number.isNaN(date.getTime()) ? '—' : shortDate.format(date);
+}
+
+function SalesTrend({ trend }) {
+  const change = Number.isFinite(trend.valor) ? percent.format(trend.valor / 100) : '—';
+  const hasPeriod = Boolean(trend.fecha_inicio && trend.fecha_fin);
+  return <Card title="Tendencia de ventas">
+    <div className="trend-summary">
+      <strong className="trend-status">{trend.tipo}</strong>
+      {hasPeriod && <span className="muted">{formatDay(trend.fecha_inicio)} – {formatDay(trend.fecha_fin)}</span>}
+    </div>
+    {hasPeriod && <dl className="trend-values">
+      <div><dt>Ventas del periodo base</dt><dd>{money.format(trend.ventas_periodo_base)}</dd></div>
+      <div><dt>Ventas del periodo reciente</dt><dd>{money.format(trend.ventas_periodo_reciente)}</dd></div>
+      <div><dt>Variación</dt><dd className={trend.valor < 0 ? 'trend-negative' : undefined}>{change}</dd></div>
+    </dl>}
+    {hasPeriod && trend.dias_por_periodo > 0 && <p className="muted trend-period">{trend.dias_por_periodo} días por periodo</p>}
+    {trend.explicacion && <p className="trend-explanation">{trend.explicacion}</p>}
+  </Card>;
+}
+
 function Forecast({ products, model, submit, busy, admin }) {
   const [product, setProduct] = useState('');
   const [result, setResult] = useState(null);
   const [request, setRequest] = useState(null);
   const selected = products.find(row => String(row.id) === product);
+  const [status, statusText] = modelStatuses[model?.estado] ?? ['Estado no disponible', 'Consulta el estado del modelo de demanda.'];
   return <>
     <Card title="Estado del modelo" actions={admin && <button className="button" disabled={busy} onClick={() => submit('modelo/entrenar', {}, data => setResult({ training: data }))}>Entrenar y evaluar</button>}>
-      <p className="muted">{model?.mensaje ?? 'Consulta el estado del modelo de demanda.'}</p>
-      {model?.algoritmo && <span className="pill">{model.algoritmo}</span>}
+      <div className="model-status">
+        <span className={'pill' + (model?.estado === 'ok' ? '' : ' warning')}>{status}</span>
+        <p className="muted">{statusText}</p>
+      </div>
       {model?.evaluacion?.cortes_evaluacion && <details><summary>Evaluación por periodo</summary>{objectTable(model.evaluacion.cortes_evaluacion)}</details>}
       {result?.training && <Notice message={result.training.mensaje ?? 'Evaluación completada.'}/>}
     </Card>
@@ -432,12 +477,19 @@ export default function Page() {
   return <div className="shell">
     <aside className={drawer ? 'sidebar open' : 'sidebar'}>
       <Brand/>
-      <nav aria-label="Módulos">{sections.filter(([key]) => key !== 'usuarios' || admin).map(([key, label, icon]) =>
-        <button key={key} type="button" aria-current={key === screen ? 'page' : undefined} onClick={() => {
-          if (busy) return;
-          if (screen !== key) { setData({}); setLoading(true); }
-          setScreen(key); setNotice(null); setDrawer(false);
-        }}><Icon name={icon}/>{label}</button>)}</nav>
+      <nav aria-label="Módulos">{navigation.map(([group, entries]) => {
+        const allowed = entries.filter(([key]) => key !== 'usuarios' || admin);
+        if (!allowed.length) return null;
+        return <div className="nav-group" key={group} role="group" aria-label={group}>
+          <span className="nav-group-label" aria-hidden="true">{group}</span>
+          {allowed.map(([key, label, icon]) =>
+            <button key={key} type="button" aria-current={key === screen ? 'page' : undefined} onClick={() => {
+              if (busy) return;
+              if (screen !== key) { setData({}); setLoading(true); }
+              setScreen(key); setNotice(null); setDrawer(false);
+            }}><Icon name={icon}/>{label}</button>)}
+        </div>;
+      })}</nav>
       <div className="account"><div><strong>{user.nombre}</strong><small>{admin ? 'Administración' : 'Operaciones'}</small></div>
         <button title="Cerrar sesión" aria-label="Cerrar sesión" type="button" disabled={busy} onClick={() => submit('salir', {}, undefined, false)}><Icon name="logout"/></button></div>
     </aside>
@@ -469,8 +521,13 @@ export default function Page() {
         {screen === 'productos' && data.productos && <Products rows={data.productos} {...props}/>}
         {(screen === 'ventas' || screen === 'compras') && data[screen] && <Movements key={screen} kind={screen} products={data.productos} rows={data[screen]} audit={data['compras/auditoria']} {...props}/>}
         {screen === 'analisis' && data.analisis && <>
-          <Metrics items={Object.entries(data.analisis.resumen).filter(([, value]) => typeof value === 'number').map(([key, value]) => [key.replaceAll('_', ' '), integer.format(value), 'query_stats'])}/>
-          <Card title="Tendencia de ventas"><Metrics items={Object.entries(data.analisis.tendencia).filter(([, value]) => ['number', 'string'].includes(typeof value)).map(([key, value]) => [key.replaceAll('_', ' '), typeof value === 'number' ? integer.format(value) : value])}/></Card>
+          <Metrics items={[
+            ['Ventas totales', money.format(data.analisis.resumen.total_ventas), 'point_of_sale'],
+            ['Unidades vendidas', integer.format(data.analisis.resumen.unidades_vendidas), 'inventory_2'],
+            ['Promedio de ventas por día', money.format(data.analisis.resumen.promedio_diario), 'monitoring'],
+            ['Días con ventas', integer.format(data.analisis.resumen.dias_con_ventas), 'dashboard'],
+          ]}/>
+          <SalesTrend trend={data.analisis.tendencia}/>
           <Card title="Productos más vendidos">{objectTable(data.analisis.destacados)}</Card>
           <Card title="Análisis por producto">{objectTable(data.analisis.productos)}</Card>
           <Card title="Alertas en importes diarios">{objectTable(data.analisis.alertas)}</Card>
