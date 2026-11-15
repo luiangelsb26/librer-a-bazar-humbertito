@@ -10,6 +10,8 @@
 
 </div>
 
+<p align="center"><a href="#funcionalidades">Funcionalidades</a> · <a href="#cómo-se-usa">Cómo se usa</a> · <a href="#estructura-del-código">Estructura</a> · <a href="#ejecución-local">Ejecución local</a></p>
+
 ## Funcionalidades
 
 | Área | Funciones |
@@ -20,6 +22,13 @@
 | Análisis | Consultar indicadores y analizar la demanda para apoyar la reposición. |
 | Reportes y acceso | Generar reportes en PDF y administrar usuarios del sistema. |
 
+## Cómo se usa
+
+1. Registra los productos o cárgalos desde una plantilla de Excel.
+2. Registra las compras y ventas y consulta el historial de movimientos.
+3. Revisa las existencias y las alertas de stock para identificar productos que requieren reposición.
+4. Consulta los indicadores y el pronóstico de demanda cuando el sistema disponga de historial de ventas.
+
 ## Estructura del código
 
 | Archivo | Responsabilidad |
@@ -27,7 +36,7 @@
 | [`app.py`](app.py) | Interfaz de Streamlit y flujos de operación. |
 | [`database.py`](database.py) | Acceso a datos con SQLite local o PostgreSQL. |
 | [`auth.py`](auth.py) | Autenticación y administración de usuarios. |
-| [`analysis.py`](analysis.py) y [`prediction.py`](prediction.py) | Análisis y estimación de demanda. |
+| [`analysis.py`](analysis.py) y [`prediction.py`](prediction.py) | Análisis del historial de ventas y pronóstico de demanda con scikit-learn. |
 | [`pdf_report.py`](pdf_report.py) | Generación de reportes en PDF. |
 
 ## Ejecución local
