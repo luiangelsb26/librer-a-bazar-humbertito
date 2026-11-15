@@ -43,26 +43,61 @@
 
 ## Ejecución local
 
-Desde la raíz del repositorio, con el entorno virtual de Python activo y **Node.js 20.9 o superior**:
+Estos pasos son para **Windows con PowerShell**. Necesitas **Git**, **Python 3.14** y **Node.js 20.9 o superior**. Ejecuta los comandos desde la raíz del proyecto.
+
+### 1. Descarga e instala
+
+Si aún no tienes el repositorio:
 
 ```powershell
-python -m pip install -r requirements.txt -r requirements-web.txt
-npm ci
+git clone https://github.com/luiangelsb26/librer-a-bazar-humbertito.git
+cd librer-a-bazar-humbertito
 ```
 
-1. Si la base ya tiene usuarios, puedes iniciar sesión con esas cuentas. Para una base nueva, ejecuta `python -m api crear-admin`.
-2. En una terminal inicia la API. El secreto aleatorio del siguiente ejemplo dura lo que dure esa sesión de PowerShell.
+Si ya tienes una copia, abre su carpeta y ejecuta `git pull --ff-only origin main` para traer la última versión.
 
-   ```powershell
-   $env:HUMBERTITO_SESSION_SECRET = python -c "import secrets; print(secrets.token_hex(32))"
-   python -m uvicorn api:create_app --factory --host 127.0.0.1 --port 8000
-   ```
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-web.txt
+npm.cmd ci
+```
 
-3. En otra terminal, ejecuta `npm run dev` y entra a [localhost:3000](http://localhost:3000).
+### 2. Configura la base de datos y el acceso
 
-SQLite usa el mismo archivo local del sistema existente. Si usas Supabase, configura `SUPABASE_DB_URL` (o `DATABASE_URL`) en el entorno de la API y de cualquier comando de inicialización. La API lee esas variables del entorno. Para producción, conserva un secreto estable, configura cookies seguras con `HUMBERTITO_SECURE_COOKIES=1` detrás de HTTPS, ejecuta un proceso de API y define `HUMBERTITO_API_URL` si la API está en otro host antes de compilar con `npm run build`. Sirve Next.js con `npm start`.
+La API usa **SQLite** por defecto y guarda los datos en `data/humbertito.db`. Si tu instalación usa **Supabase**, configura `SUPABASE_DB_URL` o `DATABASE_URL` en esta terminal antes de crear una cuenta o iniciar la API. Usa la URL de conexión de PostgreSQL que ya utiliza el proyecto. La API lee la variable del entorno. Si tienes la conexión guardada en los secretos de Streamlit, debes configurar también la variable para Next.js y su API.
 
-Para abrir la interfaz Streamlit, ejecuta `python -m streamlit run app.py`. Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
+Para una base de datos nueva, crea la primera cuenta administradora:
+
+```powershell
+.\.venv\Scripts\python.exe -m api crear-admin
+```
+
+Si la base ya tiene usuarios, inicia sesión con tu cuenta existente.
+
+### 3. Inicia la API en la primera terminal
+
+```powershell
+$env:HUMBERTITO_SESSION_SECRET = .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_hex(32))"
+.\.venv\Scripts\python.exe -m uvicorn api:create_app --factory --host 127.0.0.1 --port 8000
+```
+
+Deja esta terminal abierta. El secreto se genera para esta sesión de PowerShell. Si generas uno nuevo, tendrás que volver a iniciar sesión.
+
+### 4. Inicia Next.js en la segunda terminal
+
+Abre otra terminal en la raíz del proyecto y ejecuta:
+
+```powershell
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Abre [Humbertito en el navegador](http://127.0.0.1:3000) e inicia sesión. Next.js envía las solicitudes de `/api` al puerto `8000`. Si la pantalla muestra un error de conexión, comprueba que la primera terminal siga ejecutando la API. Para detener el sistema, pulsa **Ctrl+C** en ambas terminales.
+
+### Compilación e interfaz Streamlit
+
+Para usar la compilación de Next.js, mantén la API activa y ejecuta `npm.cmd run build` seguido de `npm.cmd start -- --hostname 127.0.0.1 --port 3000`. Si la API usa otra dirección, establece `HUMBERTITO_API_URL` antes de iniciar el servidor de desarrollo o compilar. En un despliegue con HTTPS, usa un secreto de sesión estable, activa `HUMBERTITO_SECURE_COOKIES=1` en la API y ejecuta un solo proceso de la API.
+
+Para abrir la interfaz Streamlit, ejecuta `.\.venv\Scripts\python.exe -m streamlit run app.py`. Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
 
 ## Autor
 
