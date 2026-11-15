@@ -111,6 +111,17 @@ Para generar el módulo Angular y la compilación de Next.js, mantén la API act
 
 Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
 
+## Alojamiento en la nube
+
+El `Dockerfile` arranca Next.js y Angular en el puerto público asignado por el proveedor. La API de Python escucha dentro del mismo contenedor. Por ejemplo, en Railway puedes conectar este repositorio y desplegar la rama `main` desde la raíz.
+
+Configura estas variables en el servicio:
+
+- `SUPABASE_DB_URL` con la conexión PostgreSQL de la base que usa Humbertito. Si tienes datos en SQLite que necesitas conservar, migra esos datos antes de cambiar de base.
+- `HUMBERTITO_SESSION_SECRET` con un secreto aleatorio, estable y de al menos 32 caracteres. Puedes generarlo con `python -c "import secrets; print(secrets.token_hex(32))"`.
+
+Mantén una sola instancia. El contenedor exige PostgreSQL y activa las cookies HTTPS. Después de obtener el dominio HTTPS, verifica que cargue el inicio de sesión y que `/api/sesion` devuelva un mensaje para iniciar sesión. Configura `HUMBERTITO_WEB_URL` con ese dominio en los secretos de tu ficha de Streamlit; el botón de acceso abrirá el sistema alojado.
+
 ## Autor
 
 [Luis Angel Salinas Bardales](https://github.com/luiangelsb26)

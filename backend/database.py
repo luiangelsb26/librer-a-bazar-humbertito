@@ -183,11 +183,16 @@ def es_error_integridad(error: BaseException) -> bool:
 def conectar() -> DatabaseConnection:
     """Conecta a Supabase si está configurado; si falla, usa SQLite local."""
     global _database_url, _fallback_sqlite
+    require_postgres = os.getenv("HUMBERTITO_REQUIRE_POSTGRES") == "1"
+    if require_postgres and not _database_url:
+        raise RuntimeError("Configura la conexión PostgreSQL antes de iniciar Humbertito.")
 
     if _database_url and not _fallback_sqlite:
         try:
             import psycopg
         except ModuleNotFoundError:
+            if require_postgres:
+                raise RuntimeError("Falta el controlador PostgreSQL.") from None
             _fallback_sqlite = True
             return sqlite3.connect(DB_PATH)
 
@@ -204,6 +209,8 @@ def conectar() -> DatabaseConnection:
                     )
                 )
             except Exception:
+                if require_postgres:
+                    raise RuntimeError("No se pudo conectar a PostgreSQL.") from None
                 _fallback_sqlite = True
                 _database_url = None
                 return sqlite3.connect(DB_PATH)
@@ -229,10 +236,14 @@ def conectar() -> DatabaseConnection:
                 pool.close()
             except Exception:
                 pass
+        if require_postgres:
+            raise RuntimeError("No se pudo conectar a PostgreSQL.")
         _fallback_sqlite = True
         _database_url = None
         return sqlite3.connect(DB_PATH)
 
+    if require_postgres:
+        raise RuntimeError("PostgreSQL no está disponible.")
     return sqlite3.connect(DB_PATH)
 
 
