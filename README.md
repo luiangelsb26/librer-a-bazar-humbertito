@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="100%" alt="" src="https://capsule-render.vercel.app/api?type=waving&amp;height=105&amp;color=0:0C2944,100:087E8B&amp;section=header">
+  <img width="100%" alt="" src="https://capsule-render.vercel.app/api?type=waving&amp;height=105&amp;color=0:211F34,100:6849BD&amp;section=header">
   <h1>Librería Bazar Humbertito</h1>
   <p>Sistema de gestión de inventario, compras y ventas con una interfaz oscura en Next.js, inventario en Angular y operaciones en Python.</p>
 
@@ -16,6 +16,14 @@
 **Frontend · Next.js (React) y Angular (inventario)**
 
 **Backend · Python (Starlette)**
+
+## Versión actual
+
+- **Inicio de sesión** con el diseño de dos paneles y opción de mostrar u ocultar la contraseña.
+- **Entorno de gestión** con tema oscuro en el panel general, menú, formularios, tablas y gráficos.
+- **Inventario en Angular**, integrado con la sesión y la API del resto de la aplicación.
+
+[Ver el cambio de interfaz](https://github.com/luiangelsb26/librer-a-bazar-humbertito/commit/69120d3) · [Ver cómo iniciar el sistema](#ejecución-local)
 
 ## Funcionalidades
 
@@ -68,7 +76,7 @@ npm.cmd --prefix web ci
 
 ### 2. Configura la base de datos y el acceso
 
-La API usa **SQLite** por defecto y guarda los datos en `data/humbertito.db`. Si tu instalación usa **Supabase**, configura `SUPABASE_DB_URL` o `DATABASE_URL` en esta terminal antes de crear una cuenta o iniciar la API. Usa la URL de conexión de PostgreSQL que ya utiliza el proyecto. La API lee la variable del entorno. Si tienes la conexión guardada en los secretos de Streamlit, debes configurar también la variable para Next.js y su API.
+La API usa **SQLite** por defecto y guarda los datos en `data/humbertito.db`. Si tu instalación usa **Supabase**, configura `SUPABASE_DB_URL` o `DATABASE_URL` en esta terminal antes de crear una cuenta o iniciar la API. Usa la URL de conexión de PostgreSQL que ya utiliza el proyecto. La API lee la variable del entorno. Si migras de la interfaz anterior y guardabas la conexión en los secretos de Streamlit, usa esa misma URL como variable de entorno de la API.
 
 Para una base de datos nueva, crea la primera cuenta administradora:
 
