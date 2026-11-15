@@ -1,6 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  BookOpen, ChartNoAxesCombined, ChartNoAxesColumnIncreasing, CircleAlert,
+  LayoutDashboard, LogOut, Menu, Package, ReceiptText, Search, ShoppingCart,
+  TrendingUp, UsersRound,
+} from 'lucide-react';
 
 const sections = [
   ['resumen', 'Vista general', 'dashboard'],
@@ -52,8 +57,16 @@ async function call(path, body) {
   return data;
 }
 
+const icons = {
+  dashboard: LayoutDashboard, inventory_2: Package, point_of_sale: ReceiptText,
+  shopping_cart: ShoppingCart, monitoring: ChartNoAxesCombined, trending_up: TrendingUp,
+  manage_accounts: UsersRound, search: Search, warning: CircleAlert, show_chart: ChartNoAxesCombined,
+  query_stats: ChartNoAxesColumnIncreasing, menu_book: BookOpen, menu: Menu, logout: LogOut,
+};
+
 function Icon({ name }) {
-  return <span className="material-symbols-outlined icon" aria-hidden="true">{name}</span>;
+  const Glyph = icons[name];
+  return Glyph ? <Glyph className="icon" size={20} strokeWidth={1.8} aria-hidden="true"/> : null;
 }
 
 function Notice({ message, error = false }) {
