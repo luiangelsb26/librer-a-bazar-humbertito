@@ -9,7 +9,6 @@
   "exclude": [
     "**/__pycache__",
     "web/**",
-    "streamlit_ui/**",
     "app_backup.py"
   ],
   "pythonVersion": "3.14",

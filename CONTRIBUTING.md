@@ -2,7 +2,7 @@
 
 ## Verificación de tipos
 
-La aplicación usa Python y Streamlit; Pyright revisa tipos estáticos sin cambiar
+La aplicación usa una API en Python, Next.js y un módulo Angular; Pyright revisa tipos estáticos sin cambiar
 el modo de ejecución ni requerir una compilación previa.
 
 Instala las dependencias de desarrollo y ejecuta el análisis desde la raíz:
@@ -13,8 +13,7 @@ python -m pyright
 ```
 
 La configuración actual cubre autenticación, acceso a datos, informes y
-migraciones; `auth.py` y `database.py` se revisan en modo estricto. La interfaz
-Streamlit y los módulos de análisis con Pandas/NumPy quedan fuera inicialmente;
+migraciones; `auth.py` y `database.py` se revisan en modo estricto. El pronóstico con Pandas/NumPy queda fuera inicialmente;
 se incorporarán conforme sus límites dinámicos reciban contratos de tipos y el
 analizador pueda verificarlos sin ocultar errores. Al ampliar anotaciones o
 corregir avisos, agrega esos módulos a `pyrightconfig.json`.

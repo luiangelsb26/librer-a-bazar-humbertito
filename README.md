@@ -1,12 +1,11 @@
 <div align="center">
   <img width="100%" alt="" src="https://capsule-render.vercel.app/api?type=waving&amp;height=105&amp;color=0:0C2944,100:087E8B&amp;section=header">
   <h1>Librería Bazar Humbertito</h1>
-  <p>Sistema de gestión de inventario, compras y ventas con una interfaz adaptable en Next.js y operaciones en Python.</p>
+  <p>Sistema de gestión de inventario, compras y ventas con una interfaz oscura en Next.js, inventario en Angular y operaciones en Python.</p>
 
 ![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-151515?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-C73044?style=for-the-badge&logo=streamlit&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-175B7D?style=for-the-badge&logo=sqlite&logoColor=white)
 
@@ -41,11 +40,10 @@
 | --- | --- |
 | [`web/`](web/) | Interfaz Next.js y módulo de inventario en Angular. |
 | [`backend/`](backend/) | API Starlette, autenticación, acceso a datos, operaciones y pronóstico. |
-| [`streamlit_ui/`](streamlit_ui/) | Interfaz Streamlit y sus estilos. |
 | [`database/migrations/`](database/migrations/) | Migraciones SQL para Supabase. |
 | [`scripts/`](scripts/) | Utilidades de migración y pruebas manuales. |
 
-Los puntos de entrada de Python siguen en la raíz. La base SQLite y los modelos guardados se mantienen en `data/`.
+El punto de entrada de la API está en `api.py`. La base SQLite y los modelos guardados se mantienen en `data/`.
 
 ## Ejecución local
 
@@ -99,11 +97,11 @@ npm.cmd --prefix web run dev -- --hostname 127.0.0.1 --port 3000
 
 El arranque compila el módulo Angular antes de iniciar Next.js. Abre [Humbertito en el navegador](http://127.0.0.1:3000) e inicia sesión. Next.js envía las solicitudes de `/api` al puerto `8000`. En el menú **Inventario**, Angular usa la misma sesión y la misma API que los demás módulos. Si la pantalla muestra un error de conexión, comprueba que la primera terminal siga ejecutando la API. Para detener el sistema, pulsa **Ctrl+C** en ambas terminales.
 
-### Compilación e interfaz Streamlit
+### Compilación de producción
 
 Para generar el módulo Angular y la compilación de Next.js, mantén la API activa y ejecuta `npm.cmd --prefix web run build` seguido de `npm.cmd --prefix web start -- --hostname 127.0.0.1 --port 3000`. Si la API usa otra dirección, establece `HUMBERTITO_API_URL` antes de iniciar el servidor de desarrollo o compilar. En un despliegue con HTTPS, usa un secreto de sesión estable, activa `HUMBERTITO_SECURE_COOKIES=1` en la API y ejecuta un solo proceso de la API.
 
-Para abrir la interfaz Streamlit, ejecuta `.\.venv\Scripts\python.exe -m streamlit run app.py`. Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
+Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
 
 ## Autor
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BookOpen, ChartNoAxesCombined, ChartNoAxesColumnIncreasing, CircleAlert,
+  BookOpen, ChartNoAxesCombined, ChartNoAxesColumnIncreasing, CircleAlert, Eye, EyeOff, LogIn,
   LayoutDashboard, LogOut, Menu, Package, ReceiptText, Search, ShoppingCart,
   TrendingUp, UsersRound,
 } from 'lucide-react';
@@ -306,7 +306,56 @@ function Users({ rows, user, submit, busy }) {
 }
 
 function Brand() {
-  return <div className="brand"><span><Icon name="menu_book"/></span><div><strong>Humbertito</strong><small>Librería y bazar</small></div></div>;
+  return <div className="brand">
+    <span className="brand-mark"><Icon name="menu_book"/></span>
+    <div><small>Sistema de gestión</small><strong>Librería Bazar Humbertito</strong></div>
+  </div>;
+}
+
+function Login({ notice, busy, onLogin }) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return <main className="access">
+    <section className="login" aria-labelledby="login-title">
+      <div className="login-intro">
+        <Brand/>
+        <h2>Gestiona tu librería</h2>
+        <p>Registra ventas, controla el stock y consulta tus compras desde el mismo lugar.</p>
+        <ul className="login-modules" aria-label="Módulos del sistema">
+          <li><Icon name="inventory_2"/>Inventario</li>
+          <li><Icon name="point_of_sale"/>Ventas</li>
+          <li><Icon name="shopping_cart"/>Compras</li>
+        </ul>
+      </div>
+      <div className="login-content">
+        <header className="login-heading">
+          <p className="eyebrow">Acceso al sistema</p>
+          <h1 id="login-title">Iniciar sesión</h1>
+          <p>Ingresa con la cuenta de tu librería.</p>
+        </header>
+        <Notice {...notice}/>
+        <form className="form-stack" onSubmit={event => {
+          event.preventDefault();
+          onLogin(Object.fromEntries(new FormData(event.currentTarget)));
+        }}>
+          <Field label="Usuario"><input name="username" autoComplete="username" required/></Field>
+          <div className="field">
+            <label className="field-label" htmlFor="login-password">Contraseña</label>
+            <div className="password-field">
+              <input id="login-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required/>
+              <button type="button" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-controls="login-password"
+                onClick={() => setShowPassword(value => !value)}>
+                {showPassword ? <EyeOff size={19} aria-hidden="true"/> : <Eye size={19} aria-hidden="true"/>}
+              </button>
+            </div>
+          </div>
+          <button className="primary login-submit" disabled={busy}>
+            <LogIn size={19} aria-hidden="true"/>{busy ? 'Ingresando…' : 'Iniciar sesión'}
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>;
 }
 
 export default function Page() {
@@ -366,18 +415,9 @@ export default function Page() {
   }
 
   if (user === undefined) return <main className="access"><div role="status">Cargando Humbertito…</div></main>;
-  if (!user) return <main className="access"><section className="login">
-    <Brand/><h1>Iniciar sesión</h1>
-    <Notice {...notice}/>
-    <form className="form-stack" onSubmit={e => {
-      e.preventDefault();
-      submit('entrar', Object.fromEntries(new FormData(e.currentTarget)), account => { setScreen('resumen'); setUser(account); }, false);
-    }}>
-      <Field label="Usuario"><input name="username" autoComplete="username" required/></Field>
-      <Field label="Contraseña"><input name="password" type="password" autoComplete="current-password" required/></Field>
-      <button className="primary" disabled={busy}>{busy ? 'Ingresando…' : 'Entrar al sistema'}</button>
-    </form>
-  </section></main>;
+  if (!user) return <Login notice={notice} busy={busy} onLogin={data =>
+    submit('entrar', data, account => { setScreen('resumen'); setUser(account); }, false)
+  }/>;
 
   const admin = user.rol === 'admin';
   const active = sections.find(([key]) => key === screen);
@@ -403,11 +443,14 @@ export default function Page() {
     </aside>
     <main className="workspace">
       <header className="topbar"><button className="nav-toggle" type="button" aria-label="Menú" aria-expanded={drawer} onClick={() => setDrawer(!drawer)}><Icon name="menu"/></button>
-        <span>Librería Bazar Humbertito</span>
+        <span className="top-title">Librería Bazar Humbertito</span>
         <span className="top-date">{new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeZone: 'America/Lima' }).format(new Date())}</span>
       </header>
       <div className="main-content">
-        <h1>{active[1]}</h1>
+        <div className="workspace-heading">
+          <span className="workspace-icon"><Icon name={active[2]}/></span>
+          <h1>{active[1]}</h1>
+        </div>
         <Notice {...notice}/>
         {loading && <p className="loading" role="status">Actualizando datos…</p>}
         {!loading && screen === 'resumen' && data.resumen && <>
