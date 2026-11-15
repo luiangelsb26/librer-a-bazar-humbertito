@@ -245,7 +245,6 @@ tbody tr:hover { background: #232537; }
   border: 1px solid #4a3c69;
   border-radius: .82rem;
 }
-.top-title { overflow-wrap: anywhere; }
 @media (max-width: 720px) {
   .login { grid-template-columns: 1fr; max-width: 31rem; }
   .login-intro { border-right: 0; border-bottom: 1px solid var(--line); }
