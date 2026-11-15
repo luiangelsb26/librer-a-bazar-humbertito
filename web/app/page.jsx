@@ -279,6 +279,7 @@ function Forecast({ products, model, submit, busy, admin }) {
   const [product, setProduct] = useState('');
   const [result, setResult] = useState(null);
   const [request, setRequest] = useState(null);
+  const [evaluationOpen, setEvaluationOpen] = useState(false);
   const selected = products.find(row => String(row.id) === product);
   const [status, statusText] = modelStatuses[model?.estado] ?? ['Estado no disponible', 'Consulta el estado del modelo de demanda.'];
   return <>
@@ -287,7 +288,20 @@ function Forecast({ products, model, submit, busy, admin }) {
         <span className={'pill' + (model?.estado === 'ok' ? '' : ' warning')}>{status}</span>
         <p className="muted">{statusText}</p>
       </div>
-      {model?.evaluacion?.cortes_evaluacion && <details><summary>Evaluación por periodo</summary>{objectTable(model.evaluacion.cortes_evaluacion)}</details>}
+      {model?.evaluacion?.cortes_evaluacion?.length > 0 && <details open={evaluationOpen} onToggle={event => setEvaluationOpen(event.currentTarget.open)}>
+        <summary>Evaluación por periodo</summary>
+        <Table
+          rows={model.evaluacion.cortes_evaluacion}
+          columns={Object.keys(model.evaluacion.cortes_evaluacion[0]).map(key => [key, key.replaceAll('_', ' ')])}
+          action={admin ? row => <button className="danger" type="button" disabled={busy}
+            aria-label={'Eliminar evaluación del ' + formatDay(row.fecha_corte)}
+            onClick={() => {
+              if (window.confirm('¿Eliminar el registro de evaluación del ' + formatDay(row.fecha_corte) + '?')) {
+                submit('modelo/evaluacion/eliminar', { fecha_corte: row.fecha_corte, confirmacion: row.fecha_corte });
+              }
+            }}>Eliminar</button> : undefined}
+        />
+      </details>}
       {result?.training && <Notice message={result.training.mensaje ?? 'Evaluación completada.'}/>}
     </Card>
     <Card title="Generar pronóstico"><form className="form-grid" onSubmit={e => {

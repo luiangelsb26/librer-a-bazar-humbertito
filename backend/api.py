@@ -329,6 +329,15 @@ def write_action(path, request, user, data):
         else:
             auth.eliminar_usuario(uid, user["id"])
         return json_response({"message": "Cuenta actualizada."})
+    if path == "modelo/evaluacion/eliminar":
+        from backend import prediction
+
+        fecha_corte = word(data, "fecha_corte")
+        if data.get("confirmacion") != fecha_corte:
+            raise HTTPException(422, "Confirma el periodo que quieres eliminar.")
+        if not prediction.eliminar_corte_evaluacion(fecha_corte):
+            raise HTTPException(404, "Ese periodo ya no está en la evaluación.")
+        return json_response({"message": "Registro de evaluación eliminado."})
     if path == "modelo/entrenar":
         from backend import prediction
 

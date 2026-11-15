@@ -51,7 +51,7 @@ def _cargar_artefacto():
     return None, None
 
 
-def _guardar_artefacto(artefacto, joblib):
+def _guardar_artefacto(artefacto, joblib, *, exigir_base=False):
     """Prepara la tabla si hace falta, guarda en la base y conserva respaldo local."""
     try:
         buffer = io.BytesIO()
@@ -96,6 +96,9 @@ def _guardar_artefacto(artefacto, joblib):
         guardado_en_base = False
     finally:
         con.close()
+
+    if exigir_base and not guardado_en_base:
+        return None, error_base
 
     error_local = None
     ruta_temporal = MODEL_PATH.with_name(
@@ -671,6 +674,33 @@ def entrenar_modelo(progreso: Callable[[str], None] | None = None):
         "ruta_modelo": str(MODEL_PATH),
         "almacenamiento": almacenamiento,
     }
+
+
+def eliminar_corte_evaluacion(fecha_corte: str) -> bool:
+    """Quita el detalle del periodo y conserva las métricas globales y el modelo."""
+    import joblib
+
+    artefacto, origen = _cargar_artefacto()
+    if artefacto is None:
+        return False
+    evaluacion = artefacto.get("evaluacion", {})
+    cortes = evaluacion.get("cortes_evaluacion", [])
+    restantes = [corte for corte in cortes if str(corte["fecha_corte"]) != fecha_corte]
+    if len(restantes) == len(cortes):
+        return False
+
+    actualizado = {
+        **artefacto,
+        "evaluacion": {**evaluacion, "cortes_evaluacion": restantes},
+    }
+    almacenamiento, error = _guardar_artefacto(
+        actualizado, joblib, exigir_base=origen == "base de datos",
+    )
+    if almacenamiento is None:
+        raise RuntimeError("No se pudo guardar la evaluación actualizada.") from error
+    _cargar_artefacto.clear()
+    estado_modelo.clear()
+    return True
 
 
 @st.cache_data(ttl=120, show_spinner=False, max_entries=1)
