@@ -84,7 +84,7 @@ button[disabled] { opacity: .55; cursor: not-allowed; }
 .metric > span:not(.metric-icon), .muted { color: var(--muted); font-size: .87rem; }
 .metric strong { font-size: clamp(1.24rem, 1.8vw, 1.56rem); letter-spacing: -.045em; overflow-wrap: anywhere; }
 .metric-icon { display: grid; place-items: center; width: 2.05rem; height: 2.05rem; color: var(--accent); background: #352a52; border-radius: .56rem; margin-bottom: .25rem; }
-.dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: .9rem; }
+.dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: .9rem; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: .82rem; padding: 1.05rem; margin-bottom: 1rem; min-width: 0; }
 .card-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .55rem; margin-bottom: .95rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; }
@@ -119,7 +119,7 @@ tbody tr:hover { background: #232537; }
 .notice { color: #b0f2d4; background: #233d36; border: 1px solid #3d6859; border-radius: .62rem; padding: .75rem .85rem; margin-bottom: .95rem; }
 .notice.error { color: #ffb9c7; background: #442834; border-color: #744253; }
 .error-list { color: #ffb9c7; }
-.sales-chart { --plot-height: 9rem; --label-height: 1.45rem; }
+.sales-chart { --plot-height: clamp(12rem, 22vw, 15.25rem); --label-height: 1.8rem; }
 .sales-chart-summary { display: flex; align-items: baseline; flex-wrap: wrap; gap: .35rem .7rem; margin: 0 0 .9rem; }
 .sales-chart-summary strong { font-size: 1.24rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
 .sales-chart-summary time { color: var(--muted); font-size: .78rem; }
@@ -137,7 +137,7 @@ tbody tr:hover { background: #232537; }
 }
 .sales-chart-bars {
   grid-area: 1 / 2; min-width: 0; display: grid; grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr); gap: clamp(.15rem, .8vw, .55rem); padding: 0 .25rem;
+  grid-auto-columns: minmax(0, 1fr); gap: clamp(.15rem, .55vw, .5rem); padding: 0 .25rem;
 }
 .sales-chart-day {
   display: grid; grid-template-rows: var(--plot-height) var(--label-height); justify-items: center;
@@ -149,13 +149,13 @@ tbody tr:hover { background: #232537; }
   display: flex; align-self: stretch; align-items: end; justify-content: center; width: 100%; padding-inline: .12rem;
 }
 .sales-chart-column > span {
-  width: min(100%, 2.4rem); background: #8069ba; border-radius: .28rem .28rem 0 0;
+  width: 100%; background: linear-gradient(180deg, #a68ae8, #7458b5); border-radius: .4rem .4rem 0 0;
 }
 .sales-chart-day[aria-pressed="true"] .sales-chart-column > span {
-  background: linear-gradient(180deg, #c7aaff, #a282ec);
+  background: linear-gradient(180deg, #d9c2ff, #a282ec);
 }
 .sales-chart-date {
-  align-self: center; color: var(--muted); font-size: .65rem; font-weight: 500; white-space: nowrap;
+  align-self: center; color: var(--muted); font-size: .72rem; font-weight: 500; white-space: nowrap;
 }
 @media (max-width: 480px) {
   .sales-chart-day:nth-child(even):not(:last-child) .sales-chart-date { visibility: hidden; }

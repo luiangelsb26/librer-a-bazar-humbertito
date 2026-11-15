@@ -134,7 +134,7 @@ function Trend({ rows }) {
   const peak = Math.max(1, ...rows.map(row => row.value));
   const interval = peak / 4;
   const magnitude = 10 ** Math.floor(Math.log10(interval));
-  const step = [1, 2, 2.5, 5, 10].find(size => size * magnitude >= interval) * magnitude;
+  const step = [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 7.5, 8, 10].find(size => size * magnitude >= interval) * magnitude;
   const max = step * 4;
   const selected = rows.find(row => row.day === activeDay) ?? rows.at(-1);
 
