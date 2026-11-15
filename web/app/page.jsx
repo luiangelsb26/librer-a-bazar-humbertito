@@ -206,6 +206,24 @@ function ProductSelect({ rows, onChange }) {
   </select>;
 }
 
+function ImportAudit({ summary }) {
+  const counts = value => integer.format(value ?? 0);
+  const fields = [
+    ['Compras', counts(summary.compras)],
+    ['Total registrado', money.format(summary.total_encabezados ?? 0)],
+    ['Total de detalles', money.format(summary.total_detalles ?? 0)],
+    ['Líneas de compra', counts(summary.lineas)],
+    ['Primera compra', formatDay(summary.primera_fecha)],
+    ['Última compra', formatDay(summary.ultima_fecha)],
+    ['Sin detalles', counts(summary.sin_detalles)],
+    ['Compras con diferencias', counts(summary.diferencias)],
+  ];
+
+  return <dl className="audit-summary">
+    {fields.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+  </dl>;
+}
+
 function Movements({ kind, products, rows, audit, submit, busy, admin }) {
   const sale = kind === 'ventas';
   const word = sale ? 'venta' : 'compra';
@@ -231,7 +249,7 @@ function Movements({ kind, products, rows, audit, submit, busy, admin }) {
       }}>Eliminar</button> : undefined}/></Card>
     <Excel kind={kind} submit={submit} busy={busy}/>
     {audit && <Card title="Auditoría de importaciones">
-      <Metrics items={Object.entries(audit.resumen ?? {}).map(([key, value]) => [key.replaceAll('_', ' '), value])}/>
+      <ImportAudit summary={audit.resumen ?? {}}/>
       {audit.archivos?.length > 0 && objectTable(audit.archivos.map(row => Object.fromEntries(row.map((value, index) => [['ID', 'Archivo', 'Fecha', 'Registros', 'Estado', 'Compras'][index] ?? ('Dato ' + index), value]))))}
     </Card>}
     {sale && admin && <Danger title="Vaciar historial de ventas" path="ventas/vaciar" submit={submit} busy={busy}/>}
