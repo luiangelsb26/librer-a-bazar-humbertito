@@ -1,8 +1,8 @@
 import sqlite3
 from contextlib import closing
 
-import auth
-import database
+from backend import auth
+from backend import database
 
 
 TABLAS = (

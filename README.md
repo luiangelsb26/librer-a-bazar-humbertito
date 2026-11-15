@@ -37,15 +37,15 @@
 
 ## Estructura del código
 
-| Archivo | Responsabilidad |
+| Carpeta | Contenido |
 | --- | --- |
-| [`app/`](app/) | Interfaz principal en Next.js, navegación, sesión y módulos de gestión. |
-| [`angular-inventory/`](angular-inventory/) | Módulo Angular para listar, buscar, registrar, editar y eliminar productos desde Inventario. |
-| [`api.py`](api.py) | API de Python (Starlette), autenticación por sesión y autorización por rol. |
-| [`operaciones.py`](operaciones.py) | Operaciones compartidas de inventario, ventas, compras y Excel. |
-| [`app.py`](app.py) | Interfaz Streamlit. |
-| [`database.py`](database.py) y [`auth.py`](auth.py) | Persistencia SQLite o PostgreSQL, usuarios y contraseñas. |
-| [`analysis.py`](analysis.py), [`prediction.py`](prediction.py) y [`pdf_report.py`](pdf_report.py) | Análisis comercial, pronóstico de demanda e informe PDF. |
+| [`web/`](web/) | Interfaz Next.js y módulo de inventario en Angular. |
+| [`backend/`](backend/) | API Starlette, autenticación, acceso a datos, operaciones y pronóstico. |
+| [`streamlit_ui/`](streamlit_ui/) | Interfaz Streamlit y sus estilos. |
+| [`database/migrations/`](database/migrations/) | Migraciones SQL para Supabase. |
+| [`scripts/`](scripts/) | Utilidades de migración y pruebas manuales. |
+
+Los puntos de entrada de Python siguen en la raíz. La base SQLite y los modelos guardados se mantienen en `data/`.
 
 ## Ejecución local
 
@@ -65,7 +65,7 @@ Si ya tienes una copia, abre su carpeta y ejecuta `git pull --ff-only origin mai
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-web.txt
-npm.cmd ci
+npm.cmd --prefix web ci
 ```
 
 ### 2. Configura la base de datos y el acceso
@@ -94,14 +94,14 @@ Deja esta terminal abierta. El secreto se genera para esta sesión de PowerShell
 Abre otra terminal en la raíz del proyecto y ejecuta:
 
 ```powershell
-npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+npm.cmd --prefix web run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
 El arranque compila el módulo Angular antes de iniciar Next.js. Abre [Humbertito en el navegador](http://127.0.0.1:3000) e inicia sesión. Next.js envía las solicitudes de `/api` al puerto `8000`. En el menú **Inventario**, Angular usa la misma sesión y la misma API que los demás módulos. Si la pantalla muestra un error de conexión, comprueba que la primera terminal siga ejecutando la API. Para detener el sistema, pulsa **Ctrl+C** en ambas terminales.
 
 ### Compilación e interfaz Streamlit
 
-Para generar el módulo Angular y la compilación de Next.js, mantén la API activa y ejecuta `npm.cmd run build` seguido de `npm.cmd start -- --hostname 127.0.0.1 --port 3000`. Si la API usa otra dirección, establece `HUMBERTITO_API_URL` antes de iniciar el servidor de desarrollo o compilar. En un despliegue con HTTPS, usa un secreto de sesión estable, activa `HUMBERTITO_SECURE_COOKIES=1` en la API y ejecuta un solo proceso de la API.
+Para generar el módulo Angular y la compilación de Next.js, mantén la API activa y ejecuta `npm.cmd --prefix web run build` seguido de `npm.cmd --prefix web start -- --hostname 127.0.0.1 --port 3000`. Si la API usa otra dirección, establece `HUMBERTITO_API_URL` antes de iniciar el servidor de desarrollo o compilar. En un despliegue con HTTPS, usa un secreto de sesión estable, activa `HUMBERTITO_SECURE_COOKIES=1` en la API y ejecuta un solo proceso de la API.
 
 Para abrir la interfaz Streamlit, ejecuta `.\.venv\Scripts\python.exe -m streamlit run app.py`. Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
 

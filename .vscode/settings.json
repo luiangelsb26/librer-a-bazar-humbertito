@@ -1,4 +1,3 @@
-
 {
     "files.exclude": {
         "**/__pycache__": true,
@@ -8,7 +7,14 @@
         "**/.streamlit/secrets.toml": true,
         "**/data/*.db": true,
         "**/datamkdir": true,
-        "**/app_backup.py": true
+        "**/app_backup.py": true,
+        "**/.angular": true,
+        "**/.next": true,
+        "**/node_modules": true,
+        "**/data/*.joblib": true,
+        "web/public/angular-inventory": true,
+        "public/angular-inventory": true,
+        "tmp": true
     },
     "search.exclude": {
         "**/__pycache__": true,
@@ -17,7 +23,14 @@
         "**/.streamlit/secrets.toml": true,
         "**/data/*.db": true,
         "**/datamkdir": true,
-        "**/app_backup.py": true
+        "**/app_backup.py": true,
+        "**/.angular": true,
+        "**/.next": true,
+        "**/node_modules": true,
+        "**/data/*.joblib": true,
+        "web/public/angular-inventory": true,
+        "public/angular-inventory": true,
+        "tmp": true
     },
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
     "python-envs.defaultEnvManager": "ms-python.python:venv",

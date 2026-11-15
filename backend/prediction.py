@@ -10,10 +10,10 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-import database
+from backend import database
 
 
-MODEL_PATH = Path(__file__).resolve().parent / "data" / "demanda_random_forest.joblib"
+MODEL_PATH = Path(__file__).resolve().parents[1] / "data" / "demanda_random_forest.joblib"
 MIN_LAG_DAYS = 28
 MIN_FEATURE_DAYS = 60
 RANDOM_STATE = 42
@@ -138,7 +138,7 @@ def obtener_productos():
 @st.cache_data(ttl=120, show_spinner=False, max_entries=1)
 def _obtener_ventas_diarias():
     """Reutiliza el historial agregado compartido con el módulo de análisis."""
-    import analysis
+    from backend import analysis
 
     datos = analysis.obtener_datos_ventas()
     if datos.empty:
@@ -657,7 +657,7 @@ def entrenar_modelo(progreso: Callable[[str], None] | None = None):
                 "El modelo se entrenó y quedó disponible en este servidor, pero "
                 "no se guardó de forma persistente en Supabase. La aplicación intentó "
                 "crear la tabla automáticamente; si la conexión no tiene permiso para "
-                "crear tablas, ejecute migracion_modelo_demanda.sql en Supabase y vuelva "
+                "crear tablas, ejecute database/migrations/migracion_modelo_demanda.sql en Supabase y vuelva "
                 "a entrenarlo."
             ),
             "evaluacion": evaluacion,

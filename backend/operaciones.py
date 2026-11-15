@@ -10,7 +10,7 @@ from datetime import date, datetime
 import pandas as pd
 import streamlit as st
 
-import database
+from backend import database
 
 
 def invalidar_cache_operativa():
@@ -47,7 +47,7 @@ def invalidar_cache_operativa():
         ),
     }
     for nombre_modulo, nombres_funciones in invalidaciones_por_modulo.items():
-        modulo = sys.modules.get(nombre_modulo)
+        modulo = sys.modules.get(f"backend.{nombre_modulo}")
         if modulo is None:
             continue
         for nombre in nombres_funciones:

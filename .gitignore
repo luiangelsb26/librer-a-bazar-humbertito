@@ -16,4 +16,5 @@ node_modules/
 .env*
 !.env.example
 .angular/
+/web/public/angular-inventory/
 /public/angular-inventory/

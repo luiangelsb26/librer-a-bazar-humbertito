@@ -1,8 +1,8 @@
 import sqlite3
 
-DB = "data/humbertito.db"
+from backend.database import DB_PATH
 
-conn = sqlite3.connect(DB)
+conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
 cursor.execute(

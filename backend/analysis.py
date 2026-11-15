@@ -2,7 +2,7 @@ from typing import cast
 
 import pandas as pd
 import streamlit as st
-import database
+from backend import database
 
 
 # ==========================================================

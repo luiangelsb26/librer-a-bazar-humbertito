@@ -3,7 +3,7 @@ import hmac
 import secrets
 from datetime import datetime
 from typing import Any, Literal, TypedDict
-import database
+from backend import database
 
 
 PASSWORD_HASH_ITERATIONS = 600_000

@@ -1,23 +1,22 @@
 {
   "include": [
-    "auth.py",
-    "database.py",
-    "analysis.py",
-    "pdf_report.py",
-    "migrate_to_supabase.py"
+    "backend/auth.py",
+    "backend/database.py",
+    "backend/analysis.py",
+    "backend/pdf_report.py",
+    "scripts/migrate_to_supabase.py"
   ],
   "exclude": [
     "**/__pycache__",
-    "app.py",
-    "prediction.py",
-    "app_backup.py",
-    "prueba_historial.py"
+    "web/**",
+    "streamlit_ui/**",
+    "app_backup.py"
   ],
   "pythonVersion": "3.14",
   "typeCheckingMode": "basic",
   "strict": [
-    "auth.py",
-    "database.py"
+    "backend/auth.py",
+    "backend/database.py"
   ],
   "reportMissingTypeStubs": "none"
 }

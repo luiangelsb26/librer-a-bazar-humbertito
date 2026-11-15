@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 # Ubicación de la base de datos local
-DB_PATH = Path(__file__).resolve().parent / "data" / "humbertito.db"
+DB_PATH = Path(__file__).resolve().parents[1] / "data" / "humbertito.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 _database_url: str | None = (
     os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_URL")
