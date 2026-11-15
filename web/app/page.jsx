@@ -127,6 +127,94 @@ const axisAmount = new Intl.NumberFormat('es-PE', {
   style: 'currency', currency: 'PEN', minimumFractionDigits: 0, maximumFractionDigits: 2,
 });
 
+function SalesPlot({ rows, max, selectedDay }) {
+  const canvas = useRef(null);
+
+  useEffect(() => {
+    const chart = canvas.current;
+    const context = chart.getContext('2d');
+    if (!context) return;
+
+    function draw() {
+      const { width, height } = chart.getBoundingClientRect();
+      if (!width || !height) return;
+      const ratio = window.devicePixelRatio || 1;
+      chart.width = Math.round(width * ratio);
+      chart.height = Math.round(height * ratio);
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      const points = rows.map(({ day, value }, index) => ({
+        day,
+        x: (index + .5) * width / rows.length,
+        y: Math.max(5, Math.min(height - 5, height * (1 - value / max))),
+      }));
+      const first = points[0];
+      const last = points.at(-1);
+      const accent = '#c1a3ff';
+      const gradient = context.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#a986f55c');
+      gradient.addColorStop(1, '#a986f506');
+
+      function trace() {
+        context.moveTo(first.x, first.y);
+        for (const point of points.slice(1)) context.lineTo(point.x, point.y);
+      }
+
+      context.beginPath();
+      trace();
+      context.lineTo(last.x, height);
+      context.lineTo(first.x, height);
+      context.closePath();
+      context.fillStyle = gradient;
+      context.fill();
+
+      const active = points.find(point => point.day === selectedDay);
+      if (active) {
+        context.beginPath();
+        context.moveTo(active.x, 0);
+        context.lineTo(active.x, height);
+        context.strokeStyle = '#c1a3ff69';
+        context.lineWidth = 1;
+        context.setLineDash([4, 4]);
+        context.stroke();
+        context.setLineDash([]);
+      }
+
+      context.beginPath();
+      trace();
+      context.strokeStyle = accent;
+      context.lineJoin = 'round';
+      context.lineCap = 'round';
+      context.lineWidth = 2.75;
+      context.stroke();
+
+      for (const point of points) {
+        const selected = point.day === selectedDay;
+        if (selected) {
+          context.beginPath();
+          context.arc(point.x, point.y, 9, 0, 2 * Math.PI);
+          context.fillStyle = '#c1a3ff39';
+          context.fill();
+        }
+        context.beginPath();
+        context.arc(point.x, point.y, selected ? 4.7 : 3, 0, 2 * Math.PI);
+        context.fillStyle = selected ? '#f0e7ff' : '#1b1e2a';
+        context.fill();
+        context.strokeStyle = accent;
+        context.lineWidth = 1.6;
+        context.stroke();
+      }
+    }
+
+    const observer = new ResizeObserver(draw);
+    observer.observe(chart);
+    draw();
+    return () => observer.disconnect();
+  }, [rows, max, selectedDay]);
+
+  return <canvas ref={canvas} className="sales-chart-plot" aria-hidden="true"/>;
+}
+
 function Trend({ rows }) {
   const [activeDay, setActiveDay] = useState(null);
   if (!rows?.length) return <p className="empty">Registra ventas para ver la tendencia.</p>;
@@ -148,16 +236,15 @@ function Trend({ rows }) {
         {[4, 3, 2, 1, 0].map(tick => <span key={tick}>{axisAmount.format(tick * step)}</span>)}
       </div>
       <div className="sales-chart-grid" aria-hidden="true"/>
-      <div className="sales-chart-bars">
+      <SalesPlot rows={rows} max={max} selectedDay={selected.day}/>
+      <div className="sales-chart-days">
         {rows.map(row => <button key={row.day} type="button" className="sales-chart-day"
           aria-label={formatDay(row.day) + ', ' + money.format(row.value)}
           aria-pressed={selected.day === row.day}
           onPointerEnter={() => setActiveDay(row.day)}
           onFocus={() => setActiveDay(row.day)}
           onClick={() => setActiveDay(row.day)}>
-          <span className="sales-chart-column" aria-hidden="true">
-            <span style={{ height: (100 * row.value / max) + '%' }}/>
-          </span>
+          <span className="sales-chart-hit" aria-hidden="true"/>
           <span className="sales-chart-date" aria-hidden="true">{row.label}</span>
         </button>)}
       </div>
