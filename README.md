@@ -1,8 +1,9 @@
 <div align="center">
   <img width="100%" alt="" src="https://capsule-render.vercel.app/api?type=waving&amp;height=105&amp;color=0:0C2944,100:087E8B&amp;section=header">
   <h1>Librería Bazar Humbertito</h1>
-  <p>Sistema de gestión de inventario, compras y ventas para una librería y bazar.</p>
+  <p>Sistema de gestión de inventario, compras y ventas con una interfaz adaptable en Next.js y operaciones en Python.</p>
 
+![Next.js](https://img.shields.io/badge/Next.js-151515?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-C73044?style=for-the-badge&logo=streamlit&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -33,22 +34,35 @@
 
 | Archivo | Responsabilidad |
 | --- | --- |
-| [`app.py`](app.py) | Interfaz de Streamlit y flujos de operación. |
-| [`database.py`](database.py) | Acceso a datos con SQLite local o PostgreSQL. |
-| [`auth.py`](auth.py) | Autenticación y administración de usuarios. |
-| [`analysis.py`](analysis.py) y [`prediction.py`](prediction.py) | Análisis del historial de ventas y pronóstico de demanda con scikit-learn. |
-| [`pdf_report.py`](pdf_report.py) | Generación de reportes en PDF. |
+| [`app/`](app/) | Interfaz Next.js con panel, inventario, compras, ventas, análisis, pronóstico y administración. |
+| [`api.py`](api.py) | API de Python (Starlette), autenticación por sesión y autorización por rol. |
+| [`operaciones.py`](operaciones.py) | Operaciones compartidas de inventario, ventas, compras y Excel. |
+| [`app.py`](app.py) | Interfaz Streamlit. |
+| [`database.py`](database.py) y [`auth.py`](auth.py) | Persistencia SQLite o PostgreSQL, usuarios y contraseñas. |
+| [`analysis.py`](analysis.py), [`prediction.py`](prediction.py) y [`pdf_report.py`](pdf_report.py) | Análisis comercial, pronóstico de demanda e informe PDF. |
 
 ## Ejecución local
 
-Desde la raíz del repositorio, en un entorno virtual de Python:
+Desde la raíz del repositorio, con el entorno virtual de Python activo y **Node.js 20.9 o superior**:
 
-```bash
-python -m pip install -r requirements.txt
-python -m streamlit run app.py
+```powershell
+python -m pip install -r requirements.txt -r requirements-web.txt
+npm ci
 ```
 
-La base local usa SQLite. Para usar PostgreSQL, configura la conexión mediante la variable de entorno `SUPABASE_DB_URL` o `DATABASE_URL`. Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
+1. Si la base ya tiene usuarios, puedes iniciar sesión con esas cuentas. Para una base nueva, ejecuta `python -m api crear-admin`.
+2. En una terminal inicia la API. El secreto aleatorio del siguiente ejemplo dura lo que dure esa sesión de PowerShell.
+
+   ```powershell
+   $env:HUMBERTITO_SESSION_SECRET = python -c "import secrets; print(secrets.token_hex(32))"
+   python -m uvicorn api:create_app --factory --host 127.0.0.1 --port 8000
+   ```
+
+3. En otra terminal, ejecuta `npm run dev` y entra a [localhost:3000](http://localhost:3000).
+
+SQLite usa el mismo archivo local del sistema existente. Si usas Supabase, configura `SUPABASE_DB_URL` (o `DATABASE_URL`) en el entorno de la API y de cualquier comando de inicialización. La API lee esas variables del entorno. Para producción, conserva un secreto estable, configura cookies seguras con `HUMBERTITO_SECURE_COOKIES=1` detrás de HTTPS, ejecuta un proceso de API y define `HUMBERTITO_API_URL` si la API está en otro host antes de compilar con `npm run build`. Sirve Next.js con `npm start`.
+
+Para abrir la interfaz Streamlit, ejecuta `python -m streamlit run app.py`. Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
 
 ## Autor
 

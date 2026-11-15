@@ -10,3 +10,8 @@ datamkdir/*
 app_backup.py
 .DS_Store
 Thumbs.db
+
+node_modules/
+.next/
+.env*
+!.env.example
