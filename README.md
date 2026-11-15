@@ -13,6 +13,9 @@
 
 <p align="center"><a href="#funcionalidades">Funcionalidades</a> · <a href="#cómo-se-usa">Cómo se usa</a> · <a href="#estructura-del-código">Estructura</a> · <a href="#ejecución-local">Ejecución local</a></p>
 
+**Frontend · Next.js (React)**  
+**Backend · Python (Starlette)**
+
 ## Funcionalidades
 
 | Área | Funciones |
