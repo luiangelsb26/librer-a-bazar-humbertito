@@ -1,3 +1,5 @@
+from typing import cast
+
 import pandas as pd
 import streamlit as st
 import database
@@ -409,7 +411,8 @@ def alertas_importes_diarios(ventas: pd.DataFrame) -> tuple[pd.DataFrame, int]:
 
     fechas = pd.to_datetime(ventas["fecha"]).dt.normalize()
     inicio = fechas.max() - pd.Timedelta(days=89)
-    importes = ventas.groupby(fechas)["subtotal"].sum().loc[inicio:]
+    totales = cast(pd.Series, ventas.groupby(fechas)["subtotal"].sum())
+    importes = totales.loc[inicio:]
     dias_evaluados = len(importes)
     if dias_evaluados < 14:
         return pd.DataFrame(columns=columnas), dias_evaluados
@@ -420,7 +423,7 @@ def alertas_importes_diarios(ventas: pd.DataFrame) -> tuple[pd.DataFrame, int]:
     superior = q3 + 1.5 * rango
     atipicos = importes[(importes < inferior) | (importes > superior)]
     return pd.DataFrame({
-        "Fecha": atipicos.index.strftime("%d/%m/%Y"),
+        "Fecha": pd.DatetimeIndex(atipicos.index).strftime("%d/%m/%Y"),
         "Ventas (S/)": atipicos.to_numpy(),
         "Alerta": (atipicos > superior).map({True: "Importe alto", False: "Importe bajo"}).to_numpy(),
     }), dias_evaluados
