@@ -645,7 +645,6 @@ export default function Page() {
     </aside>
     <main className="workspace">
       <header className="topbar"><button className="nav-toggle" type="button" aria-label="Menú" aria-expanded={drawer} onClick={() => setDrawer(!drawer)}><Icon name="menu"/></button>
-        <span className="top-title">Librería Bazar Humbertito</span>
         <span className="top-date">{new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeZone: 'America/Lima' }).format(new Date())}</span>
       </header>
       <div className="main-content">
