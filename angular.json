@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "projects": {
+    "inventory": {
+      "projectType": "application",
+      "root": "angular-inventory",
+      "sourceRoot": "angular-inventory",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "angular-inventory/main.ts",
+            "tsConfig": "angular-inventory/tsconfig.json",
+            "outputPath": {
+              "base": "public/angular-inventory",
+              "browser": ""
+            },
+            "index": false,
+            "outputHashing": "none",
+            "sourceMap": false,
+            "optimization": {
+              "scripts": true,
+              "styles": true,
+              "fonts": false
+            },
+            "budgets": [
+              {
+                "type": "initial",
+                "maximumWarning": "350kB",
+                "maximumError": "500kB"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

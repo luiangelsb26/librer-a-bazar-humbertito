@@ -82,6 +82,8 @@ input, select {
 }
 input[type='checkbox'] { width: 1.09rem; min-height: 1.09rem; accent-color: var(--brand); }
 .check { display: flex; gap: .45rem; align-items: center; font-size: .9rem; }
+humbertito-inventory { display: block; }
+humbertito-inventory .field.search { display: grid; }
 .search { display: flex; align-items: center; gap: .4rem; max-width: 22rem; margin-bottom: .65rem; color: var(--muted); }
 .table-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; text-align: left; font-size: .85rem; }

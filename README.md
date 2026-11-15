@@ -3,6 +3,7 @@
   <h1>Librería Bazar Humbertito</h1>
   <p>Sistema de gestión de inventario, compras y ventas con una interfaz adaptable en Next.js y operaciones en Python.</p>
 
+![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-151515?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-C73044?style=for-the-badge&logo=streamlit&logoColor=white)
@@ -13,7 +14,8 @@
 
 <p align="center"><a href="#funcionalidades">Funcionalidades</a> · <a href="#cómo-se-usa">Cómo se usa</a> · <a href="#estructura-del-código">Estructura</a> · <a href="#ejecución-local">Ejecución local</a></p>
 
-**Frontend · Next.js (React)**  
+**Frontend · Next.js (React) y Angular (inventario)**
+
 **Backend · Python (Starlette)**
 
 ## Funcionalidades
@@ -37,7 +39,8 @@
 
 | Archivo | Responsabilidad |
 | --- | --- |
-| [`app/`](app/) | Interfaz Next.js con panel, inventario, compras, ventas, análisis, pronóstico y administración. |
+| [`app/`](app/) | Interfaz principal en Next.js, navegación, sesión y módulos de gestión. |
+| [`angular-inventory/`](angular-inventory/) | Módulo Angular para listar, buscar, registrar, editar y eliminar productos desde Inventario. |
 | [`api.py`](api.py) | API de Python (Starlette), autenticación por sesión y autorización por rol. |
 | [`operaciones.py`](operaciones.py) | Operaciones compartidas de inventario, ventas, compras y Excel. |
 | [`app.py`](app.py) | Interfaz Streamlit. |
@@ -46,7 +49,7 @@
 
 ## Ejecución local
 
-Estos pasos son para **Windows con PowerShell**. Necesitas **Git**, **Python 3.14** y **Node.js 20.9 o superior**. Ejecuta los comandos desde la raíz del proyecto.
+Estos pasos son para **Windows con PowerShell**. Necesitas **Git**, **Python 3.14** y **Node.js 20.19+, 22.12+ o 24.x**. Ejecuta los comandos desde la raíz del proyecto.
 
 ### 1. Descarga e instala
 
@@ -94,11 +97,11 @@ Abre otra terminal en la raíz del proyecto y ejecuta:
 npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-Abre [Humbertito en el navegador](http://127.0.0.1:3000) e inicia sesión. Next.js envía las solicitudes de `/api` al puerto `8000`. Si la pantalla muestra un error de conexión, comprueba que la primera terminal siga ejecutando la API. Para detener el sistema, pulsa **Ctrl+C** en ambas terminales.
+El arranque compila el módulo Angular antes de iniciar Next.js. Abre [Humbertito en el navegador](http://127.0.0.1:3000) e inicia sesión. Next.js envía las solicitudes de `/api` al puerto `8000`. En el menú **Inventario**, Angular usa la misma sesión y la misma API que los demás módulos. Si la pantalla muestra un error de conexión, comprueba que la primera terminal siga ejecutando la API. Para detener el sistema, pulsa **Ctrl+C** en ambas terminales.
 
 ### Compilación e interfaz Streamlit
 
-Para usar la compilación de Next.js, mantén la API activa y ejecuta `npm.cmd run build` seguido de `npm.cmd start -- --hostname 127.0.0.1 --port 3000`. Si la API usa otra dirección, establece `HUMBERTITO_API_URL` antes de iniciar el servidor de desarrollo o compilar. En un despliegue con HTTPS, usa un secreto de sesión estable, activa `HUMBERTITO_SECURE_COOKIES=1` en la API y ejecuta un solo proceso de la API.
+Para generar el módulo Angular y la compilación de Next.js, mantén la API activa y ejecuta `npm.cmd run build` seguido de `npm.cmd start -- --hostname 127.0.0.1 --port 3000`. Si la API usa otra dirección, establece `HUMBERTITO_API_URL` antes de iniciar el servidor de desarrollo o compilar. En un despliegue con HTTPS, usa un secreto de sesión estable, activa `HUMBERTITO_SECURE_COOKIES=1` en la API y ejecuta un solo proceso de la API.
 
 Para abrir la interfaz Streamlit, ejecuta `.\.venv\Scripts\python.exe -m streamlit run app.py`. Consulta la [guía de desarrollo](CONTRIBUTING.md) para el análisis de tipos.
 

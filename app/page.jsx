@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen, ChartNoAxesCombined, ChartNoAxesColumnIncreasing, CircleAlert,
   LayoutDashboard, LogOut, Menu, Package, ReceiptText, Search, ShoppingCart,
   TrendingUp, UsersRound,
 } from 'lucide-react';
+import Script from 'next/script';
 
 const sections = [
   ['resumen', 'Vista general', 'dashboard'],
@@ -19,17 +20,6 @@ const sections = [
 const money = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
 const integer = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 2 });
 const localDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Lima' });
-const productFields = [
-  ['codigo', 'Código'], ['nombre', 'Nombre'], ['categoria', 'Categoría'],
-  ['precio_compra', 'Precio de compra', 'money'], ['precio_venta', 'Precio de venta', 'money'],
-  ['stock', 'Existencias', 'integer'], ['stock_minimo', 'Stock mínimo', 'integer'],
-  ['dias_entrega', 'Plazo de entrega en días', 'integer'],
-];
-const productColumns = [
-  ['codigo', 'Código'], ['nombre', 'Producto'], ['categoria', 'Categoría'],
-  ['precio_compra', 'Compra', 'money'], ['precio_venta', 'Venta', 'money'],
-  ['stock', 'Existencias'], ['stock_minimo', 'Mínimo'], ['dias_entrega', 'Entrega (días)'],
-];
 const movementColumns = [
   ['id', 'N.º'], ['fecha', 'Fecha'], ['referencia', 'Comprobante'], ['producto', 'Producto'],
   ['cantidad', 'Unidades'], ['precio', 'Precio unitario', 'money'], ['subtotal', 'Subtotal', 'money'],
@@ -171,29 +161,34 @@ function Excel({ kind, submit, busy }) {
 }
 
 function Products({ rows, submit, busy, admin }) {
-  const [edit, setEdit] = useState(null);
+  const element = useRef(null);
+  const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    function fail() { setFailed(true); }
+    window.addEventListener('humbertito-inventory-error', fail);
+    customElements.whenDefined('humbertito-inventory').then(() => {
+      if (mounted) setReady(true);
+    });
+    return () => {
+      mounted = false;
+      window.removeEventListener('humbertito-inventory-error', fail);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !element.current) return;
+    element.current.rows = rows;
+    element.current.submit = (path, data) => busy ? Promise.resolve(false) : submit(path, data);
+  }, [ready, rows, submit, busy]);
+
   return <>
-    <Card title={edit ? 'Editar producto' : 'Registrar producto'}>
-      <form key={edit?.id ?? 'new'} className="form-grid" onSubmit={e => {
-        e.preventDefault();
-        const form = e.currentTarget;
-        const data = Object.fromEntries(new FormData(form));
-        submit(edit ? 'productos/editar' : 'productos/crear', { ...data, id: edit?.id }, () => { form.reset(); setEdit(null); });
-      }}>
-        {productFields.map(([key, label, format]) => <Field key={key} label={label}>
-          <input name={key} defaultValue={edit?.[key] ?? (format ? 0 : '')} type={format ? 'number' : 'text'} step={format === 'money' ? '0.01' : undefined} min={key === 'precio_venta' ? '0.01' : (format ? 0 : undefined)}
-            max={key === 'dias_entrega' ? 30 : undefined} maxLength={format ? undefined : 250} required={key !== 'categoria'}/>
-        </Field>)}
-        <div className="actions full"><button className="primary" disabled={busy}>{edit ? 'Guardar cambios' : 'Registrar producto'}</button>
-          {edit && <button type="button" onClick={() => setEdit(null)}>Cancelar</button>}</div>
-      </form>
-    </Card>
-    <Card title="Productos registrados"><Table rows={rows} columns={productColumns} searchable action={row => <>
-      <button type="button" onClick={() => { setEdit(row); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Editar</button>
-      <button type="button" className="danger" disabled={busy} onClick={() => {
-        if (window.confirm('¿Eliminar el producto ' + row.nombre + '?')) submit('productos/eliminar', { id: row.id });
-      }}>Eliminar</button>
-    </>}/></Card>
+    <Script src="/angular-inventory/main.js" type="module" strategy="afterInteractive" onError={() => setFailed(true)}/>
+    {failed && <Notice message="No se pudo cargar el inventario. Recarga la página para volver a intentarlo." error/>}
+    {!ready && !failed && <p className="loading" role="status">Cargando inventario…</p>}
+    {ready && <humbertito-inventory ref={element}/>}
     <Excel kind="productos" submit={submit} busy={busy}/>
     {admin && <Danger title="Vaciar catálogo" path="productos/vaciar" submit={submit} busy={busy}/>}
   </>;
@@ -361,8 +356,10 @@ export default function Page() {
       if (path === 'salir' || path === 'usuarios/transferir') { setData({}); setUser(null); }
       if (result.message) setNotice({ message: result.message });
       if (refresh) setRevision(value => value + 1);
+      return true;
     } catch (error) {
       fail(error);
+      return false;
     } finally {
       setBusy(false);
     }

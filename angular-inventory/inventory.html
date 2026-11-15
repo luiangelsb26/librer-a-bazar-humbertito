@@ -1,0 +1,66 @@
+<section class="card" aria-labelledby="inventory-editor">
+  <div class="card-heading">
+    <h2 id="inventory-editor" tabindex="-1">{{ selected() ? 'Editar producto' : 'Registrar producto' }}</h2>
+  </div>
+  <form class="form-grid" (submit)="save($event)">
+    @for (field of fields; track field.key) {
+      <label class="field">
+        <span>{{ field.label }}</span>
+        <input #control [name]="field.key" [type]="field.type"
+          [value]="draft()[field.key] ?? (field.type === 'number' ? 0 : '')"
+          [attr.min]="'min' in field ? field.min : null" [attr.max]="'max' in field ? field.max : null"
+          [attr.step]="'step' in field ? field.step : null"
+          [attr.maxlength]="field.type === 'text' ? 250 : null"
+          [required]="field.required" (input)="changeField(field.key, control.value)">
+      </label>
+    }
+    <div class="actions full">
+      <button class="primary" [disabled]="busy() || !submit()">{{ selected() ? 'Guardar cambios' : 'Registrar producto' }}</button>
+      @if (selected()) { <button type="button" [disabled]="busy()" (click)="edit(null)">Cancelar</button> }
+    </div>
+  </form>
+</section>
+
+<section class="card" aria-labelledby="inventory-list">
+  <div class="card-heading"><h2 id="inventory-list">Productos registrados</h2></div>
+  <label class="field search">
+    <span>Buscar productos</span>
+    <input #filter type="search" placeholder="Código, nombre o categoría" [value]="search()" (input)="changeSearch(filter.value)">
+  </label>
+  @if (!visible().length) {
+    <p class="empty" role="status">No hay productos para mostrar.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th scope="col">Código</th><th scope="col">Producto</th><th scope="col">Categoría</th>
+          <th scope="col">Compra</th><th scope="col">Venta</th><th scope="col">Existencias</th>
+          <th scope="col">Mínimo</th><th scope="col">Entrega (días)</th><th scope="col">Acciones</th>
+        </tr></thead>
+        <tbody>
+          @for (row of visible(); track row.id) {
+            <tr>
+              <td>{{ row.codigo }}</td><td>{{ row.nombre }}</td><td>{{ row.categoria || '—' }}</td>
+              <td>{{ money.format(row.precio_compra) }}</td><td>{{ money.format(row.precio_venta) }}</td>
+              <td><span class="pill" [class.warning]="+row.stock <= +row.stock_minimo">{{ row.stock }}</span></td>
+              <td>{{ row.stock_minimo }}</td><td>{{ row.dias_entrega }}</td>
+              <td class="row-actions">
+                <button type="button" [disabled]="busy()" (click)="edit(row)">Editar</button>
+                <button type="button" class="danger" [disabled]="busy()" (click)="remove(row)">Eliminar</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  @if (pages() > 1) {
+    <div class="pagination">
+      <span>{{ filtered().length }} productos · Página {{ current() + 1 }} de {{ pages() }}</span>
+      <div>
+        <button type="button" [disabled]="current() === 0" (click)="page.set(current() - 1)">Anterior</button>
+        <button type="button" [disabled]="current() + 1 === pages()" (click)="page.set(current() + 1)">Siguiente</button>
+      </div>
+    </div>
+  }
+</section>
