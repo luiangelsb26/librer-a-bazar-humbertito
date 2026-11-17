@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 from datetime import date, datetime
 from decimal import Decimal
 from threading import Lock
+from typing import Literal, overload
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
@@ -38,7 +39,9 @@ XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 def normalize(value):
     if isinstance(value, pd.DataFrame):
-        return json.loads(value.to_json(orient="records", date_format="iso"))
+        serialized = value.to_json(orient="records", date_format="iso")
+        assert serialized is not None
+        return json.loads(serialized)
     if isinstance(value, dict):
         return {k: normalize(v) for k, v in value.items()}
     if isinstance(value, (tuple, list)):
@@ -47,8 +50,9 @@ def normalize(value):
         return value.isoformat()
     if isinstance(value, Decimal):
         value = float(value)
-    if hasattr(value, "item"):
-        return normalize(value.item())
+    item = getattr(value, "item", None)
+    if callable(item):
+        return normalize(item())
     if isinstance(value, float) and not math.isfinite(value):
         return None
     return value
@@ -127,7 +131,15 @@ def word(data, field, optional=False):
     return value if field == "password" else value.strip()
 
 
-def number(data, field, *, integer=False, minimum=0, maximum=1_000_000_000):
+@overload
+def number(data, field, *, integer: Literal[True], minimum: float = 0, maximum: float = 1_000_000_000) -> int: ...
+
+
+@overload
+def number(data, field, *, integer: Literal[False] = False, minimum: float = 0, maximum: float = 1_000_000_000) -> float: ...
+
+
+def number(data, field, *, integer: bool = False, minimum: float = 0, maximum: float = 1_000_000_000) -> int | float:
     try:
         value = float(data.get(field, ""))
         if not math.isfinite(value) or not minimum <= value <= maximum or (integer and not value.is_integer()):
@@ -273,10 +285,16 @@ def write_action(path, request, user, data):
         request.session.clear()
         return json_response({"message": "Sesión cerrada."})
     if path in ("productos/crear", "productos/editar"):
-        args = [word(data, k, optional=k == "categoria") for k in ("codigo", "nombre", "categoria")]
-        args += [number(data, "precio_compra"), number(data, "precio_venta", minimum=0.01)]
-        args += [number(data, k, integer=True) for k in ("stock", "stock_minimo")]
-        args += [number(data, "dias_entrega", integer=True, maximum=30)]
+        args = (
+            word(data, "codigo"),
+            word(data, "nombre"),
+            word(data, "categoria", optional=True),
+            number(data, "precio_compra"),
+            number(data, "precio_venta", minimum=0.01),
+            number(data, "stock", integer=True),
+            number(data, "stock_minimo", integer=True),
+            number(data, "dias_entrega", integer=True, maximum=30),
+        )
         if path.endswith("/editar"):
             return outcome(ops.actualizar_producto(number(data, "id", integer=True, minimum=1), *args))
         return outcome(ops.registrar_producto(*args))
@@ -319,7 +337,12 @@ def write_action(path, request, user, data):
         password = word(data, "password")
         if len(password) < 8:
             raise HTTPException(422, "Usa al menos ocho caracteres en la contraseña.")
-        auth.crear_usuario(word(data, "username"), word(data, "nombre"), password, word(data, "rol"))
+        username = word(data, "username")
+        nombre = word(data, "nombre")
+        rol = word(data, "rol")
+        if rol != "admin" and rol != "empleado":
+            raise ValueError("El rol seleccionado no es válido.")
+        auth.crear_usuario(username, nombre, password, rol)
         return json_response({"message": "Usuario creado."})
     if path in ("usuarios/eliminar", "usuarios/transferir"):
         uid = number(data, "id", integer=True, minimum=1)
